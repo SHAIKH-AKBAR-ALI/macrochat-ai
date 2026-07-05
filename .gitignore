@@ -1,0 +1,9 @@
+.env
+.venv/
+__pycache__/
+node_modules/
+frontend/dist/
+password/
+.claude/
+.agents/
+skills-lock.json

@@ -1,0 +1,71 @@
+---
+import "../styles/global.css";
+const { title = "MacroChat AI", active = "" } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <script is:inline>
+      // before paint: stored theme, else OS preference
+      document.documentElement.dataset.theme =
+        localStorage.getItem("mc_theme") ||
+        (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    </script>
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="wrap">
+        <a class="nav__logo" href="/">MACRO<b>CHAT</b></a>
+        <div class="nav__links">
+          <a href="/chat" class={active === "chat" ? "active" : ""}>Log a meal</a>
+          <a href="/dashboard" class={active === "dashboard" ? "active" : ""}>Today</a>
+          <a href="/login" id="nav-auth" class={active === "login" ? "active" : ""}>Log in</a>
+          <button class="nav__theme" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">◐</button>
+        </div>
+      </div>
+    </nav>
+    <main>
+      <slot />
+    </main>
+    <footer class="footer">
+      <div class="wrap">
+        <span>MACRO<b>CHAT</b> — AI NUTRITION TRACKER</span>
+        <span>NUMBERS FROM <b>INDB + USDA</b>. NEVER GUESSED BY THE AI.</span>
+      </div>
+    </footer>
+    <script>
+      document.getElementById("theme-toggle")!.addEventListener("click", () => {
+        const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem("mc_theme", next);
+      });
+
+      // scroll-reveal for any .reveal element (landing sections)
+      const io = new IntersectionObserver((entries) => {
+        for (const e of entries) if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+      }, { threshold: 0.15 });
+      document.querySelectorAll(".reveal").forEach((n) => io.observe(n));
+
+      // Nav auth state: swap "Log in" for "Log out" when a token exists.
+      const link = document.getElementById("nav-auth")!;
+      if (localStorage.getItem("mc_token")) {
+        link.textContent = "Log out";
+        link.setAttribute("href", "#");
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          localStorage.removeItem("mc_token");
+          location.href = "/";
+        });
+      }
+    </script>
+  </body>
+</html>

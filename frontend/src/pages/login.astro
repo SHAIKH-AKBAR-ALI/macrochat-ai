@@ -1,0 +1,47 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+<Layout title="Log in — MacroChat AI" active="login">
+  <div class="wrap" style="max-width:460px; padding:4rem 0;">
+    <p class="eyebrow">Welcome back</p>
+    <h1 style="font-size:clamp(2.2rem,6vw,3.5rem); margin:1rem 0 2rem;">Log in</h1>
+    <form id="login-form" class="block">
+      <p class="form-error" id="err" role="alert"></p>
+      <label class="field"><span>Email</span>
+        <input type="email" name="email" required autocomplete="email" />
+      </label>
+      <label class="field"><span>Password</span>
+        <input type="password" name="password" required autocomplete="current-password" />
+      </label>
+      <button class="btn" type="submit" id="submit" style="width:100%;">Log in</button>
+    </form>
+    <p class="mono" style="margin-top:1rem;">No account? <a href="/signup">Sign up</a></p>
+  </div>
+
+  <script>
+    import { jsonPost } from "../lib/api";
+
+    const form = document.getElementById("login-form") as HTMLFormElement;
+    const err = document.getElementById("err")!;
+    const submit = document.getElementById("submit") as HTMLButtonElement;
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      err.classList.remove("show");
+      submit.disabled = true;
+      const fd = new FormData(form);
+      try {
+        const res = await jsonPost("/login", {
+          email: fd.get("email"),
+          password: fd.get("password"),
+        });
+        localStorage.setItem("mc_token", res.access_token);
+        location.href = "/chat";
+      } catch (ex: any) {
+        err.textContent = ex.message;
+        err.classList.add("show");
+        submit.disabled = false;
+      }
+    });
+  </script>
+</Layout>

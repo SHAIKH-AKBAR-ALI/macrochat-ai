@@ -1,0 +1,102 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+<Layout title="MacroChat AI — Tell it what you ate">
+  <section class="hero">
+    <div class="wrap hero__grid">
+      <div>
+        <p class="eyebrow" data-rise="1">AI nutrition tracker</p>
+        <h1 style="margin-top:1rem;" data-rise="2">
+          Tell it what<br />you ate.<br /><span>It does the math.</span>
+        </h1>
+        <p class="hero__lead" data-rise="3">
+          Send a meal photo or a line of text — “200g grilled chicken, 2 rotis”.
+          MacroChat identifies the food, resolves the portion, and pulls calories
+          and macros from real nutrition databases. The AI never invents a number.
+        </p>
+        <div data-rise="4">
+          <a class="btn" href="/signup">Start tracking</a>
+          <a class="btn btn--ghost" href="/chat" style="margin-left:0.6rem;">Try it without an account</a>
+        </div>
+      </div>
+
+      <div class="demo-exchange" aria-label="Example exchange" data-rise="3">
+        <div class="msg msg--user" style="align-self:flex-end;">
+          <div class="msg__who">You</div>
+          <div class="msg__body">200g grilled chicken + 2 rotis</div>
+        </div>
+        <div class="facts">
+          <div class="facts__title">Meal facts</div>
+          <div class="facts__row facts__row--hero">
+            <b>Calories</b><span class="num">504 kcal</span>
+          </div>
+          <div class="facts__row">
+            <span>Grilled chicken breast · 200g <span class="tag tag--usda">USDA</span></span>
+            <span class="num">330 kcal</span>
+          </div>
+          <div class="facts__row facts__row--thick">
+            <span>Roti · 2 pc <span class="tag">INDB</span></span>
+            <span class="num">174 kcal</span>
+          </div>
+          <div class="facts__row"><b>Protein</b><span class="num">68.3 g</span></div>
+          <div class="facts__row"><b>Carbs</b><span class="num">36.1 g</span></div>
+          <div class="facts__row"><b>Fat</b><span class="num">9.8 g</span></div>
+          <div class="facts__note">Portions stated in text — logged with high confidence</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker__track">
+      Protein first, cravings later <b>■</b>
+      A logged meal beats a perfect meal <b>■</b>
+      Water before coffee <b>■</b>
+      Half the plate vegetables, no math needed <b>■</b>
+      Consistency beats intensity <b>■</b>
+      Walk 10 minutes after eating <b>■</b>
+      You can't out-track sleep — get 7 hours <b>■</b>
+      Small portions, honest grams <b>■</b>
+    </div>
+  </div>
+
+  <section class="band band--amber">
+    <div class="wrap reveal">
+      <h2 style="margin-bottom:1.5rem;">How it works</h2>
+      <div class="steps">
+        <div class="block">
+          <p class="eyebrow">Step 1</p>
+          <h3 style="margin:0.8rem 0 0.5rem;">Say it or snap it</h3>
+          <p>Type your meal, attach a photo, or both. The AI names each food and
+          spots the prep style — grilled, fried, curry.</p>
+        </div>
+        <div class="block">
+          <p class="eyebrow">Step 2</p>
+          <h3 style="margin:0.8rem 0 0.5rem;">Real database lookup</h3>
+          <p>Every calorie comes from the Indian Nutrient Databank or USDA
+          FoodData Central — matched to your food, never guessed from the AI's memory.</p>
+        </div>
+        <div class="block">
+          <p class="eyebrow">Step 3</p>
+          <h3 style="margin:0.8rem 0 0.5rem;">You stay in control</h3>
+          <p>Stated a portion? Logged instantly. Photo-only estimate? You confirm
+          the grams before anything counts toward your day.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band--ink">
+    <div class="wrap reveal" style="display:flex; flex-wrap:wrap; gap:2rem; align-items:center; justify-content:space-between;">
+      <div>
+        <h2>Your day, measured.</h2>
+        <p style="max-width:32rem; margin-top:0.8rem;">
+          Daily calorie and macro targets computed from your height, weight, and goal
+          — then every logged meal counts down what's left. Midnight is <em>your</em>
+          midnight, not the server's.
+        </p>
+      </div>
+      <a class="btn" href="/signup">Create account</a>
+    </div>
+  </section>
+</Layout>

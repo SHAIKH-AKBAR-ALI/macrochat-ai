@@ -1,0 +1,228 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+<Layout title="Log a meal — MacroChat AI" active="chat">
+  <div class="wrap" style="max-width:820px;">
+    <div class="chat" id="chat">
+      <div class="msg msg--bot">
+        <div class="msg__who">MacroChat</div>
+        <div class="msg__body">What did you eat? Type it, attach a photo, or both. State portions ("200g", "2 rotis") and I'll log them straight away.</div>
+      </div>
+      <p class="mono" id="guest-note" style="display:none; border:2px solid var(--ink); background:var(--amber); color:var(--on-amber); padding:0.5rem 0.8rem;">
+        Guest mode — analysis works, but meals only save to your day when
+        <a href="/login">logged in</a>.
+      </p>
+    </div>
+
+    <form class="composer" id="composer">
+      <label class="filebtn" id="photo-label">
+        + Photo
+        <input type="file" id="photo" accept="image/*" hidden />
+      </label>
+      <input type="text" id="text" placeholder="e.g. 200g grilled chicken, 2 rotis" autocomplete="off" />
+      <button class="btn" type="submit" id="send">Analyze</button>
+    </form>
+  </div>
+
+  <script>
+    import { API, token, authHeaders, jsonPost } from "../lib/api";
+
+    const chat = document.getElementById("chat")!;
+    const form = document.getElementById("composer") as HTMLFormElement;
+    const textInput = document.getElementById("text") as HTMLInputElement;
+    const photoInput = document.getElementById("photo") as HTMLInputElement;
+    const photoLabel = document.getElementById("photo-label")!;
+    const send = document.getElementById("send") as HTMLButtonElement;
+
+    if (!token()) document.getElementById("guest-note")!.style.display = "block";
+
+    // Logged in: replay saved chat history (facts panels render static — already handled)
+    async function loadHistory() {
+      if (!token()) return;
+      try {
+        const res = await fetch(API + "/history", { headers: authHeaders() });
+        if (!res.ok) return;
+        const { messages } = await res.json();
+        for (const m of messages) {
+          const c = m.content;
+          if (m.role === "user") {
+            addMsg("user", [c.text, c.photo && "📷 photo"].filter(Boolean).join("\n"));
+          } else {
+            addMsg("bot", c.reply);
+            if (c.items?.length) {
+              const wrap = el("div");
+              wrap.append(factsPanel(c, false));
+              addMsg("bot", wrap);
+            }
+          }
+        }
+      } catch { /* history is best-effort; chat still works without it */ }
+    }
+    loadHistory();
+
+    photoInput.addEventListener("change", () => {
+      const f = photoInput.files?.[0];
+      photoLabel.childNodes[0].textContent = f ? `📷 ${f.name.slice(0, 18)}` : "+ Photo";
+      photoLabel.classList.toggle("has-file", !!f);
+    });
+
+    function el(tag: string, cls = "", text = "") {
+      const n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text) n.textContent = text;
+      return n;
+    }
+
+    function addMsg(who: "user" | "bot", body: HTMLElement | string) {
+      const msg = el("div", `msg msg--${who}`);
+      msg.append(el("div", "msg__who", who === "user" ? "You" : "MacroChat"));
+      const b = el("div", "msg__body");
+      typeof body === "string" ? (b.textContent = body) : b.append(body);
+      msg.append(b);
+      chat.append(msg);
+      msg.scrollIntoView({ block: "end" });
+      return msg;
+    }
+
+    const fmt = (v: number | null, unit: string) =>
+      v == null ? "—" : `${v} ${unit}`;
+
+    function sourceTag(item: any) {
+      if (!item.source) return el("span", "tag tag--miss", "NO MATCH");
+      return el("span", `tag ${item.source === "USDA" ? "tag--usda" : ""}`, item.source);
+    }
+
+    function todayStrip(today: any) {
+      const strip = el("div", "facts__note");
+      strip.textContent =
+        `LOGGED ✓ — TODAY: ${today.eaten.kcal}/${today.goals.kcal} KCAL EATEN · ` +
+        `${today.remaining.kcal} KCAL · ${today.remaining.protein}G PROTEIN LEFT`;
+      strip.style.background = "var(--amber)";
+      strip.style.color = "var(--on-amber)";
+      return strip;
+    }
+
+    // Facts panel for an analysis result. If confirmable, grams become inputs.
+    function factsPanel(result: any, confirmable: boolean) {
+      const panel = el("div", "facts");
+      panel.append(el("div", "facts__title", "Meal facts"));
+
+      const hero = el("div", "facts__row facts__row--hero");
+      hero.append(el("b", "", "Calories"), el("span", "num", `${result.totals.kcal} kcal`));
+      panel.append(hero);
+
+      const gramInputs: { item: any; input: HTMLInputElement }[] = [];
+      result.items.forEach((item: any, i: number) => {
+        const row = el("div", `facts__row${i === result.items.length - 1 ? " facts__row--thick" : ""}`);
+        const left = el("span");
+        left.append(
+          document.createTextNode(
+            `${item.name}${item.prep_style ? ` · ${item.prep_style}` : ""} `
+          ),
+          sourceTag(item)
+        );
+        if (item.matched_db_name && item.matched_db_name.toLowerCase() !== item.name.toLowerCase()) {
+          left.append(el("span", "sub", ` matched: ${item.matched_db_name}`));
+        }
+        const right = el("span", "num");
+        if (confirmable) {
+          const input = el("input", "gram-input") as HTMLInputElement;
+          input.type = "number";
+          input.min = "1";
+          input.step = "1";
+          input.value = String(Math.round(item.portion_grams));
+          gramInputs.push({ item, input });
+          right.append(input, document.createTextNode(" g"));
+        } else {
+          right.textContent = `${Math.round(item.portion_grams)} g · ${fmt(item.kcal, "kcal")}`;
+        }
+        row.append(left, right);
+        panel.append(row);
+      });
+
+      for (const [label, key, unit] of [["Protein", "protein", "g"], ["Carbs", "carbs", "g"], ["Fat", "fat", "g"]] as const) {
+        const row = el("div", "facts__row");
+        row.append(el("b", "", label), el("span", "num", fmt(result.totals[key], unit)));
+        panel.append(row);
+      }
+
+      if (confirmable) {
+        const note = el("div", "facts__note",
+          "Portions estimated from photo — adjust grams, then confirm to log.");
+        panel.append(note);
+
+        const actions = el("div", "facts__row");
+        const btn = el("button", "btn", "Confirm & log") as HTMLButtonElement;
+        btn.type = "button";
+        btn.style.width = "100%";
+        btn.addEventListener("click", async () => {
+          if (!token()) { location.href = "/login"; return; }
+          btn.disabled = true;
+          try {
+            const res = await jsonPost("/confirm", {
+              items: gramInputs.map(({ item, input }) => ({
+                name: item.name,
+                prep_style: item.prep_style,
+                portion_grams: Number(input.value),
+              })),
+            });
+            const fresh = factsPanel(res, false);
+            fresh.append(todayStrip(res.today));
+            panel.replaceWith(fresh);
+          } catch (ex: any) {
+            btn.disabled = false;
+            note.textContent = ex.message;
+          }
+        });
+        actions.append(btn);
+        panel.append(actions);
+      } else if (result.saved && result.today) {
+        panel.append(todayStrip(result.today));
+      } else if (!result.saved && !token()) {
+        panel.append(el("div", "facts__note", "Not saved — log in to track your day."));
+      }
+      return panel;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = textInput.value.trim();
+      const photo = photoInput.files?.[0];
+      if (!text && !photo) return;
+
+      addMsg("user", [text, photo && `📷 ${photo.name}`].filter(Boolean).join("\n"));
+      textInput.value = "";
+      photoInput.value = "";
+      photoLabel.childNodes[0].textContent = "+ Photo";
+      photoLabel.classList.remove("has-file");
+
+      send.disabled = true;
+      const thinking = addMsg("bot", "Identifying food, looking up the database…");
+      try {
+        const fd = new FormData();
+        if (text) fd.append("text", text);
+        if (photo) fd.append("photo", photo);
+        const res = await fetch(API + "/analyze", {
+          method: "POST",
+          headers: authHeaders(),
+          body: fd,
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.detail || `Analyze failed (${res.status})`);
+
+        thinking.remove();
+        addMsg("bot", result.reply);
+        if (result.items.length) {
+          const wrap = el("div");
+          wrap.append(factsPanel(result, result.needs_confirmation));
+          addMsg("bot", wrap);
+        }
+      } catch (ex: any) {
+        thinking.remove();
+        addMsg("bot", `Something went wrong: ${ex.message}`);
+      } finally {
+        send.disabled = false;
+      }
+    });
+  </script>
+</Layout>
