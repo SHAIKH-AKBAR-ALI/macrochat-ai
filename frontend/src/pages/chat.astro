@@ -15,8 +15,12 @@ import Layout from "../layouts/Layout.astro";
     </div>
 
     <form class="composer" id="composer">
+      <label class="filebtn" id="camera-label" title="Take a photo">
+        📷 Camera
+        <input type="file" id="camera" accept="image/*" capture="environment" hidden />
+      </label>
       <label class="filebtn" id="photo-label">
-        + Photo
+        + File
         <input type="file" id="photo" accept="image/*" hidden />
       </label>
       <input type="text" id="text" placeholder="e.g. 200g grilled chicken, 2 rotis" autocomplete="off" />
@@ -60,11 +64,25 @@ import Layout from "../layouts/Layout.astro";
     }
     loadHistory();
 
-    photoInput.addEventListener("change", () => {
-      const f = photoInput.files?.[0];
-      photoLabel.childNodes[0].textContent = f ? `📷 ${f.name.slice(0, 18)}` : "+ Photo";
-      photoLabel.classList.toggle("has-file", !!f);
-    });
+    const cameraInput = document.getElementById("camera") as HTMLInputElement;
+    const cameraLabel = document.getElementById("camera-label")!;
+
+    // Two sources, one photo: whichever picked last wins, the other clears.
+    function wireSource(input: HTMLInputElement, label: HTMLElement, idle: string,
+                        other: HTMLInputElement, otherLabel: HTMLElement, otherIdle: string) {
+      input.addEventListener("change", () => {
+        const f = input.files?.[0];
+        label.childNodes[0].textContent = f ? `📷 ${f.name.slice(0, 18)}` : idle;
+        label.classList.toggle("has-file", !!f);
+        if (f) {
+          other.value = "";
+          otherLabel.childNodes[0].textContent = otherIdle;
+          otherLabel.classList.remove("has-file");
+        }
+      });
+    }
+    wireSource(photoInput, photoLabel, "+ File", cameraInput, cameraLabel, "📷 Camera");
+    wireSource(cameraInput, cameraLabel, "📷 Camera", photoInput, photoLabel, "+ File");
 
     function el(tag: string, cls = "", text = "") {
       const n = document.createElement(tag);
@@ -187,14 +205,17 @@ import Layout from "../layouts/Layout.astro";
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const text = textInput.value.trim();
-      const photo = photoInput.files?.[0];
+      const photo = photoInput.files?.[0] || cameraInput.files?.[0];
       if (!text && !photo) return;
 
       addMsg("user", [text, photo && `📷 ${photo.name}`].filter(Boolean).join("\n"));
       textInput.value = "";
       photoInput.value = "";
-      photoLabel.childNodes[0].textContent = "+ Photo";
+      cameraInput.value = "";
+      photoLabel.childNodes[0].textContent = "+ File";
       photoLabel.classList.remove("has-file");
+      cameraLabel.childNodes[0].textContent = "📷 Camera";
+      cameraLabel.classList.remove("has-file");
 
       send.disabled = true;
       const thinking = addMsg("bot", "Identifying food, looking up the database…");

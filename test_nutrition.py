@@ -14,6 +14,13 @@ def main():
     assert hit is not None, "grilled chicken breast should resolve"
     assert 15 < hit["protein_100g"] < 45, hit
 
+    # plain produce must match the raw food, not a dish containing it
+    # (bug 2026-07-05: "apple" -> "Croissants, apple", "banana" -> dehydrated powder)
+    hit = nutrition.lookup("apple")
+    assert hit and hit["kcal_100g"] < 100, hit  # raw apple ~50, croissant/strudel ~250+
+    hit = nutrition.lookup("banana")
+    assert hit and hit["kcal_100g"] < 150, hit  # raw banana ~89, dehydrated 346
+
     # garbage -> None, never invented
     assert nutrition.lookup("zzqxv nonsense food") is None
 

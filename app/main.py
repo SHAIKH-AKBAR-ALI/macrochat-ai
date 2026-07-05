@@ -82,7 +82,8 @@ async def analyze(
     user_id = db.current_user_id(cred) if cred is not None else None
     # today's totals go INTO the pipeline so the reply can narrate remaining macros
     today = db.today_totals(user_id) if user_id else None
-    result = pipeline.invoke({"image_b64": image_b64, "text": text, "today": today})
+    result = pipeline.invoke({"image_b64": image_b64, "text": text, "today": today,
+                              "guest": user_id is None})
 
     response = {
         "is_food_log": result["is_food_log"],

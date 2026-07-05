@@ -18,11 +18,14 @@
 }
 
 /* Dark mode: same ink-on-paper system, inverted. Amber stays amber. */
+:root { color-scheme: light; }
+
 :root[data-theme="dark"] {
   --paper: #171512;
   --card: #211e19;
   --ink: #f0e8d5;
   --mute: #9a917d;
+  color-scheme: dark; /* UA widgets (spinners, scrollbars, pickers) follow theme */
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -341,6 +344,7 @@ main { flex: 1; }
   border: var(--border);
   border-radius: 0;
   background: var(--paper);
+  color: var(--ink); /* inputs don't inherit color — UA black vanished on dark paper */
 }
 
 .filebtn {
@@ -366,6 +370,7 @@ main { flex: 1; }
   border: 2px solid var(--ink);
   border-radius: 0;
   background: var(--paper);
+  color: var(--ink); /* same non-inheritance fix as composer input */
   text-align: right;
 }
 
@@ -384,6 +389,16 @@ main { flex: 1; }
 
 .footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
 .footer b { color: var(--amber); font-weight: 400; }
+
+.footer__links {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid #3a3a3a;
+  justify-content: flex-start !important;
+  gap: 1.5rem !important;
+}
+.footer__links a { text-decoration: none; }
+.footer__links a:hover { color: var(--amber); }
 
 /* --- landing specifics --- */
 
@@ -405,6 +420,36 @@ main { flex: 1; }
 .steps .block:last-child { border-right: none; }
 
 .demo-exchange { display: flex; flex-direction: column; gap: 1rem; }
+
+/* --- FAQ (native details/summary) --- */
+
+.faq {
+  border: var(--border);
+  background: var(--card);
+  margin-bottom: 0.8rem;
+}
+
+.faq summary {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.9rem 1.1rem;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; font-size: 1.2rem; }
+.faq[open] summary::after { content: "–"; }
+.faq[open] summary { background: var(--amber); color: var(--on-amber); border-bottom: var(--border); }
+.faq summary:hover { background: var(--amber); color: var(--on-amber); }
+.faq p { padding: 1rem 1.1rem; }
 
 @media (max-width: 860px) {
   .nav .wrap { flex-wrap: wrap; padding-block: 0.4rem; }
@@ -467,6 +512,27 @@ main { flex: 1; }
   [data-rise="2"] { animation-delay: 0.12s; }
   [data-rise="3"] { animation-delay: 0.24s; }
   [data-rise="4"] { animation-delay: 0.36s; }
+
+  /* amber highlight wipes across the h1 marker after the text rises */
+  @keyframes wipe { from { background-size: 0% 100%; } to { background-size: 100% 100%; } }
+  .hero h1 span {
+    background-image: linear-gradient(var(--amber), var(--amber));
+    background-color: transparent;
+    background-repeat: no-repeat;
+    animation: wipe 0.7s 0.55s both;
+  }
+
+  /* demo facts card drifts gently — data with a pulse */
+  @keyframes drift { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+  .demo-exchange .facts { animation: drift 5s ease-in-out 1.5s infinite; }
+  .demo-exchange .facts:hover { animation-play-state: paused; }
+
+  /* nav logo amber square blink */
+  @keyframes blink { 0%, 88%, 100% { opacity: 1; } 94% { opacity: 0.25; } }
+  .msg__who::before { animation: blink 4s infinite; }
+
+  .faq summary::after { transition: transform 0.2s; }
+  .faq[open] summary::after { transform: rotate(180deg); }
 
   .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.5s, transform 0.5s; }
   .reveal.in { opacity: 1; transform: none; }

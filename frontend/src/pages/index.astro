@@ -64,25 +64,69 @@ import Layout from "../layouts/Layout.astro";
     <div class="wrap reveal">
       <h2 style="margin-bottom:1.5rem;">How it works</h2>
       <div class="steps">
-        <div class="block">
+        <div class="block reveal">
           <p class="eyebrow">Step 1</p>
           <h3 style="margin:0.8rem 0 0.5rem;">Say it or snap it</h3>
           <p>Type your meal, attach a photo, or both. The AI names each food and
           spots the prep style — grilled, fried, curry.</p>
         </div>
-        <div class="block">
+        <div class="block reveal" style="transition-delay:0.12s;">
           <p class="eyebrow">Step 2</p>
           <h3 style="margin:0.8rem 0 0.5rem;">Real database lookup</h3>
           <p>Every calorie comes from the Indian Nutrient Databank or USDA
           FoodData Central — matched to your food, never guessed from the AI's memory.</p>
         </div>
-        <div class="block">
+        <div class="block reveal" style="transition-delay:0.24s;">
           <p class="eyebrow">Step 3</p>
           <h3 style="margin:0.8rem 0 0.5rem;">You stay in control</h3>
           <p>Stated a portion? Logged instantly. Photo-only estimate? You confirm
           the grams before anything counts toward your day.</p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="band" id="faq">
+    <div class="wrap reveal" style="max-width:820px;">
+      <p class="eyebrow">FAQ</p>
+      <h2 style="margin:1rem 0 1.5rem;">Fair questions.</h2>
+
+      <details class="faq">
+        <summary>How accurate are the calorie counts?</summary>
+        <p>Numbers come from the Indian Nutrient Databank and USDA FoodData Central —
+        real lab-measured data, never AI guesses. The uncertain part is portion size:
+        state grams in text and it's as exact as your scale; from a photo it's an
+        estimate, and we always ask you to confirm it before it counts.</p>
+      </details>
+      <details class="faq">
+        <summary>Do I need to weigh my food?</summary>
+        <p>No — but it helps. "2 rotis" or "a bowl of dal" works; the AI converts
+        common portions to grams. Photos alone work too, you just confirm the
+        estimated grams before logging.</p>
+      </details>
+      <details class="faq">
+        <summary>Does it know Indian food?</summary>
+        <p>Yes — 1,000+ recipes and ingredients from the Indian Nutrient Databank:
+        roti, dal, sabzi, biryani, dosa. Everything else falls back to USDA's
+        database.</p>
+      </details>
+      <details class="faq">
+        <summary>Can I try it without an account?</summary>
+        <p>Yes. <a href="/chat">Guest mode</a> analyzes any meal — you only need an
+        account to save meals and track daily totals against your goal.</p>
+      </details>
+      <details class="faq">
+        <summary>Why does it sometimes ask me to confirm?</summary>
+        <p>When a portion is estimated from a photo (or the food identification is
+        uncertain), nothing is saved until you check the grams. We never silently log
+        a guess.</p>
+      </details>
+      <details class="faq">
+        <summary>What happens to my photos and data?</summary>
+        <p>Photos are used only to identify the food. Your meal history is stored
+        encrypted in Supabase with row-level security — only your account can read it.
+        See the <a href="/privacy">privacy policy</a>.</p>
+      </details>
     </div>
   </section>
 

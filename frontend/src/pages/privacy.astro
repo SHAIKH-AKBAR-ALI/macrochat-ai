@@ -1,0 +1,41 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+<Layout title="Privacy Policy — MacroChat AI">
+  <section class="band">
+    <div class="wrap" style="max-width:760px;">
+      <p class="eyebrow">Privacy policy</p>
+      <h1 style="font-size:clamp(2rem,5vw,3.2rem); margin:1.2rem 0 1.5rem;">Your data, plainly.</h1>
+      <p class="mono" style="color:var(--mute); margin-bottom:2rem;">Last updated: July 2026</p>
+
+      <div class="block" style="margin-bottom:1.2rem;">
+        <h3 style="margin-bottom:0.6rem;">What we collect</h3>
+        <p>Account details (email, height, weight, age, sex, activity level, goal,
+        time zone) to compute your daily targets; the meals and messages you log; and
+        photos you upload, which are processed for food identification.</p>
+      </div>
+
+      <div class="block" style="margin-bottom:1.2rem;">
+        <h3 style="margin-bottom:0.6rem;">How it's used</h3>
+        <p>Meal text and photos are sent to AI providers (OpenAI; Google Gemini for
+        guest sessions) solely to identify foods and portions. Nutrition numbers come
+        from public databases (INDB, USDA). Your data is used to run the service —
+        never sold, never used for advertising.</p>
+      </div>
+
+      <div class="block" style="margin-bottom:1.2rem;">
+        <h3 style="margin-bottom:0.6rem;">Where it lives</h3>
+        <p>Your account and meal history are stored in Supabase (Postgres) with
+        row-level security — only your authenticated account can read your rows.
+        Guest analyses are not saved at all.</p>
+      </div>
+
+      <div class="block">
+        <h3 style="margin-bottom:0.6rem;">Your choices</h3>
+        <p>You can use MacroChat as a guest with nothing stored. To delete your
+        account and all associated data, <a href="/contact">contact us</a> — deletion
+        is permanent.</p>
+      </div>
+    </div>
+  </section>
+</Layout>

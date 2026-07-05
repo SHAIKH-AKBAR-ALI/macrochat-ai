@@ -82,7 +82,9 @@ def lookup_usda(query: str, name: str | None = None) -> dict | None:
                 "api_key": settings.usda_api_key,
                 "query": query,
                 "dataType": ["Foundation", "SR Legacy"],
-                "pageSize": 5,
+                # USDA relevance is weak for one-word queries ("apple" top-5 lacks
+                # "Apples, raw") — fetch wide, rank locally
+                "pageSize": 25,
             },
             timeout=10,
         )
@@ -93,14 +95,41 @@ def lookup_usda(query: str, name: str | None = None) -> dict | None:
     # The prep word ("boiled") must never outweigh the food itself: require the
     # food NAME in the description, or "boiled quinoa" matches "Chicken, feet, boiled".
     base = name or query
+
+    # ponytail: crude singularizer — "Apples" vs "apple" otherwise fails exact-token
+    # comparison; mangling is applied to both sides so it cancels out
+    def _sing(w: str) -> str:
+        return w[:-1] if w.endswith("s") else w
+
+    def _norm(s: str) -> str:
+        return " ".join(_sing(w) for w in utils.default_process(s).split())
+
+    base_n = _norm(base)
+    query_n = _norm(query)
     foods = [
         f for f in foods
-        if fuzz.token_set_ratio(base, f.get("description", ""),
-                                processor=utils.default_process) >= USDA_NAME_MATCH
+        if fuzz.token_set_ratio(base_n, _norm(f.get("description", ""))) >= USDA_NAME_MATCH
     ]
+
+    # token_set_ratio scores subsets 100, so "apple" passes for "Croissants, apple".
+    # USDA convention: the primary food is the phrase before the first comma
+    # ("Apples, raw, with skin" / "Rice flour, white"). Rank entries whose primary
+    # phrase is fully covered by the query ahead of dishes/products that merely
+    # contain the queried food (croissants, crackers, noodles, flour...).
+    qwords = set(query_n.split()) | set(base_n.split())
+
+    def rank(f):
+        desc = f.get("description", "")
+        primary = _norm(desc.split(",")[0]).split()
+        primary_is_queried_food = primary and all(w in qwords for w in primary)
+        # WRatio saturates at 90 on substrings — no signal. token_set rewards
+        # covering the query's prep words; token_sort penalizes dish-length noise.
+        desc_n = _norm(desc)
+        score = fuzz.token_set_ratio(query_n, desc_n) + fuzz.token_sort_ratio(query_n, desc_n)
+        return (0 if primary_is_queried_food else 1, -score)
+
     # best match first; skip entries with no kcal (e.g. "Flour, quinoa") instead of bailing
-    for best in sorted(foods, key=lambda f: fuzz.WRatio(query, f.get("description", "")),
-                       reverse=True):
+    for best in sorted(foods, key=rank):
         macros = {}
         for n in best.get("foodNutrients", []):
             key = USDA_NUTRIENTS.get(str(n.get("nutrientNumber")))

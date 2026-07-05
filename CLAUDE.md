@@ -175,6 +175,51 @@ intent E2E all passing; `npm run build` passing):
   hover lifts, health-tips marquee; all motion gated on prefers-reduced-motion
 - Mobile: sticky composer, full-width messages, wrapping facts rows
 
+### Deployment — ✅ LIVE (2026-07-05)
+- GitHub: https://github.com/SHAIKH-AKBAR-ALI/macrochat-ai (public); Render (Singapore, free):
+  backend `macrochat-api` (srv-d94qovlckfvc73af7b70) → https://macrochat-api.onrender.com,
+  static site `macrochat` (srv-d94qp2faqgkc73e983v0) → https://macrochat-d6oi.onrender.com
+- Auto-deploy on push works (required installing the Render GitHub App on the repo —
+  repo created via API had no webhook; "Git deployment credentials" in Render ≠ app install)
+- Render pip-installs root requirements.txt even for the STATIC site → both services
+  need `PYTHON_VERSION=3.12.7` env var; frontend bakes `PUBLIC_API_URL` at build
+- Free tier: backend cold-starts ~50s after 15 min idle
+
+### Misidentification bug-fix round — ✅ DONE (2026-07-05)
+User repro: apple photo → "apple croissant" 381 kcal; banana photo + "one small banana"
+text → "dehydrated banana meal" auto-saved. Root causes were BOTH in `lookup_usda`
+ranking, not just vision:
+- `token_set_ratio` name filter scores subset matches 100 ("apple" ⊂ "Croissants,
+  apple") and fails on plurals ("apple" vs "Apples, raw" = 40 < 70 cutoff → all raw
+  apples filtered out, croissant kept). Fixed: crude singularizer on both sides before
+  comparing; pageSize 5→25 (USDA relevance is weak — "apple" top-5 had no raw apple)
+- Ranking used WRatio which saturates at 90 on substrings (croissant == raw apple).
+  Fixed: rank by (primary-phrase-covered, token_set+token_sort). USDA convention puts
+  the primary food before the first comma — entries whose primary phrase is fully
+  covered by the query outrank dishes/products containing it (crackers/noodles/flour)
+- `IDENTIFY_SYSTEM`: literal-reading rule (plain apple = "apple" unless visual evidence
+  of prep/processing) + user text names the food = that IS the food
+- `reconcile_identity` (graph.py): user text is ground truth for identity — vision name
+  ⊇ user's food words → strip to user's plainer name; zero overlap → force confirm
+  (reuses portion_confidence="low"), never auto-save on identity conflict
+- Tests: `test_identity.py` (reconcile logic, no LLM), plain apple/banana kcal-range
+  asserts in `test_nutrition.py`. Known ceiling: bare "rice" (no prep) → "Rice
+  crackers"; vision always supplies prep so unreached in practice
+- Also: guest (unauthenticated) LLM traffic now runs Gemini 2.5 Flash via its
+  OpenAI-compatible endpoint (`GEMINI_API_KEY`, falls back to OpenAI if unset);
+  config.py needed `extra = "ignore"` (pydantic 2.13 forbids unknown .env keys)
+
+### Frontend round 2 — ✅ DONE (2026-07-05)
+- Dark-mode invisible text: form controls don't inherit `color` — composer input and
+  gram-input showed UA-default black on dark paper. Fixed + `color-scheme` per theme
+- Chat composer: separate 📷 Camera (`capture="environment"`) and + File inputs;
+  whichever picked last wins
+- New pages: /about, /privacy, /terms, /contact, 404, 500 (Render serves dist/404.html
+  automatically); footer links to all + /#faq
+- Landing: FAQ section (native details/summary, amber open state), staggered step
+  reveals, amber highlight wipe on h1, drifting demo card — all motion gated on
+  prefers-reduced-motion
+
 ### Phase 4 — Later / not yet scoped
 - Barcode scanning (explicitly skipped for now)
 - Multi-day history / trends
