@@ -12,22 +12,30 @@ source of truth for calorie/macro numbers — those always come from a real data
 to do arithmetic for daily totals — that's backend/SQL, not a chat response.
 
 ## Tech stack
-- LLM: OpenAI GPT-4o-mini (food identification, cheap/high-volume) and GPT-4o (reasoning,
-  conversational responses)
+- LLM (logged-in): OpenAI GPT-4o-mini (food identification, cheap/high-volume) and
+  GPT-4o (reasoning, conversational responses)
+- LLM (guest / not logged in): Gemini 2.5 Flash via its OpenAI-compatible endpoint
+  (`GEMINI_API_KEY`; falls back to OpenAI if unset) — saves OpenAI spend
 - Orchestration: LangGraph
 - Backend: FastAPI (Python)
 - Frontend: Astro
 - Auth + DB: Supabase (Postgres)
-- Nutrition data: INDB (Indian Nutrient Databank — recipes + ingredients) loaded into
-  Supabase, plus USDA FoodData Central API for generic/international foods
+- Nutrition data: INDB (Indian Nutrient Databank — recipes + ingredients) loaded
+  in-memory from `data/INDB.xlsx` (NOT in Supabase — locked decision, no benefit for
+  single server), plus USDA FoodData Central API for generic/international foods
 - Fuzzy matching: rapidfuzz (Python) to map LLM food descriptions to database entries
+- Hosting: Render (Singapore, free tier) — see Deployment section
 - No barcode scanning in this project (explicitly out of scope)
 - No LlamaIndex / RAG — nutrition lookup is structured DB query, not semantic search
 
 ## Core pipeline (LangGraph nodes)
 1. **Input** — photo and/or text from user
-2. **Identify food** (GPT-4o-mini, vision) — name each food item, note visible prep
-   style (grilled/fried/curry/etc.), note visible sauces/oil if apparent
+2. **Identify food** (GPT-4o-mini vision; Gemini for guests) — name each food item
+   with the SIMPLEST literal reading (plain apple = "apple", never a dish/product
+   containing it), note visible prep style and sauces/oil. User text naming a food is
+   ground truth for identity — `reconcile_identity` strips vision's over-specific
+   names to the user's plainer wording, and an outright identity conflict forces the
+   confirm step (never auto-saves)
 3. **Resolve portion**:
    - If user gave text portions (e.g. "200g chicken") → use directly, high confidence,
      skip confirmation
