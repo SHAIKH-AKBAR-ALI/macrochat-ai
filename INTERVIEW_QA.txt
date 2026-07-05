@@ -1,0 +1,242 @@
+================================================================
+MACROCHAT AI — PROJECT Q&A (interview / demo prep)
+================================================================
+
+----------------------------------------------------------------
+SECTION 1 — PROJECT OVERVIEW (10 Q&A)
+----------------------------------------------------------------
+
+Q1. What is MacroChat AI?
+A. An AI nutrition tracker. The user sends a meal photo and/or text like
+"200g chicken, 2 rotis". The system identifies the food, resolves portion
+sizes, looks up calories/protein/carbs/fat from real nutrition databases,
+and tracks daily totals against a personal goal.
+
+Q2. What is the core design principle?
+A. The LLM is never the source of truth for numbers. Its only job is
+identifying food and reasoning about portions. Every calorie/macro value
+comes from a real database (INDB for Indian foods, USDA for everything
+else), and daily-total arithmetic is done in backend code/SQL — never by
+the LLM.
+
+Q3. Why not just ask GPT "how many calories in this meal"?
+A. LLMs hallucinate numbers confidently and inconsistently — the same roti
+can get 80 kcal one day and 150 the next. By restricting the LLM to
+identification and pulling numbers from lab-measured databases, results
+are reproducible and auditable (every item shows which DB entry matched).
+
+Q4. What inputs does it accept?
+A. Photo only, text only, or both. Text portions ("200g") are trusted and
+auto-logged. Photo-only portions are estimated with LOW confidence and
+always require user confirmation before saving — the app never silently
+logs a guess.
+
+Q5. How are daily goals computed?
+A. Mifflin-St Jeor equation for BMR from height/weight/age/sex, multiplied
+by an activity factor, adjusted for the goal (lose/maintain/gain). Plain
+backend math, computed once at signup and stored in the profile.
+
+Q6. How does "today" work across time zones?
+A. Time zone is auto-detected at signup (Intl API), user-confirmable, and
+stored per user. Daily totals filter meals from local midnight to midnight
+using Python's zoneinfo — never server time.
+
+Q7. Who can use it without an account?
+A. Guest mode: anyone can analyze a meal on /chat. Analysis works fully,
+but nothing is saved — saving and daily tracking require login.
+
+Q8. What does the dashboard show?
+A. Progress bars for calories, protein, carbs, and fat — eaten vs. daily
+goal, with remaining amounts. All values are backend-computed.
+
+Q9. What is explicitly out of scope?
+A. Barcode scanning, claiming 100% accurate calorie counts, RAG/semantic
+search over meal history, and letting the LLM do any arithmetic.
+
+Q10. Where is it deployed?
+A. Frontend (Astro static site) and backend (FastAPI web service) both on
+Render's Singapore region, free tier. Code on GitHub with push-to-deploy.
+Live: https://macrochat-d6oi.onrender.com
+
+----------------------------------------------------------------
+SECTION 2 — PROBLEMS FACED + APPROACH (15 Q&A)
+----------------------------------------------------------------
+
+Q1. Biggest bug you faced?
+A. Plain foods misidentified: a red apple photo returned "apple croissant"
+(381 kcal), and a banana photo WITH the text "one small banana" saved
+"dehydrated banana meal" (346 kcal). Users were getting 3-4x the real
+calories for fruit.
+
+Q2. How did you debug it?
+A. Reproduced the pipeline locally step by step. The surprise: the vision
+model wasn't the main culprit — calling nutrition.lookup("apple") directly
+returned "Croissants, apple". The bug was in the database matching layer,
+below the LLM. Lesson: reproduce at each pipeline stage before blaming the
+most "AI" component.
+
+Q3. What was the actual root cause?
+A. Two flaws in the USDA matcher: (1) the name filter used token_set_ratio,
+which scores subset matches 100 — "apple" is a subset of "Croissants,
+apple" — while failing on plurals ("apple" vs "Apples, raw" scored 40,
+below the cutoff, so every real apple entry was filtered OUT and the
+croissant kept). (2) Ranking used WRatio, which saturates at 90 for any
+substring match, so croissant and raw apple tied.
+
+Q4. How did you fix the plural problem?
+A. A crude singularizer (strip trailing s/es) applied to BOTH sides before
+comparing. It mangles some words ("cheese" → "chee") but mangles them
+identically on both sides, so comparisons still work. Deliberate cheap
+trick over pulling in a lemmatizer dependency.
+
+Q5. How did you fix the ranking?
+A. Exploited USDA's naming convention: the primary food is always the
+phrase before the first comma ("Apples, raw, with skin" / "Rice flour,
+white"). Entries whose primary phrase is fully covered by the query rank
+ahead of dishes that merely contain the food. Tie-break by token_set_ratio
++ token_sort_ratio — set ratio rewards covering prep words ("grilled"),
+sort ratio penalizes long dish names.
+
+Q6. Why did you also have to increase the API page size?
+A. USDA's own search relevance is weak: the top-5 results for "apple"
+contained no raw apple at all (croissants, strudel, babyfood juice). Fetch
+25 and rank locally instead of trusting their ordering.
+
+Q7. Why did user text not override the wrong identification?
+A. Text was only used for portions ("200g" → trust grams), never checked
+against identity. So "one small banana" set HIGH confidence (portion
+stated) while the identity was wrong → auto-saved without confirmation.
+Worst possible combination: wrong data with the confident code path.
+
+Q8. How did you fix the text-vs-vision conflict?
+A. Two layers. Prompt: user text naming a food IS the food; the photo only
+informs portion and prep. Code (reconcile_identity, deterministic and unit
+tested): if vision's name is the user's words plus extra qualifiers
+("banana" → "dehydrated banana meal"), strip to the user's plainer name —
+the user is looking at the real object, vision is guessing from pixels.
+If the names share no food word at all, force the confirmation step.
+Never auto-save on an identity conflict.
+
+Q9. Earlier matching bugs before this one?
+A. "boiled quinoa" matched "Chicken, feet, boiled" (prep word outweighed
+the food) — fixed by requiring the food NAME in the description.
+"broccoli" fuzzy-matched "Cream of broccoli soup" (WRatio scores
+substrings ~90) — fixed with a token_sort_ratio ≥ 60 guard that penalizes
+the ingredient-vs-dish length gap.
+
+Q10. Any bug from a "successful" empty result?
+A. Yes — non-food input produced an empty items list, and Python's
+all([]) == True marked it high confidence, auto-saving 0-kcal meals.
+Fixed by forcing needs_confirmation when there are no items. Classic
+vacuous-truth trap.
+
+Q11. A subtle library bug you caught?
+A. rapidfuzz's extractOne on a pandas Series returns the index LABEL, but
+the code used .iloc (positional). Works only while the index is contiguous
+— would silently return the WRONG FOOD's macros if the INDB index ever had
+gaps. Fixed to .loc. Latent, not yet triggered — found by reading the API
+contract, not by a failing test.
+
+Q12. Deployment problems?
+A. Three in one evening: (1) requirements.txt had a stale pydantic pin that
+conflicted with the upgraded supabase client — local venv had drifted from
+the pin file. (2) Render pip-installs the root requirements.txt even for
+the STATIC site, and without a PYTHON_VERSION pin pandas tried building
+from source and died. (3) Pushes didn't deploy: the repo was created via
+API, so no webhook existed — Render's GitHub App had to be installed on
+the repo (the "Git deployment credentials" page is a different thing and
+a red herring).
+
+Q13. A frontend bug that looked like a backend bug?
+A. Dark-mode "disappearing text": typed text was invisible in the chat
+input. Cause: form controls do NOT inherit CSS color — inputs that never
+set color rendered UA-default black on the dark background. Fixed by
+setting color explicitly plus color-scheme per theme so native widgets
+(spinners, pickers) follow.
+
+Q14. How do you keep guest traffic from burning your OpenAI budget?
+A. Unauthenticated requests route to Gemini 2.5 Flash through its
+OpenAI-compatible endpoint — same ChatOpenAI client class, different
+base_url, zero new dependencies. Falls back to OpenAI if the key is
+unset. Logged-in users stay on GPT-4o/4o-mini.
+
+Q15. How do you prevent these bugs from regressing?
+A. Every fixed bug leaves a runnable check: test_identity.py covers the
+reconcile logic with the two real repro scenarios (banana, apple),
+test_nutrition.py asserts plain "apple"/"banana" match raw fruit kcal
+ranges, and the empty-items and validation cases have targeted asserts.
+No frameworks — plain assert scripts that fail loudly.
+
+----------------------------------------------------------------
+SECTION 3 — TECH STACK & ARCHITECTURE (10 Q&A)
+----------------------------------------------------------------
+
+Q1. Walk me through the stack.
+A. FastAPI (Python) backend orchestrated with LangGraph; OpenAI GPT-4o-mini
+for vision identification and GPT-4o for conversational replies (Gemini
+2.5 Flash for guests); Supabase for auth + Postgres; INDB (1,014 Indian
+recipes, in-memory from xlsx) + USDA FoodData Central API for nutrition
+data; rapidfuzz for name matching; Astro frontend; Render hosting.
+
+Q2. Why LangGraph?
+A. The pipeline is a small typed state machine: identify → lookup →
+aggregate → respond, with one conditional edge (non-food input skips
+straight to a chat-style respond node). LangGraph gives exactly that —
+typed shared state, explicit edges — without agent framework overhead.
+
+Q3. Why two different LLM sizes?
+A. Identification is high-volume and mechanical → cheap fast model
+(4o-mini) at temperature 0 with structured output. The user-facing reply
+is low-volume and benefits from better phrasing → 4o at temperature 0.4.
+Cost scales with the cheap model, quality shows in the expensive one.
+
+Q4. Why is INDB in-memory instead of in Supabase?
+A. 1,014 rows, single server, read-only. A pandas DataFrame loaded at
+startup gives microsecond fuzzy matching with zero network hops. Moving it
+to Postgres adds latency and ops for no benefit at this scale — a locked
+decision, revisit only if there are multiple app servers.
+
+Q5. How does the two-database lookup work?
+A. INDB first (exact alias pass on "/"-split names, then WRatio fuzzy with
+a token_sort guard), USDA API as fallback. Prep style is prepended to the
+query ("grilled" + "chicken breast") so the right variant wins. If neither
+matches, the item returns null macros — shown as NO MATCH, never invented.
+
+Q6. How is auth handled?
+A. Supabase GoTrue. Signup uses the admin API with instant email confirm
+(avoids the 2/hour confirmation-email rate limit). Login is a stateless
+REST call — never sign_in on the shared service client, because that would
+swap the client's auth to that user's JWT and poison subsequent requests.
+The backend validates bearer tokens per request; Postgres tables have
+row-level security with owner-only policies as a second wall.
+
+Q7. What's the data model?
+A. profiles (per-user goals, biometrics, time_zone), meals (items as
+jsonb: name/grams/prep/confidence + total macros, UTC created_at),
+chat_messages (persisted history). All RLS-enabled, keyed to auth user id.
+
+Q8. Why Astro for the frontend?
+A. The site is mostly static pages with islands of vanilla TS (chat,
+dashboard). Astro ships zero JS by default, builds to plain HTML served
+from Render's CDN, and needed no React-size runtime for this UI. Design
+is a neo-brutalist system with FDA-nutrition-label panels as the
+signature element.
+
+Q9. How does deployment/CI work?
+A. GitHub → Render auto-deploy on push to main (GitHub App webhook).
+Backend: pip install + uvicorn, env vars hold all keys. Frontend: npm
+build, PUBLIC_API_URL baked at build time, dist/ served on CDN with
+404.html handled natively. Free tier: backend cold-starts ~50s after
+15 min idle.
+
+Q10. What would you change at 100x scale?
+A. Move INDB into Postgres with trigram/full-text indexes (multiple
+servers can't each hold state), add a Redis cache for USDA responses,
+queue meal analysis behind a worker (LLM latency off the request path),
+paid Render tier or containers to kill cold starts, and token refresh
+instead of 1-hour expiry redirects. The LLM-never-computes-numbers
+principle stays at any scale.
+
+================================================================
+END
+================================================================

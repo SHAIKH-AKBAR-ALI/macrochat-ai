@@ -228,11 +228,18 @@ ranking, not just vision:
   reveals, amber highlight wipe on h1, drifting demo card — all motion gated on
   prefers-reduced-motion
 
-### Phase 4 — Later / not yet scoped
-- Barcode scanning (explicitly skipped for now)
-- Multi-day history / trends
-- Any RAG-style "ask about my meal history" natural language querying (would justify
-  LlamaIndex later — not needed now)
+### Phase 4+ — Later / not yet scoped
+Full 10-phase future plan lives in `ROADMAP.txt` (2026-07-05): session polish (token
+refresh, cold-start UX), meal edit/delete/re-log, history & trends, quick-log
+favorites, mobile PWA, Indian household portion units (katori/chamach) + per-user
+portion memory, goal coaching, micronutrients, sharing/export, and finally barcode +
+packaged foods. Highlights previously listed here (barcode, multi-day trends, RAG
+meal-history querying) are folded into it.
+
+## Project docs (root, not code)
+- `ROADMAP.txt` — 10 future phases ordered by user value, with sequencing logic
+- `INTERVIEW_QA.txt` — 35 Q&A prep: project overview (10), problems faced + approach
+  (15), tech stack & architecture (10)
 
 ## Explicit non-goals
 - Do not claim or imply 100% accurate calorie counts — always communicate confidence

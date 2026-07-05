@@ -1,0 +1,124 @@
+================================================================
+MACROCHAT AI — FUTURE ROADMAP (10 phases, ordered by user value)
+================================================================
+
+----------------------------------------------------------------
+PHASE 1 — Session & reliability polish
+----------------------------------------------------------------
+Fix the known rough edges that interrupt real usage:
+- Token refresh: Supabase tokens expire ~1h, user gets kicked to login
+  mid-session. Add silent refresh (refresh_token flow) so a session
+  survives a whole day.
+- Retry/queue on cold start: free-tier backend sleeps; first request
+  waits ~50s. Show a friendly "waking up the kitchen..." state with
+  automatic retry instead of a hanging spinner.
+- Fix orphan-account edge: if profile insert fails mid-signup, the auth
+  user exists but /today 500s. Wrap signup in cleanup-on-failure.
+
+----------------------------------------------------------------
+PHASE 2 — Meal management (edit / delete / re-log)
+----------------------------------------------------------------
+Right now a logged meal is permanent. Users need:
+- Delete a meal (logged the wrong thing, duplicate submit)
+- Edit grams after saving (realized the portion was off)
+- "Log again" button on any past meal — most people eat the same
+  breakfast daily; one tap beats re-typing.
+Daily totals recompute automatically since they're backend SQL.
+
+----------------------------------------------------------------
+PHASE 3 — History & trends dashboard
+----------------------------------------------------------------
+Today-only view becomes a timeline:
+- Calendar/week strip: kcal + macros per day vs goal, streak highlighting
+- 7/30-day charts: weight of habit visible (protein trend, weekend spikes)
+- Per-meal drill-down from any past day
+- Simple insights, backend-computed: "protein under goal 5 of last 7 days"
+No LLM needed — it's all SQL aggregates over the meals table.
+
+----------------------------------------------------------------
+PHASE 4 — Quick-log favorites & meal templates
+----------------------------------------------------------------
+Cut logging friction to near zero:
+- Auto-detect repeated meals and surface "Usual breakfast?" one-tap chips
+- User-named templates ("gym lunch" = 200g chicken + rice + salad)
+- Recent foods list in the composer — tap to add without typing
+Biggest retention lever: the app people keep is the one that takes
+5 seconds to log with.
+
+----------------------------------------------------------------
+PHASE 5 — Mobile PWA + camera-first flow
+----------------------------------------------------------------
+- PWA manifest + service worker: install to home screen, app icon,
+  offline shell (queue meals typed offline, sync when back)
+- Camera-first mobile chat: open straight into viewfinder, snap → analyze
+- Compress photos client-side before upload (faster on mobile data,
+  cheaper vision calls)
+- Push notifications (opt-in): "You haven't logged lunch" nudge
+
+----------------------------------------------------------------
+PHASE 6 — Smarter portions & Indian household units
+----------------------------------------------------------------
+Portion estimation is the weakest link. Improve it:
+- Household-unit vocabulary: katori, glass, chamach, "half plate" —
+  mapped to gram ranges per food type (dal katori ≠ rice katori)
+- Reference-object hints in photos (plate size, spoon) fed to the prompt
+- Per-user portion memory: if the user always corrects roti to 45g,
+  default THEIR roti to 45g next time
+- Show portion as a range when confidence is low ("60-90g") instead of
+  a false-precision single number
+
+----------------------------------------------------------------
+PHASE 7 — Goal coaching & weekly review
+----------------------------------------------------------------
+From tracker to coach (LLM narrates, backend computes — same principle):
+- Weekly summary message: adherence, best/worst days, one specific
+  suggestion computed from real data
+- Goal adjustment flow: weight check-ins, recompute targets when weight
+  changes (Mifflin-St Jeor already in place)
+- Streaks and gentle gamification: logging streak, protein-goal streak —
+  no shame mechanics, only positive reinforcement
+
+----------------------------------------------------------------
+PHASE 8 — Micronutrients & food quality
+----------------------------------------------------------------
+INDB and USDA both carry more than macros:
+- Fiber, sugar, sodium tracking (both DBs have the columns already)
+- Optional micronutrient panel per meal (iron, calcium, B12 — big for
+  vegetarian Indian diets)
+- "Quality" tags computed from data: high-fiber, high-sodium, whole-food
+  vs processed ratio for the day
+
+----------------------------------------------------------------
+PHASE 9 — Sharing & accountability
+----------------------------------------------------------------
+- Share a meal card (the nutrition-facts panel as an image) to WhatsApp/
+  social — free marketing loop
+- Accountability partner: read-only view of a friend's day/streak with
+  mutual consent
+- Export everything: CSV/JSON of full history (data ownership, and
+  dietitians ask for it)
+
+----------------------------------------------------------------
+PHASE 10 — Barcode & packaged foods
+----------------------------------------------------------------
+Deliberately skipped until now; unlock packaged-food logging:
+- Barcode scan via phone camera (native BarcodeDetector API where
+  available) → Open Food Facts / branded-food databases
+- Label-photo fallback: photograph the nutrition label, vision model
+  reads the printed numbers — still database-principle compliant since
+  the numbers come from the label, not LLM memory
+- Indian packaged brands coverage check before launch
+
+----------------------------------------------------------------
+Sequencing logic
+----------------------------------------------------------------
+1-2 remove friction for existing users (retention before features).
+3-4 make the data valuable and logging effortless (the habit loop).
+5 meets users where they actually are (phones).
+6 attacks the core accuracy weakness.
+7-8 deepen the product's value.
+9-10 grow it outward.
+
+Standing rules for every phase: numbers come from databases, totals from
+backend SQL, low-confidence guesses always confirmed, no dark patterns.
+================================================================
