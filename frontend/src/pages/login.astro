@@ -3,9 +3,9 @@ import Layout from "../layouts/Layout.astro";
 ---
 <Layout title="Log in — MacroChat AI" active="login">
   <div class="wrap" style="max-width:460px; padding:4rem 0;">
-    <p class="eyebrow">Welcome back</p>
-    <h1 style="font-size:clamp(2.2rem,6vw,3.5rem); margin:1rem 0 2rem;">Log in</h1>
-    <form id="login-form" class="block">
+    <p class="eyebrow" data-rise="1">Welcome back</p>
+    <h1 style="font-size:clamp(2.2rem,6vw,3.5rem); margin:1rem 0 2rem;" data-rise="2">Log in</h1>
+    <form id="login-form" class="block auth-card" data-rise="3">
       <p class="form-error" id="err" role="alert"></p>
       <label class="field"><span>Email</span>
         <input type="email" name="email" required autocomplete="email" />

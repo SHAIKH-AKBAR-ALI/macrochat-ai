@@ -77,6 +77,7 @@ class State(TypedDict, total=False):
     is_food_log: bool
     items: list[dict]
     totals: dict
+    totals_partial: bool  # true if an unmatched item is missing from the total
     overall_confidence: str
     needs_confirmation: bool
     reply: str
@@ -177,11 +178,15 @@ def lookup(state: State) -> State:
                 "protein": round(hit["protein_100g"] * g / 100, 1),
                 "carbs": round(hit["carb_100g"] * g / 100, 1),
                 "fat": round(hit["fat_100g"] * g / 100, 1),
+                # match-quality signal for the confidence gate (aggregate)
+                "match_confidence": hit.get("score"),
+                "match_candidates": hit.get("candidates", []),
             }
         else:
             # never invent numbers for unmatched foods
             item |= {"matched_db_name": None, "source": None,
-                     "kcal": None, "protein": None, "carbs": None, "fat": None}
+                     "kcal": None, "protein": None, "carbs": None, "fat": None,
+                     "match_confidence": None, "match_candidates": []}
         items.append(item)
     return {"items": items}
 
@@ -198,10 +203,28 @@ def aggregate(state: State) -> State:
     all_high = bool(state["items"]) and all(
         i["portion_confidence"] == "high" for i in state["items"]
     )
+    # Match-confidence gate: a weak text->DB match ("rice" -> "Rice crackers") must
+    # not silently auto-save. Separate from the portion/vision confirm flow — this
+    # flags WHICH food matched poorly. Any weak item forces meal confirmation.
+    # Two match problems force confirmation, both distinct from portion confidence:
+    #   - weak match (score below threshold, e.g. "rice" -> "Rice crackers")
+    #   - NO match at all (kcal is None) -> the item is silently missing from totals,
+    #     so the meal total is partial. Must never auto-save as if complete.
+    match_weak = False
+    for i in state["items"]:
+        score = i.get("match_confidence")
+        unmatched = i.get("kcal") is None
+        i["match_needs_confirm"] = unmatched or (
+            score is not None and score < nutrition.MATCH_CONFIDENCE_MIN
+        )
+        match_weak = match_weak or i["match_needs_confirm"]
     return {
         "totals": totals,
-        "overall_confidence": "high" if all_high else "low",
-        "needs_confirmation": not all_high,
+        # total is partial whenever an item has no macros — flag it so the reply/UI
+        # can say the shown total excludes unmatched items
+        "totals_partial": any(i["kcal"] is None for i in state["items"]),
+        "overall_confidence": "high" if (all_high and not match_weak) else "low",
+        "needs_confirmation": (not all_high) or match_weak,
     }
 
 
@@ -240,6 +263,7 @@ def respond(state: State) -> State:
     summary = {
         "items": state["items"],
         "totals": state["totals"],
+        "totals_partial": state.get("totals_partial", False),
         "overall_confidence": state["overall_confidence"],
         "today": state.get("today"),
     }

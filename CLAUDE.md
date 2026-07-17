@@ -246,6 +246,126 @@ ranking, not just vision:
   reveals, amber highlight wipe on h1, drifting demo card — all motion gated on
   prefers-reduced-motion
 
+### UI redesign — clean light modern + cold-start fixes — ✅ DONE + DEPLOYED (2026-07-18)
+Full frontend restyle away from neo-brutalist to **clean light modern**, plus chat/premium
+sections and free-tier cold-start UX. `npm run build` passing; live-verified locally
+(backend + frontend both up). Deployed to Render alongside the two nutrition-matching
+rounds below.
+- **Design pivot** (user rejected neo-brutalist after seeing it): warm white bg, deep
+  green-charcoal ink, fresh emerald accent (`--amber` = `#17a672`), citrus-coral
+  secondary (`--burnt`). Rounded cards (16px), pill buttons/composer/chips, soft layered
+  shadows — NO hard borders. Fonts: Plus Jakarta Sans (display+body) replaces
+  Anton/Archivo; IBM Plex Mono kept for macro numbers. Dark mode inverts to deep
+  green-black, accent brightens.
+  - Trick that kept the diff small: **reused every CSS class name AND `:root` var name**
+    (`--amber/--burnt/--paper/--card/--ink/--on-amber/--mute/--border/--bw`), only
+    remapped their VALUES + component rules. So page markup, inline `style="var(--…)"`,
+    and `anim.ts` donut colors resolve unchanged. Rewrite lived almost entirely in
+    `frontend/src/styles/global.css` (full rewrite) + the font `<link>` in `Layout.astro`.
+  - Heavy use of CSS `color-mix()` for tints (accent 12% over card, etc.) — modern
+    browsers only, acceptable for a static Astro site.
+- **New premium landing** (`index.astro`, ~146→~420 lines, 10 sections): count-up stats
+  band, how-it-works w/ hand-drawn inline-SVG doodles, product-shot browser frame
+  (centerpiece, contains a mock chat + donut), 6-cell feature grid, comparison strip
+  (typical app vs MacroChat), receipts band (real logs, not fake testimonials), FAQ
+  expanded 6→10 (added photo-vs-text, ~50s cold start, no-barcode, dark mode), mega CTA
+  with drawn arrow.
+- **Chat upgrades** (`chat.astro`): quick-action chips (tap→`requestSubmit`, hide after
+  first send), typing indicator (pulsing dots via `typingEl()`), photo thumbnail in user
+  bubble (`URL.createObjectURL`, revoke on load), animated macro donut ring on every
+  facts panel, numbers count up on live/confirm (not history replay).
+- **New shared file** `frontend/src/lib/anim.ts`: `REDUCED` (prefers-reduced-motion),
+  `countUp(el)` (rAF, reads `data-count`/`data-suffix`), `donut(p,c,f)` (SVG kcal-split
+  ring, protein/carb/fat = 4/4/9, returns null if any macro null). `Layout.astro` IO
+  reveal-observer also runs `countUp` on `[data-count]` children. New `public/favicon.svg`.
+- **Dashboard**: meters grow from 0 (rAF after 0-width paint), remaining numbers count
+  up, today's macro-split donut; all guarded against bfcache re-run stacking.
+- **Cold-start UX** (the "Failed to fetch" a guest hits on the LIVE free tier — backend
+  sleeps after 15 min idle, first request wakes it in ~50s):
+  - `chat.astro`: after 4s the typing text switches to "Waking the server — first request
+    can take ~50s…"; a network-error (`Failed to fetch`) auto-retries the fetch once;
+    friendlier catch message instead of raw error.
+  - `app/main.py`: added `GET /health` → `{"ok": True}` (cheap ping target).
+  - `.github/workflows/keepalive.yml`: GitHub Actions cron pings `/health` every 10 min
+    so the backend never sleeps. Ceiling: GH cron drifts a few min + auto-disables after
+    60 days repo inactivity. Free-tier 750 instance-hrs/mo ≈ 730 hrs in a month, so one
+    always-on service still fits the quota.
+  - Diagnosis note: local "Failed to fetch" was just the backend not started (only ran
+    frontend). LIVE stack verified healthy — frontend baked to
+    `https://macrochat-api.onrender.com`, CORS allows `*.onrender.com`, `/analyze` 200
+    (but 55s cold). Run BOTH servers locally: backend
+    `.venv\Scripts\uvicorn app.main:app --port 8000 --reload`, frontend `cd frontend; npm run dev`.
+- **TODO next session**: commit + push to deploy (Render auto-deploys static site +
+  backend; GitHub starts the keepalive cron). Then live-verify brother's guest flow.
+  Optionally revisit the emerald shade if user wants a different green (one-line var swap).
+
+### Staple seed list + match-confidence gate — ✅ DONE + DEPLOYED (2026-07-18)
+User repro: "200g grilled chicken, rice" → "rice" fuzzy-hit USDA "Rice crackers" → 1,134
+kcal (should be ~590). Two root causes: no preference for plain staples over processed
+variants, and no confidence signal on weak text→DB matches (a garbage-above-cutoff match
+looked identical to a perfect one, so nothing gated it and it could auto-save silently).
+`test_nutrition.py` + `test_identity.py` passing.
+- **Part 1 — staple seed list** (`app/nutrition.py`): `_STAPLE_ENTRIES` hand-maintained
+  table of PLAIN COOKED macros per 100g, exact-alias `match_staple()` checked FIRST in
+  `lookup()` (before INDB/USDA), deterministic (no fuzz/API), so "rice crackers"/"rice
+  flour" never resolve here. Only **rice** (130/2.7/28.2/0.3) + **dal/lentils**
+  (116/9.0/20.1/0.4) — probed INDB first: rice/dal/lentils → None (fell to USDA junk);
+  roti/chapati DELIBERATELY excluded, INDB already nails them ("Chapati/Roti" 202 kcal),
+  a staple entry would override that curated value AND break the roti→INDB test. Values
+  from USDA SR Legacy cooked forms. Extend from query logs when available.
+- **Part 2 — match-confidence gate**: `lookup()` hits now carry `score` (0-100) +
+  `candidates` (2-3 alt names). Scores: STAPLE=100, INDB=its WRatio (≥88 by FUZZ_CUTOFF),
+  USDA=100 if the match's PRIMARY phrase (before first comma) is the queried food else 50
+  (found only inside another product — "Rice crackers"/"Oil, oat"). `MATCH_CONFIDENCE_MIN
+  = 70` sits in the gap → only the USDA-50 bucket gates. `graph.py` `aggregate` sets
+  per-item `match_needs_confirm` + forces meal `needs_confirmation` on any weak item →
+  no silent auto-save; `lookup` node attaches `match_confidence`/`match_candidates` to
+  each item (candidates flow to frontend via existing `response["items"]`, editable-match
+  UI NOT built yet). `main.py` unchanged — existing `needs_confirmation` guard blocks save.
+  - **Metric dead-end worth remembering**: first tried score = avg(token_set, token_sort).
+    Rejected — it gated CORRECT matches (apple 69, chicken 73, quinoa 77: token_sort
+    punishes short-query-vs-long-USDA-desc regardless of correctness) and passed WRONG
+    ones. The primary-phrase-coverage flag (already computed in `lookup_usda`'s `rank()`)
+    is the real good-vs-bad signal; reused it. ceiling: coarse binary — a wrong match that
+    still ranks group-0 wouldn't gate; refine the covered bucket only if that shows up.
+  - Kept the gate on a SEPARATE `match_needs_confirm` flag rather than overloading
+    `portion_confidence="low"` (as `reconcile_identity` does) so bad-portion vs bad-match
+    stay distinguishable + independently testable. Flagged, not merged.
+- Tests added to `test_nutrition.py`: staple hit + non-overmatch, deterministic gate
+  (weak/strong `match_confidence` → aggregate `needs_confirmation`), bug-meal integration
+  (rice→STAPLE, total < 800 kcal).
+
+### Dal no-match + partial-total + guest session-expired misfire — ✅ DONE + DEPLOYED (2026-07-18)
+Three bugs after the staple/gate round, all reproduced then fixed; `test_nutrition.py`
++ `test_identity.py` passing, `npm run build` passing. Deployed to Render with the
+staple/gate round and the UI redesign in one push.
+- **#1 dal → NO_MATCH.** `match_staple` is exact-alias, but the LLM almost always
+  QUALIFIES dal ("dal fry"/"toor dal"/"moong dal"/"dal tadka"/"yellow dal") — none are
+  aliases, INDB has no plain dal, USDA has no "dal fry" → NO_MATCH. (`match_staple("dal")`
+  itself works; verified the bare name resolves.) Fix: `match_staple_token()` in
+  `nutrition.py` — a dal-family token (`dal/daal/dhal/lentil/lentils`) anywhere in the
+  name → plain cooked dal, wired into `lookup()` **after INDB** so a curated "Dal Makhani"
+  still wins. Rice deliberately NOT token-matched (qualified rice = "fried rice"/"rice
+  crackers"/"rice flour" is a different food; qualified dal is still ~plain dal). ceiling:
+  a fried "dal papad" would undercount. `reconcile_identity` doesn't rescue qualified
+  names because its `user_set ⊆ item_set` test uses the whole meal's food words, so a
+  second item ("roti") breaks the subset — left as-is, token fallback covers it.
+- **#2 no-match item silently dropped from total.** `aggregate`'s gate had
+  `score is not None` which let a fully-unmatched item (`match_confidence=None`) escape →
+  with high portions the partial total auto-saved as if complete (repro: "2 rotis and
+  dal" → 404.6 kcal roti-only, dal missing). Fix: `unmatched = kcal is None` also fires
+  `match_needs_confirm` → forces `needs_confirmation`; added `totals_partial` flag
+  threaded State → respond summary → API response (`main.py`) so reply/UI can say the
+  total excludes unmatched items.
+- **#3 "session expired" misfires in guest flow.** `authHeaders()` sent `Bearer mc_token`
+  whenever the token existed — a lingering ~1h-expired token from a prior login tagged
+  along into guest analysis → `/analyze` 401 → `auth_expired` → scary notice mid guest
+  turn. Fix: `token()` in `frontend/src/lib/api.ts` now reads the JWT `exp` client-side
+  (no network) and drops an expired token before it's sent; backend `auth_expired` stays
+  as the safety net. Notice now only appears on genuine mid-session expiry.
+- Tests: qualified-dal → STAPLE (+ dal makhani → INDB), unmatched → `needs_confirmation`
+  + `totals_partial` in `test_nutrition.py`.
+
 ### Phase 4+ — Later / not yet scoped
 Full 10-phase future plan lives in `ROADMAP.txt` (2026-07-05): session polish (token
 refresh, cold-start UX), meal edit/delete/re-log, history & trends, quick-log

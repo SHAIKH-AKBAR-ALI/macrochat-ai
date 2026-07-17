@@ -60,24 +60,67 @@ import Layout from "../layouts/Layout.astro";
     </div>
   </div>
 
+  <!-- STATS -->
   <section class="band band--amber">
-    <div class="wrap reveal">
-      <h2 style="margin-bottom:1.5rem;">How it works</h2>
+    <div class="wrap">
+      <div class="stats reveal">
+        <div class="stat">
+          <span class="num" data-count="1000" data-suffix="+">0</span>
+          <span class="lbl">INDB Indian foods</span>
+        </div>
+        <div class="stat">
+          <span class="num" data-count="300000" data-suffix="+">0</span>
+          <span class="lbl">USDA entries on tap</span>
+        </div>
+        <div class="stat">
+          <span class="num" data-count="0">0</span>
+          <span class="lbl">Numbers the AI guessed</span>
+        </div>
+        <div class="stat">
+          <span class="num" data-count="2">0</span>
+          <span class="lbl">Lab-grade databases</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <p class="eyebrow">How it works</p>
+        <h2>Three steps. No food-search forms.</h2>
+      </div>
       <div class="steps">
-        <div class="block reveal">
-          <p class="eyebrow">Step 1</p>
+        <div class="block reveal scrub">
+          <svg class="draw" viewBox="0 0 60 44" width="56" height="42" aria-hidden="true">
+            <rect x="3" y="4" width="42" height="28" rx="0" />
+            <polyline points="14,32 14,40 24,32" />
+            <line x1="12" y1="14" x2="36" y2="14" />
+            <line x1="12" y1="22" x2="30" y2="22" />
+          </svg>
+          <p class="eyebrow" style="margin-top:0.8rem;">Step 1</p>
           <h3 style="margin:0.8rem 0 0.5rem;">Say it or snap it</h3>
           <p>Type your meal, attach a photo, or both. The AI names each food and
           spots the prep style — grilled, fried, curry.</p>
         </div>
-        <div class="block reveal" style="transition-delay:0.12s;">
-          <p class="eyebrow">Step 2</p>
+        <div class="block reveal scrub" style="transition-delay:0.12s;">
+          <svg class="draw" viewBox="0 0 60 44" width="56" height="42" aria-hidden="true">
+            <ellipse cx="30" cy="9" rx="18" ry="6" />
+            <path d="M12 9 V33 C12 36 21 39 30 39 C39 39 48 36 48 33 V9" />
+            <path d="M12 21 C12 24 21 27 30 27 C39 27 48 24 48 21" />
+          </svg>
+          <p class="eyebrow" style="margin-top:0.8rem;">Step 2</p>
           <h3 style="margin:0.8rem 0 0.5rem;">Real database lookup</h3>
           <p>Every calorie comes from the Indian Nutrient Databank or USDA
           FoodData Central — matched to your food, never guessed from the AI's memory.</p>
         </div>
-        <div class="block reveal" style="transition-delay:0.24s;">
-          <p class="eyebrow">Step 3</p>
+        <div class="block reveal scrub" style="transition-delay:0.24s;">
+          <svg class="draw" viewBox="0 0 60 44" width="56" height="42" aria-hidden="true">
+            <rect x="6" y="8" width="28" height="28" />
+            <polyline points="13,22 20,29 40,7" />
+          </svg>
+          <p class="eyebrow" style="margin-top:0.8rem;">Step 3</p>
           <h3 style="margin:0.8rem 0 0.5rem;">You stay in control</h3>
           <p>Stated a portion? Logged instantly. Photo-only estimate? You confirm
           the grams before anything counts toward your day.</p>
@@ -86,7 +129,164 @@ import Layout from "../layouts/Layout.astro";
     </div>
   </section>
 
-  <section class="band" id="faq">
+  <!-- PRODUCT SHOT -->
+  <section class="section" style="padding-top:0;">
+    <div class="wrap">
+      <div class="shot__grid">
+        <div class="reveal scrub-l">
+          <p class="eyebrow">The whole app</p>
+          <h2 style="margin:0.8rem 0 1rem;">A meal in, the facts out.</h2>
+          <p style="color:var(--mute); font-size:1.05rem;">
+            No dropdowns, no barcode hunt. Snap the plate, and MacroChat hands
+            back a nutrition-facts panel with the macro split and every source
+            labelled — INDB or USDA, right on the row.
+          </p>
+        </div>
+        <div class="shot reveal scrub-r">
+          <div class="shot__bar" aria-hidden="true">
+            <i></i><i></i><i></i>
+            <span class="shot__url">macrochat.app/chat</span>
+          </div>
+          <div class="shot__body">
+            <div class="msg msg--user" style="align-self:flex-end; max-width:100%;">
+              <div class="msg__who">You</div>
+              <div class="msg__body">1 bowl veg biryani</div>
+            </div>
+            <div class="facts" style="margin:0;">
+              <div class="facts__title">Meal facts</div>
+              <div class="facts__row facts__row--hero"><b>Calories</b><span class="num">412 kcal</span></div>
+              <div class="facts__row facts__donut">
+                <div class="donut">
+                  <svg class="donut__svg" viewBox="0 0 42 42" aria-label="Protein 22%, Carbs 58%, Fat 20%">
+                    <circle cx="21" cy="21" r="15.5" fill="none" stroke="var(--amber)" stroke-width="9" pathLength="100" stroke-dasharray="22 78" stroke-dashoffset="0" transform="rotate(-90 21 21)" />
+                    <circle cx="21" cy="21" r="15.5" fill="none" stroke="var(--burnt)" stroke-width="9" pathLength="100" stroke-dasharray="58 42" stroke-dashoffset="-22" transform="rotate(-90 21 21)" />
+                    <circle cx="21" cy="21" r="15.5" fill="none" stroke="var(--mute)" stroke-width="9" pathLength="100" stroke-dasharray="20 80" stroke-dashoffset="-80" transform="rotate(-90 21 21)" />
+                  </svg>
+                  <div class="donut__legend">
+                    <span><i style="background:var(--amber)"></i>Protein 22%</span>
+                    <span><i style="background:var(--burnt)"></i>Carbs 58%</span>
+                    <span><i style="background:var(--mute)"></i>Fat 20%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="facts__row facts__row--thick"><span>Veg biryani · 1 bowl <span class="tag">INDB</span></span><span class="num">412 kcal</span></div>
+              <div class="facts__row"><b>Protein</b><span class="num">9.1 g</span></div>
+              <div class="facts__row"><b>Carbs</b><span class="num">59.8 g</span></div>
+              <div class="facts__row"><b>Fat</b><span class="num">9.2 g</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURE GRID -->
+  <section class="section" style="padding-top:0;">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <p class="eyebrow">What's inside</p>
+        <h2>Built for how you actually eat.</h2>
+      </div>
+      <div class="gridfeat reveal">
+        <div class="cell">
+          <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><rect x="4" y="9" width="32" height="24"/><circle cx="20" cy="21" r="6"/><line x1="14" y1="9" x2="17" y2="5"/><line x1="26" y1="9" x2="23" y2="5"/></svg>
+          <h3>Photo, text, or both</h3>
+          <p>Snap the plate, type the portion, or do both. Text with grams logs instantly.</p>
+        </div>
+        <div class="cell">
+          <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><path d="M20 5 C10 5 6 14 10 22 C13 28 20 35 20 35 C20 35 27 28 30 22 C34 14 30 5 20 5"/><line x1="20" y1="12" x2="20" y2="28"/></svg>
+          <h3>Knows Indian food</h3>
+          <p>1,000+ INDB recipes — roti, dal, sabzi, biryani, dosa — not just packaged goods.</p>
+        </div>
+        <div class="cell">
+          <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><rect x="7" y="9" width="26" height="26"/><polyline points="13,21 18,26 29,13"/></svg>
+          <h3>You confirm the grams</h3>
+          <p>Estimated a portion from a photo? Nothing counts until you approve it.</p>
+        </div>
+        <div class="cell">
+          <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><circle cx="20" cy="14" r="7"/><path d="M7 34 C7 26 13 23 20 23 C27 23 33 26 33 34"/></svg>
+          <h3>No signup wall</h3>
+          <p>Guest mode analyzes any meal free. Make an account only when you want to track a day.</p>
+        </div>
+        <div class="cell">
+          <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><path d="M27 22 A11 11 0 1 1 18 8 A9 9 0 1 0 27 22"/></svg>
+          <h3>Dark mode, still brutal</h3>
+          <p>Same ink-on-paper system, inverted. Amber stays amber. Follows your OS.</p>
+        </div>
+        <div class="cell">
+          <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><circle cx="20" cy="20" r="14"/><polyline points="20,11 20,20 27,24"/></svg>
+          <h3>Your midnight, not ours</h3>
+          <p>Daily totals reset on your timezone's midnight — captured once at signup.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARISON -->
+  <section class="band band--ink">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <p class="eyebrow" style="border-color:var(--paper);">Why it's different</p>
+        <h2>A typical calorie app vs. MacroChat.</h2>
+      </div>
+      <div class="compare reveal">
+        <div class="compare__row">
+          <div class="compare__cell compare__cell--them compare__head">Typical app</div>
+          <div class="compare__cell compare__cell--us compare__head">MacroChat</div>
+        </div>
+        <div class="compare__row">
+          <div class="compare__cell compare__cell--them">AI or crowd guesses the numbers</div>
+          <div class="compare__cell compare__cell--us">Only INDB + USDA lookups</div>
+        </div>
+        <div class="compare__row">
+          <div class="compare__cell compare__cell--them">Endless food-search dropdowns</div>
+          <div class="compare__cell compare__cell--us">One sentence, or one photo</div>
+        </div>
+        <div class="compare__row">
+          <div class="compare__cell compare__cell--them">Silently logs whatever it thinks</div>
+          <div class="compare__cell compare__cell--us">You confirm estimated portions</div>
+        </div>
+        <div class="compare__row">
+          <div class="compare__cell compare__cell--them">Barcode-first, Indian food missing</div>
+          <div class="compare__cell compare__cell--us">1,000+ Indian recipes built in</div>
+        </div>
+        <div class="compare__row">
+          <div class="compare__cell compare__cell--them">Account wall before you can look</div>
+          <div class="compare__cell compare__cell--us">Guest mode, no signup</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RECEIPTS -->
+  <section class="section">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <p class="eyebrow">Real logs</p>
+        <h2>Not reviews. Receipts.</h2>
+      </div>
+      <div class="quotes reveal">
+        <div class="quote">
+          <div class="quote__mark">“</div>
+          <p>2 rotis and dal — logged in 6 seconds, 348 kcal, source INDB.</p>
+          <div class="quote__by">— A real log, not a review</div>
+        </div>
+        <div class="quote">
+          <div class="quote__mark">“</div>
+          <p>Photo of a plate → “grilled chicken breast, 210g?” → confirmed → 347 kcal.</p>
+          <div class="quote__by">— The confirm step, working</div>
+        </div>
+        <div class="quote">
+          <div class="quote__mark">“</div>
+          <p>“boiled quinoa” resolved to USDA quinoa, not chicken feet. Fixed, tested.</p>
+          <div class="quote__by">— One less junk match</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
     <div class="wrap reveal" style="max-width:820px;">
       <p class="eyebrow">FAQ</p>
       <h2 style="margin:1rem 0 1.5rem;">Fair questions.</h2>
@@ -105,6 +305,12 @@ import Layout from "../layouts/Layout.astro";
         estimated grams before logging.</p>
       </details>
       <details class="faq">
+        <summary>Photo or text — which is better?</summary>
+        <p>Text with stated portions ("200g chicken") is exact and logs instantly.
+        Photos are great for identification, but portion size is estimated — you'll
+        confirm the grams. Best of both: send a photo <em>and</em> a line of text.</p>
+      </details>
+      <details class="faq">
         <summary>Does it know Indian food?</summary>
         <p>Yes — 1,000+ recipes and ingredients from the Indian Nutrient Databank:
         roti, dal, sabzi, biryani, dosa. Everything else falls back to USDA's
@@ -116,10 +322,28 @@ import Layout from "../layouts/Layout.astro";
         account to save meals and track daily totals against your goal.</p>
       </details>
       <details class="faq">
+        <summary>Why does the first message sometimes take ~50 seconds?</summary>
+        <p>We run on a free tier that sleeps when idle. The first request wakes the
+        server — a cold start of up to ~50 seconds — and everything after is fast.
+        Leave the tab open; it will answer.</p>
+      </details>
+      <details class="faq">
         <summary>Why does it sometimes ask me to confirm?</summary>
         <p>When a portion is estimated from a photo (or the food identification is
         uncertain), nothing is saved until you check the grams. We never silently log
         a guess.</p>
+      </details>
+      <details class="faq">
+        <summary>Does it scan barcodes?</summary>
+        <p>No, on purpose. Barcodes only cover packaged food; most real meals — dal,
+        sabzi, home-cooked anything — have no barcode. Describe or photograph the
+        plate instead.</p>
+      </details>
+      <details class="faq">
+        <summary>Is there a dark mode?</summary>
+        <p>Yes — the ◐ toggle in the nav. Same ink-on-paper system, inverted; amber
+        stays amber. Your choice is remembered, and it follows your OS preference by
+        default.</p>
       </details>
       <details class="faq">
         <summary>What happens to my photos and data?</summary>
@@ -130,17 +354,16 @@ import Layout from "../layouts/Layout.astro";
     </div>
   </section>
 
-  <section class="band band--ink">
-    <div class="wrap reveal" style="display:flex; flex-wrap:wrap; gap:2rem; align-items:center; justify-content:space-between;">
-      <div>
-        <h2>Your day, measured.</h2>
-        <p style="max-width:32rem; margin-top:0.8rem;">
-          Daily calorie and macro targets computed from your height, weight, and goal
-          — then every logged meal counts down what's left. Midnight is <em>your</em>
-          midnight, not the server's.
-        </p>
-      </div>
-      <a class="btn" href="/signup">Create account</a>
+  <!-- MEGA CTA -->
+  <section class="band band--amber">
+    <div class="wrap cta-mega reveal">
+      <svg class="arrow draw draw--now" viewBox="0 0 70 50" aria-hidden="true">
+        <path d="M6 10 C30 4 44 18 40 40" />
+        <polyline points="32,34 40,42 48,34" />
+      </svg>
+      <h2>Stop guessing.<br />Start logging.</h2>
+      <a class="btn btn--ghost" href="/signup" style="font-size:1rem; padding:1.1rem 2.4rem;">Start tracking — free</a>
+      <p class="sub">No card. No barcode. No AI-invented numbers.</p>
     </div>
   </section>
 </Layout>

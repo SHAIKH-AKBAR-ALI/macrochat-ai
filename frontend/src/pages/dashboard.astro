@@ -3,8 +3,8 @@ import Layout from "../layouts/Layout.astro";
 ---
 <Layout title="Today — MacroChat AI" active="dashboard">
   <div class="wrap" style="max-width:820px; padding:3rem 0 4rem;">
-    <p class="eyebrow" id="date-label">Today</p>
-    <h1 style="font-size:clamp(2.2rem,6vw,4rem); margin:1rem 0 2rem;">Your day</h1>
+    <p class="eyebrow" id="date-label" data-rise="1">Today</p>
+    <h1 style="font-size:clamp(2.2rem,6vw,4rem); margin:1rem 0 2rem;" data-rise="2">Your day</h1>
 
     <div id="loading" class="mono">Loading today's totals…</div>
 
@@ -20,6 +20,7 @@ import Layout from "../layouts/Layout.astro";
           <div class="facts__row facts__row--hero">
             <b>Calories left</b><span class="num" id="rem-kcal"></span>
           </div>
+          <div class="facts__row facts__donut" id="today-donut" style="display:none;"></div>
           <div class="facts__row"><b>Protein left</b><span class="num" id="rem-protein"></span></div>
           <div class="facts__row"><b>Carbs left</b><span class="num" id="rem-carbs"></span></div>
           <div class="facts__row"><b>Fat left</b><span class="num" id="rem-fat"></span></div>
@@ -33,6 +34,7 @@ import Layout from "../layouts/Layout.astro";
 
   <script>
     import { API, token, authHeaders } from "../lib/api";
+    import { countUp, donut, REDUCED } from "../lib/anim";
 
     if (!token()) location.href = "/login";
 
@@ -65,15 +67,31 @@ import Layout from "../layouts/Layout.astro";
           </div>
           <div class="meter__track" role="meter" aria-label="${label}"
                aria-valuenow="${eaten}" aria-valuemin="0" aria-valuemax="${goal}">
-            <div class="meter__fill${eaten > goal ? " over" : ""}" style="width: ${pct}%"></div>
+            <div class="meter__fill${eaten > goal ? " over" : ""}" style="width: ${REDUCED ? pct : 0}%"></div>
           </div>`;
         meters.append(m);
+        // grow from zero: the steps() transition on .meter__fill does the rest
+        if (!REDUCED) {
+          const fill = m.querySelector<HTMLElement>(".meter__fill")!;
+          requestAnimationFrame(() => requestAnimationFrame(() => (fill.style.width = pct + "%")));
+        }
       }
 
       for (const [key, , unit] of MACROS) {
-        document.getElementById(`rem-${key === "kcal" ? "kcal" : key}`)!.textContent =
-          `${t.remaining[key]} ${unit}`;
+        const span = document.getElementById(`rem-${key}`)!;
+        span.dataset.count = String(t.remaining[key]);
+        span.dataset.suffix = ` ${unit}`;
+        delete span.dataset.counted; // allow re-count on bfcache rerun
+        span.textContent = `0 ${unit}`;
+        countUp(span);
       }
+
+      // today's macro split donut — clear before re-append (bfcache rerun)
+      const dslot = document.getElementById("today-donut")!;
+      dslot.innerHTML = "";
+      const ring = donut(t.eaten.protein, t.eaten.carbs, t.eaten.fat);
+      if (ring) { dslot.append(ring); dslot.style.display = "flex"; }
+      else dslot.style.display = "none";
       document.getElementById("meals-count")!.textContent =
         `${t.meals_logged} meal${t.meals_logged === 1 ? "" : "s"} logged today`;
 

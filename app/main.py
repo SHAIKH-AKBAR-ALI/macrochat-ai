@@ -21,6 +21,11 @@ app.add_middleware(
 _optional_bearer = HTTPBearer(auto_error=False)
 
 
+@app.get("/health")
+def health():
+    return {"ok": True}
+
+
 # --- auth ---
 
 class SignupBody(BaseModel):
@@ -97,6 +102,7 @@ async def analyze(
         "is_food_log": result["is_food_log"],
         "items": result["items"],
         "totals": result["totals"],
+        "totals_partial": result.get("totals_partial", False),
         "overall_confidence": result["overall_confidence"],
         "needs_confirmation": result["needs_confirmation"],
         "reply": result["reply"],

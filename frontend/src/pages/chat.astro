@@ -14,6 +14,13 @@ import Layout from "../layouts/Layout.astro";
       </p>
     </div>
 
+    <div class="chips" id="chips">
+      <button type="button" class="chip">2 rotis and dal</button>
+      <button type="button" class="chip">200g grilled chicken, rice</button>
+      <button type="button" class="chip">1 bowl veg biryani</button>
+      <button type="button" class="chip">2 eggs and toast</button>
+    </div>
+
     <form class="composer" id="composer">
       <label class="filebtn" id="camera-label" title="Take a photo">
         📷 Camera
@@ -30,6 +37,7 @@ import Layout from "../layouts/Layout.astro";
 
   <script>
     import { API, token, authHeaders, jsonPost } from "../lib/api";
+    import { countUp, donut } from "../lib/anim";
 
     const chat = document.getElementById("chat")!;
     const form = document.getElementById("composer") as HTMLFormElement;
@@ -37,6 +45,15 @@ import Layout from "../layouts/Layout.astro";
     const photoInput = document.getElementById("photo") as HTMLInputElement;
     const photoLabel = document.getElementById("photo-label")!;
     const send = document.getElementById("send") as HTMLButtonElement;
+    const chips = document.getElementById("chips")!;
+
+    // Chip → fill the text box and submit. Row hides after first send.
+    chips.addEventListener("click", (e) => {
+      const chip = (e.target as HTMLElement).closest(".chip");
+      if (!chip) return;
+      textInput.value = chip.textContent!.trim();
+      form.requestSubmit();
+    });
 
     if (!token()) document.getElementById("guest-note")!.style.display = "block";
 
@@ -91,6 +108,13 @@ import Layout from "../layouts/Layout.astro";
       return n;
     }
 
+    // Typing indicator: three squares + status text, shown while /analyze runs.
+    function typingEl() {
+      const t = el("span", "typing");
+      t.append(el("i"), el("i"), el("i"), el("span", "", "Identifying food, checking the database"));
+      return t;
+    }
+
     function addMsg(who: "user" | "bot", body: HTMLElement | string) {
       const msg = el("div", `msg msg--${who}`);
       msg.append(el("div", "msg__who", who === "user" ? "You" : "MacroChat"));
@@ -120,14 +144,35 @@ import Layout from "../layouts/Layout.astro";
       return strip;
     }
 
+    // Number span that counts up from 0 when `animate`, else static.
+    function numSpan(value: number | null, unit: string, animate: boolean) {
+      const s = el("span", "num");
+      if (animate && value != null) {
+        s.dataset.count = String(value);
+        s.dataset.suffix = ` ${unit}`;
+        s.textContent = `0 ${unit}`;
+      } else {
+        s.textContent = fmt(value, unit);
+      }
+      return s;
+    }
+
     // Facts panel for an analysis result. If confirmable, grams become inputs.
-    function factsPanel(result: any, confirmable: boolean) {
+    // animate: count numbers up + draw donut (live/confirm only, not history).
+    function factsPanel(result: any, confirmable: boolean, animate = false) {
       const panel = el("div", "facts");
       panel.append(el("div", "facts__title", "Meal facts"));
 
       const hero = el("div", "facts__row facts__row--hero");
-      hero.append(el("b", "", "Calories"), el("span", "num", `${result.totals.kcal} kcal`));
+      hero.append(el("b", "", "Calories"), numSpan(result.totals.kcal, "kcal", animate));
       panel.append(hero);
+
+      const ring = donut(result.totals.protein, result.totals.carbs, result.totals.fat);
+      if (ring) {
+        const row = el("div", "facts__row facts__donut");
+        row.append(ring);
+        panel.append(row);
+      }
 
       const gramInputs: { item: any; input: HTMLInputElement }[] = [];
       result.items.forEach((item: any, i: number) => {
@@ -160,7 +205,7 @@ import Layout from "../layouts/Layout.astro";
 
       for (const [label, key, unit] of [["Protein", "protein", "g"], ["Carbs", "carbs", "g"], ["Fat", "fat", "g"]] as const) {
         const row = el("div", "facts__row");
-        row.append(el("b", "", label), el("span", "num", fmt(result.totals[key], unit)));
+        row.append(el("b", "", label), numSpan(result.totals[key], unit, animate));
         panel.append(row);
       }
 
@@ -184,9 +229,10 @@ import Layout from "../layouts/Layout.astro";
                 portion_grams: Number(input.value),
               })),
             });
-            const fresh = factsPanel(res, false);
+            const fresh = factsPanel(res, false, true);
             fresh.append(todayStrip(res.today));
             panel.replaceWith(fresh);
+            fresh.querySelectorAll<HTMLElement>("[data-count]").forEach(countUp);
           } catch (ex: any) {
             btn.disabled = false;
             note.textContent = ex.message;
@@ -208,7 +254,20 @@ import Layout from "../layouts/Layout.astro";
       const photo = photoInput.files?.[0] || cameraInput.files?.[0];
       if (!text && !photo) return;
 
-      addMsg("user", [text, photo && `📷 ${photo.name}`].filter(Boolean).join("\n"));
+      chips.style.display = "none";
+
+      // User bubble: text + a live thumbnail of the uploaded photo.
+      if (photo) {
+        const body = el("div");
+        if (text) body.append(document.createTextNode(text));
+        const img = el("img", "msg__thumb") as HTMLImageElement;
+        img.src = URL.createObjectURL(photo);
+        img.onload = () => URL.revokeObjectURL(img.src);
+        body.append(img);
+        addMsg("user", body);
+      } else {
+        addMsg("user", text);
+      }
       textInput.value = "";
       photoInput.value = "";
       cameraInput.value = "";
@@ -218,19 +277,28 @@ import Layout from "../layouts/Layout.astro";
       cameraLabel.classList.remove("has-file");
 
       send.disabled = true;
-      const thinking = addMsg("bot", "Identifying food, looking up the database…");
+      const thinking = addMsg("bot", typingEl());
+      // Free-tier backend sleeps; first request wakes it (~50s). Warn so it
+      // doesn't look frozen.
+      const coldTimer = setTimeout(() => {
+        const s = thinking.querySelector(".typing span");
+        if (s) s.textContent = "Waking the server — the first request can take ~50s…";
+      }, 4000);
       try {
         const fd = new FormData();
         if (text) fd.append("text", text);
         if (photo) fd.append("photo", photo);
-        const res = await fetch(API + "/analyze", {
-          method: "POST",
-          headers: authHeaders(),
-          body: fd,
-        });
+        // Cold start can drop the first connection — retry a network failure once.
+        let res: Response;
+        try {
+          res = await fetch(API + "/analyze", { method: "POST", headers: authHeaders(), body: fd });
+        } catch {
+          res = await fetch(API + "/analyze", { method: "POST", headers: authHeaders(), body: fd });
+        }
         const result = await res.json();
         if (!res.ok) throw new Error(result.detail || `Analyze failed (${res.status})`);
 
+        clearTimeout(coldTimer);
         thinking.remove();
         if (result.auth_expired) {
           localStorage.removeItem("mc_token");
@@ -239,12 +307,18 @@ import Layout from "../layouts/Layout.astro";
         addMsg("bot", result.reply);
         if (result.items.length) {
           const wrap = el("div");
-          wrap.append(factsPanel(result, result.needs_confirmation));
+          const panel = factsPanel(result, result.needs_confirmation, true);
+          wrap.append(panel);
           addMsg("bot", wrap);
+          panel.querySelectorAll<HTMLElement>("[data-count]").forEach(countUp);
         }
       } catch (ex: any) {
+        clearTimeout(coldTimer);
         thinking.remove();
-        addMsg("bot", `Something went wrong: ${ex.message}`);
+        const msg = ex.message === "Failed to fetch"
+          ? "Couldn't reach the server — it may be waking up. Wait a few seconds and try again."
+          : `Something went wrong: ${ex.message}`;
+        addMsg("bot", msg);
       } finally {
         send.disabled = false;
       }
