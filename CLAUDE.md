@@ -217,6 +217,24 @@ ranking, not just vision:
   OpenAI-compatible endpoint (`GEMINI_API_KEY`, falls back to OpenAI if unset);
   config.py needed `extra = "ignore"` (pydantic 2.13 forbids unknown .env keys)
 
+### Stale-token 401 + Groq fallback + LangSmith — ✅ DONE (2026-07-17)
+- "Guest photo → Something went wrong" root cause was NOT Gemini/vision (verified
+  live: key valid, image + structured output + PNG-as-jpeg all pass): Render logs
+  showed `/analyze → 401` — an expired `mc_token` (~1h, no refresh) sent as Bearer
+  hard-failed `current_user_id`. Fix: `/analyze` degrades invalid token to guest
+  analysis + `auth_expired` flag; chat.astro clears token + shows session-expired
+  note. `/confirm` `/today` `/history` stay strict 401.
+- Guest LLM chain now Gemini → Groq `meta-llama/llama-4-scout-17b-16e-instruct`
+  (OpenAI-compat `api.groq.com/openai/v1`) → OpenAI, via per-model
+  `with_structured_output` then `.with_fallbacks` (RunnableWithFallbacks has no
+  with_structured_output). Groq needs `method="json_schema"` — its tool-calling
+  emits bools as strings. `GROQ_API_KEY` in config (`GROQ_API_KEY_2` unused).
+- LangSmith tracing on (env-only: `LANGCHAIN_TRACING_V2/API_KEY/PROJECT=macrochat`);
+  monitoring decision: LangSmith only — no Ragas (no RAG), no Prometheus (Render
+  dashboard covers infra).
+- Render env updated (merge) + deployed; live-verified guest and stale-token
+  `/analyze` both 200, `auth_expired: true` on stale.
+
 ### Frontend round 2 — ✅ DONE (2026-07-05)
 - Dark-mode invisible text: form controls don't inherit `color` — composer input and
   gram-input showed UA-default black on dark paper. Fixed + `color-scheme` per theme
