@@ -232,6 +232,10 @@ import Layout from "../layouts/Layout.astro";
         if (!res.ok) throw new Error(result.detail || `Analyze failed (${res.status})`);
 
         thinking.remove();
+        if (result.auth_expired) {
+          localStorage.removeItem("mc_token");
+          addMsg("bot", "Your session expired — log in again to save meals to your day.");
+        }
         addMsg("bot", result.reply);
         if (result.items.length) {
           const wrap = el("div");

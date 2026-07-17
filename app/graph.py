@@ -17,17 +17,6 @@ from app.config import settings
 llm_mini = ChatOpenAI(model="gpt-4o-mini", api_key=settings.openai_api_key, temperature=0)
 llm_full = ChatOpenAI(model="gpt-4o", api_key=settings.openai_api_key, temperature=0.4)
 
-# Guest (not logged in) traffic runs on Gemini via its OpenAI-compatible endpoint —
-# keeps OpenAI spend for signed-in users. Falls back to OpenAI if no Gemini key.
-if settings.gemini_api_key:
-    _GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/openai/"
-    llm_guest_mini = ChatOpenAI(model="gemini-2.5-flash", api_key=settings.gemini_api_key,
-                                base_url=_GEMINI_BASE, temperature=0)
-    llm_guest_full = ChatOpenAI(model="gemini-2.5-flash", api_key=settings.gemini_api_key,
-                                base_url=_GEMINI_BASE, temperature=0.4)
-else:
-    llm_guest_mini, llm_guest_full = llm_mini, llm_full
-
 
 class FoodItem(BaseModel):
     name: str = Field(description="Food name, e.g. 'chicken breast', 'roti'")
@@ -45,6 +34,39 @@ class IdentifiedMeal(BaseModel):
                     "False for questions ('what did I eat today?'), greetings, or anything else."
     )
     items: list[FoodItem]
+
+
+# Guest (not logged in) traffic runs on Gemini via its OpenAI-compatible endpoint —
+# keeps OpenAI spend for signed-in users. Fallback chain: Gemini -> Groq -> OpenAI.
+# RunnableWithFallbacks has no .with_structured_output, so structured output is
+# applied per-model and the resulting runnables are chained.
+identify_mini = llm_mini.with_structured_output(IdentifiedMeal)
+if settings.gemini_api_key:
+    _GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/openai/"
+    _gem_mini = ChatOpenAI(model="gemini-2.5-flash", api_key=settings.gemini_api_key,
+                           base_url=_GEMINI_BASE, temperature=0)
+    _gem_full = ChatOpenAI(model="gemini-2.5-flash", api_key=settings.gemini_api_key,
+                           base_url=_GEMINI_BASE, temperature=0.4)
+    _id_fallbacks, _full_fallbacks = [], []
+    if settings.groq_api_key:
+        _GROQ_BASE = "https://api.groq.com/openai/v1"
+        _GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"  # vision + tool use
+        _groq_mini = ChatOpenAI(model=_GROQ_MODEL, api_key=settings.groq_api_key,
+                                base_url=_GROQ_BASE, temperature=0)
+        _groq_full = ChatOpenAI(model=_GROQ_MODEL, api_key=settings.groq_api_key,
+                                base_url=_GROQ_BASE, temperature=0.4)
+        # Groq's llama tool-calling emits wrong JSON types (bool as string);
+        # its json_schema response_format is reliable — verified against live API
+        _id_fallbacks.append(
+            _groq_mini.with_structured_output(IdentifiedMeal, method="json_schema")
+        )
+        _full_fallbacks.append(_groq_full)
+    identify_guest = _gem_mini.with_structured_output(IdentifiedMeal).with_fallbacks(
+        _id_fallbacks + [identify_mini]
+    )
+    llm_guest_full = _gem_full.with_fallbacks(_full_fallbacks + [llm_full])
+else:
+    identify_guest, llm_guest_full = identify_mini, llm_full
 
 
 class State(TypedDict, total=False):
@@ -131,8 +153,8 @@ def identify(state: State) -> State:
             "type": "image_url",
             "image_url": {"url": f"data:image/jpeg;base64,{state['image_b64']}"},
         })
-    llm = llm_guest_mini if state.get("guest") else llm_mini
-    result = llm.with_structured_output(IdentifiedMeal).invoke(
+    runnable = identify_guest if state.get("guest") else identify_mini
+    result = runnable.invoke(
         [SystemMessage(IDENTIFY_SYSTEM), HumanMessage(content=content)]
     )
     items = reconcile_identity([i.model_dump() for i in result.items], state.get("text"))

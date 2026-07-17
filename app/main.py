@@ -79,7 +79,15 @@ async def analyze(
     if photo is None and not text:
         raise HTTPException(422, "Provide a photo, text, or both.")
     image_b64 = base64.b64encode(await photo.read()).decode() if photo else None
-    user_id = db.current_user_id(cred) if cred is not None else None
+    # Stale/expired token must not hard-fail analysis — degrade to guest and flag it
+    # so the client can clear the token. Save/confirm/today still require real auth.
+    auth_expired = False
+    user_id = None
+    if cred is not None:
+        try:
+            user_id = db.current_user_id(cred)
+        except HTTPException:
+            auth_expired = True
     # today's totals go INTO the pipeline so the reply can narrate remaining macros
     today = db.today_totals(user_id) if user_id else None
     result = pipeline.invoke({"image_b64": image_b64, "text": text, "today": today,
@@ -93,6 +101,7 @@ async def analyze(
         "needs_confirmation": result["needs_confirmation"],
         "reply": result["reply"],
         "saved": False,
+        "auth_expired": auth_expired,
     }
     # High confidence food + logged in -> auto-log. Low confidence -> client POSTs /confirm.
     if user_id and result["is_food_log"] and not result["needs_confirmation"]:
