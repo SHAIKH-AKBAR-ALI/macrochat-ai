@@ -340,4 +340,102 @@ export const ko: { [S in keyof PageStrings]?: Partial<PageStrings[S]> } = {
     "recipe.p3": "사진이나 한 문장으로 하고 싶다면 ",
     "recipe.p3link": "식사 채팅을 써보세요",
   },
+
+  foods: {
+    indexEyebrow: "참고 자료",
+    indexH1: "식품 매크로, A–Z",
+    indexLead:
+      "자주 먹는 {count}개 식품의 100g당 칼로리와 매크로입니다. 실제 데이터베이스(USDA + INDB) 값으로, MacroChat이 식사를 기록할 때 쓰는 것과 같습니다.",
+    indexTitle: "식품 매크로 A–Z — MacroChat",
+    indexDesc:
+      "자주 먹는 식품의 100g당 칼로리, 단백질, 탄수화물, 지방. USDA와 Indian Nutrient Databank 데이터이며 추정치가 아닙니다.",
+    indexToCompare: "두 식품 비교하기 →",
+
+    crumb: "식품",
+    title: "{name} 매크로 — 100g당 칼로리, 단백질, 탄수화물, 지방",
+    desc: "{name}: 100g당 {kcal}kcal, 단백질 {protein}g, 탄수화물 {carb}g, 지방 {fat}g. 출처: {source}.",
+    h1: "{name} 매크로",
+    lead: "100g 기준이며 출처는 {source}입니다. 실험실 측정값이고 추정치가 아닙니다.",
+    srcUSDA: "USDA FoodData Central",
+    srcINDB: "Indian Nutrient Databank",
+    factsTitle: "{name} · 100g",
+    fiber: "식이섬유",
+    sugars: "당류",
+    satfat: "포화지방",
+    sodium: "나트륨",
+    note: "매크로 %는 {kcal}kcal에서 차지하는 비율입니다(단백질·탄수화물 4kcal/g, 지방 9kcal/g).",
+    cta: "내 기록에 추가하기 →",
+    portion:
+      "실제 먹은 양을 기록하려면? 레시피 계산기가 {name}을(를) 입력한 그램에 맞춰 환산하고 식사 전체를 합산합니다. 또는 식사 채팅에 무엇을 먹었는지 말해도 됩니다.",
+    mealChat: "식사 채팅",
+    commonQuestions: "자주 묻는 질문",
+    faqQ1: "{name}의 칼로리는 얼마인가요?",
+    faqA1:
+      "{name}은(는) 100g당 {kcal}kcal이며 단백질 {protein}g, 탄수화물 {carb}g, 지방 {fat}g입니다.",
+    faqQ2: "{name}은(는) 단백질이 많은 편인가요?",
+    faqA2:
+      "칼로리의 {pct}%가 단백질에서 나오며, 100kcal당 {density}g에 해당합니다. 35%를 넘으면 좋은 단백질 공급원입니다.",
+    faqQ3: "이 데이터의 출처는 어디인가요?",
+    faqA3:
+      "{source}의 100g당 실측값입니다. MacroChat도 식사를 기록할 때 같은 출처를 사용합니다.",
+    compareH2: "{name} 비교하기",
+    vs: "{a} vs {b}",
+    relatedH2: "관련 식품",
+    relatedItem: "{name} 매크로",
+    relatedKcal: "100g당 {kcal}kcal",
+  },
+
+  compare: {
+    indexTitle: "식품 매크로 비교 — MacroChat",
+    indexDesc:
+      "자주 먹는 식품의 칼로리와 매크로를 나란히 비교하고, 감량과 증량 중 어디에 맞는지 알기 쉽게 알려줍니다.",
+    indexEyebrow: "참고 자료",
+    indexH1: "두 식품 비교",
+    indexLead:
+      "100g 기준 1:1 매크로 비교 {count}건. 각각 체지방 감량과 근육 증가 관점의 규칙 기반 결론이 붙어 있습니다.",
+    indexPopular: "인기 비교",
+    indexToFoods: "모든 식품 매크로 페이지 →",
+
+    crumb: "비교",
+    title: "{a} vs {b} — 100g당 매크로 비교",
+    desc: "{a}와 {b}의 100g 비교: {kcalA} vs {kcalB} kcal, 단백질 {proteinA} vs {proteinB} g, 탄수화물 {carbA} vs {carbB} g. 어느 쪽이 목표에 맞는지.",
+    lead: "모든 값은 100g 기준이며 {source}에서 그대로 가져왔습니다. 추정치가 아닙니다.",
+    srcBoth: "USDA와 INDB",
+    proteinPer100: "100kcal당 단백질 — {a} {pdA}g · {b} {pdB}g",
+    verdictH2: "목표에 더 맞는 쪽",
+    quickAnswers: "빠른 답변",
+    moreH2: "{name} 비교 더 보기",
+    macrosLink: "{name} 매크로",
+    cta: "MacroChat에서 둘 다 기록하기 →",
+
+    faqQ1: "{a}와 {b} 중 단백질이 더 많은 쪽은?",
+    faqA1: "100g 기준으로 {winner}이(가) 더 많습니다 — {hi}g 대 {lo}g ({gap}).",
+    faqQ2: "체중 감량에 더 좋은 쪽은?",
+    faqA2:
+      "{leaner}이(가) 100g당 칼로리가 낮아({leanerKcal} vs {otherKcal} kcal) 적자 상태에 넣기 쉽습니다. 반면 {protein}은(는) 칼로리당 단백질이 많아 포만감에 유리합니다.",
+    faqQ3: "이 수치는 어디서 왔나요?",
+    faqA3:
+      "USDA FoodData Central과 Indian Nutrient Databank의 100g당 실측값이며 추정치가 아닙니다. MacroChat도 식사를 기록할 때 같은 데이터를 씁니다.",
+
+    "gap.allOfIt": "전부",
+    "gap.same": "같음",
+    "gap.times": "{n}배",
+    "gap.pctMore": "{n}% 더 많음",
+    "gap.pctPlain": "{n}%",
+    "verdict.leaner":
+      "100g 기준으로 {leaner}의 칼로리가 {gap} 더 적습니다({leanerKcal} vs {otherKcal} kcal). 칼로리 적자를 만들기에 더 수월합니다.",
+    "verdict.closeKcal": "100g 기준 칼로리는 둘이 비슷합니다({kcalA} vs {kcalB} kcal).",
+    "verdict.protein":
+      "{protein}이(가) 단백질 밀도가 더 높습니다 — 100kcal당 {pdHigh}g 대 {pdLow}g — 근육 증가나 감량 중 포만감 유지에는 이쪽이 낫습니다.",
+    "verdict.closeProtein": "칼로리당 단백질 비율은 둘이 비슷합니다.",
+
+    "tool.portionSize": "1회 섭취량",
+    "tool.per100": "100g 기준",
+    "tool.perServing": "1인분 기준",
+    "tool.custom": "직접 입력",
+    "tool.sum": "{a} {gA}g = {kcalA}kcal · {b} {gB}g = {kcalB}kcal",
+    "tool.key": "채워진 막대 = 값이 큰 쪽 · ",
+    "tool.keyWin": "음영 표시된 칸",
+    "tool.keyEnd": " = 저칼로리·고단백 목표에 더 나은 쪽",
+  },
 };

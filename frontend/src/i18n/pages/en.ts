@@ -349,6 +349,109 @@ export const en = {
     "recipe.p3": "Want it done from a photo or a sentence instead? ",
     "recipe.p3link": "Try the meal chat",
   },
+
+  /** /foods/ index + the 499 per-food pages. {placeholders} are filled by
+   * fmt() — food names and numbers come from the database, not from here. */
+  foods: {
+    indexEyebrow: "Reference",
+    indexH1: "Food macros, A–Z",
+    indexLead:
+      "Per-100 g calories and macros for {count} common foods. Real database values (USDA + INDB), the same ones MacroChat logs a meal with.",
+    indexTitle: "Food macros A–Z — MacroChat",
+    indexDesc:
+      "Calories, protein, carbs and fat per 100 g for common foods — USDA and Indian Nutrient Databank data, no estimates.",
+    indexToCompare: "Compare two foods →",
+
+    crumb: "Foods",
+    title: "{name} macros — calories, protein, carbs, fat per 100 g",
+    desc: "{name}: {kcal} kcal, {protein} g protein, {carb} g carbs, {fat} g fat per 100 g. Source: {source}.",
+    h1: "{name} macros",
+    lead: "Per 100 grams, from {source}. Lab data, not an estimate.",
+    srcUSDA: "USDA FoodData Central",
+    srcINDB: "the Indian Nutrient Databank",
+    factsTitle: "{name} · 100 g",
+    fiber: "Fiber",
+    sugars: "Sugars",
+    satfat: "Saturated fat",
+    sodium: "Sodium",
+    note: "Macro % = share of the {kcal} kcal (protein/carbs 4 kcal/g, fat 9 kcal/g).",
+    cta: "Add this to your tracker →",
+    portion:
+      "Logging a real portion? The recipe calculator scales {name} to your grams and sums a whole meal, or just tell the meal chat what you ate.",
+    mealChat: "meal chat",
+    commonQuestions: "Common questions",
+    faqQ1: "How many calories are in {name}?",
+    faqA1:
+      "{name} has {kcal} kcal per 100 g, with {protein} g protein, {carb} g carbs and {fat} g fat.",
+    faqQ2: "Is {name} high in protein?",
+    faqA2:
+      "It carries {pct}% of its calories as protein ({density} g per 100 kcal). Anything above ~35% is a strong protein source.",
+    faqQ3: "Where does this data come from?",
+    faqA3:
+      "{source} — lab-measured values per 100 g. MacroChat uses the same source to log a meal.",
+    compareH2: "Compare {name}",
+    vs: "{a} vs {b}",
+    relatedH2: "Related foods",
+    relatedItem: "{name} macros",
+    relatedKcal: "{kcal} kcal / 100 g",
+  },
+
+  /** /compare/ index + the 3,916 pair pages, including the rule-based verdict
+   * sentences that used to be hardcoded in src/lib/seo.ts. */
+  compare: {
+    indexTitle: "Compare food macros — MacroChat",
+    indexDesc:
+      "Side-by-side calorie and macro comparisons for common foods, with a plain verdict on which fits a cut or a bulk.",
+    indexEyebrow: "Reference",
+    indexH1: "Compare two foods",
+    indexLead:
+      "{count} head-to-head macro comparisons, per 100 g, each with a rule-based verdict for fat loss vs muscle gain.",
+    indexPopular: "Popular comparisons",
+    indexToFoods: "All food macro pages →",
+
+    crumb: "Compare",
+    title: "{a} vs {b} — macros compared per 100 g",
+    desc: "{a} vs {b} per 100 g: {kcalA} vs {kcalB} kcal, {proteinA} vs {proteinB} g protein, {carbA} vs {carbB} g carbs. Which fits your goal.",
+    lead: "Every value is per 100 grams, straight from {source} — no estimates.",
+    srcBoth: "USDA and INDB",
+    proteinPer100:
+      "Protein per 100 kcal — {a} {pdA} g · {b} {pdB} g",
+    verdictH2: "Better for your goal",
+    quickAnswers: "Quick answers",
+    moreH2: "More {name} comparisons",
+    macrosLink: "{name} macros",
+    cta: "Track either in MacroChat →",
+
+    faqQ1: "Which has more protein, {a} or {b}?",
+    faqA1: "Per 100 g, {winner} has more protein — {hi} g vs {lo} g ({gap}).",
+    faqQ2: "Which is better for weight loss?",
+    faqA2:
+      "{leaner} is lower in calories per 100 g ({leanerKcal} vs {otherKcal} kcal), so it's the easier fit in a deficit. {protein} gives more protein per calorie, which helps with fullness.",
+    faqQ3: "Where do these numbers come from?",
+    faqA3:
+      "USDA FoodData Central and the Indian Nutrient Databank — lab-measured values per 100 g, not estimates. MacroChat uses the same data to log a meal.",
+
+    "gap.allOfIt": "all of it",
+    "gap.same": "the same",
+    "gap.times": "{n}x",
+    "gap.pctMore": "{n}% more",
+    "gap.pctPlain": "{n}%",
+    "verdict.leaner":
+      "Per 100 g, {leaner} has {gap} fewer calories ({leanerKcal} vs {otherKcal} kcal) — the easier fit in a calorie deficit.",
+    "verdict.closeKcal": "Per 100 g the two are close on calories ({kcalA} vs {kcalB} kcal).",
+    "verdict.protein":
+      "{protein} is more protein-dense — {pdHigh} g protein per 100 kcal vs {pdLow} g — so it's the better pick for muscle gain or staying full on a cut.",
+    "verdict.closeProtein": "They carry protein at a similar rate per calorie.",
+
+    "tool.portionSize": "Portion size",
+    "tool.per100": "Per 100 g",
+    "tool.perServing": "Per serving",
+    "tool.custom": "Custom",
+    "tool.sum": "{gA} g {a} = {kcalA} kcal · {gB} g {b} = {kcalB} kcal",
+    "tool.key": "Filled bar = higher value · ",
+    "tool.keyWin": "tinted cell",
+    "tool.keyEnd": " = better for a lean / high-protein goal",
+  },
 } as const;
 
 export type PageStrings = typeof en;

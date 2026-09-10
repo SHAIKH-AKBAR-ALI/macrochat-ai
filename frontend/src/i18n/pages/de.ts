@@ -350,4 +350,102 @@ export const de: { [S in keyof PageStrings]?: Partial<PageStrings[S]> } = {
     "recipe.p3": "Lieber aus einem Foto oder einem Satz? ",
     "recipe.p3link": "Probier den Mahlzeiten-Chat",
   },
+
+  foods: {
+    indexEyebrow: "Referenz",
+    indexH1: "Lebensmittel-Makros, A–Z",
+    indexLead:
+      "Kalorien und Makros je 100 g für {count} gängige Lebensmittel. Werte aus echten Datenbanken (USDA + INDB) — dieselben, mit denen MacroChat eine Mahlzeit erfasst.",
+    indexTitle: "Lebensmittel-Makros A–Z — MacroChat",
+    indexDesc:
+      "Kalorien, Protein, Kohlenhydrate und Fett je 100 g für gängige Lebensmittel — Daten aus USDA und Indian Nutrient Databank, ohne Schätzungen.",
+    indexToCompare: "Zwei Lebensmittel vergleichen →",
+
+    crumb: "Lebensmittel",
+    title: "{name} Makros — Kalorien, Protein, Kohlenhydrate, Fett je 100 g",
+    desc: "{name}: {kcal} kcal, {protein} g Protein, {carb} g Kohlenhydrate, {fat} g Fett je 100 g. Quelle: {source}.",
+    h1: "{name}: Makros",
+    lead: "Je 100 Gramm, aus {source}. Labormessungen, keine Schätzung.",
+    srcUSDA: "USDA FoodData Central",
+    srcINDB: "dem Indian Nutrient Databank",
+    factsTitle: "{name} · 100 g",
+    fiber: "Ballaststoffe",
+    sugars: "Zucker",
+    satfat: "Gesättigte Fettsäuren",
+    sodium: "Natrium",
+    note: "Der Makro-Anteil bezieht sich auf die {kcal} kcal (Protein und Kohlenhydrate 4 kcal/g, Fett 9 kcal/g).",
+    cta: "Zum Tracker hinzufügen →",
+    portion:
+      "Willst du eine echte Portion erfassen? Der Rezeptrechner skaliert {name} auf deine Gramm und summiert die ganze Mahlzeit — oder sag dem Mahlzeiten-Chat einfach, was du gegessen hast.",
+    mealChat: "Mahlzeiten-Chat",
+    commonQuestions: "Häufige Fragen",
+    faqQ1: "Wie viele Kalorien hat {name}?",
+    faqA1:
+      "{name} hat {kcal} kcal je 100 g, mit {protein} g Protein, {carb} g Kohlenhydraten und {fat} g Fett.",
+    faqQ2: "Ist {name} proteinreich?",
+    faqA2:
+      "{pct} % der Kalorien stammen aus Protein ({density} g je 100 kcal). Über etwa 35 % ist es eine starke Proteinquelle.",
+    faqQ3: "Woher stammen diese Daten?",
+    faqA3:
+      "Aus {source} — im Labor gemessene Werte je 100 g. MacroChat nutzt dieselbe Quelle, um eine Mahlzeit zu erfassen.",
+    compareH2: "{name} vergleichen",
+    vs: "{a} oder {b}",
+    relatedH2: "Ähnliche Lebensmittel",
+    relatedItem: "{name}: Makros",
+    relatedKcal: "{kcal} kcal / 100 g",
+  },
+
+  compare: {
+    indexTitle: "Lebensmittel-Makros vergleichen — MacroChat",
+    indexDesc:
+      "Kalorien und Makros gängiger Lebensmittel nebeneinander, mit einem klaren Urteil, was in eine Diät oder einen Aufbau passt.",
+    indexEyebrow: "Referenz",
+    indexH1: "Zwei Lebensmittel vergleichen",
+    indexLead:
+      "{count} direkte Makro-Vergleiche je 100 g, jeder mit einem regelbasierten Urteil für Fettabbau oder Muskelaufbau.",
+    indexPopular: "Beliebte Vergleiche",
+    indexToFoods: "Alle Makro-Seiten →",
+
+    crumb: "Vergleich",
+    title: "{a} oder {b} — Makros im Vergleich je 100 g",
+    desc: "{a} oder {b} je 100 g: {kcalA} vs. {kcalB} kcal, {proteinA} vs. {proteinB} g Protein, {carbA} vs. {carbB} g Kohlenhydrate. Was zu deinem Ziel passt.",
+    lead: "Alle Werte gelten je 100 Gramm und kommen direkt aus {source} — ohne Schätzungen.",
+    srcBoth: "USDA und INDB",
+    proteinPer100: "Protein je 100 kcal — {a} {pdA} g · {b} {pdB} g",
+    verdictH2: "Besser für dein Ziel",
+    quickAnswers: "Kurze Antworten",
+    moreH2: "Weitere Vergleiche mit {name}",
+    macrosLink: "{name}: Makros",
+    cta: "Beides in MacroChat tracken →",
+
+    faqQ1: "Was hat mehr Protein, {a} oder {b}?",
+    faqA1: "Je 100 g hat {winner} mehr Protein — {hi} g gegenüber {lo} g ({gap}).",
+    faqQ2: "Was eignet sich besser zum Abnehmen?",
+    faqA2:
+      "{leaner} hat je 100 g weniger Kalorien ({leanerKcal} statt {otherKcal} kcal) und passt damit leichter in ein Defizit. {protein} liefert mehr Protein pro Kalorie, was beim Sattbleiben hilft.",
+    faqQ3: "Woher stammen diese Zahlen?",
+    faqA3:
+      "Aus USDA FoodData Central und dem Indian Nutrient Databank — im Labor gemessene Werte je 100 g, keine Schätzungen. MacroChat nutzt dieselben Daten, um eine Mahlzeit zu erfassen.",
+
+    "gap.allOfIt": "den ganzen Unterschied",
+    "gap.same": "gleich viel",
+    "gap.times": "das {n}-fache",
+    "gap.pctMore": "{n} % mehr",
+    "gap.pctPlain": "{n} %",
+    "verdict.leaner":
+      "Je 100 g hat {leaner} {gap} weniger Kalorien ({leanerKcal} statt {otherKcal} kcal) — das passt leichter in ein Kaloriendefizit.",
+    "verdict.closeKcal": "Je 100 g liegen beide bei den Kalorien nah beieinander ({kcalA} vs. {kcalB} kcal).",
+    "verdict.protein":
+      "{protein} ist proteindichter — {pdHigh} g Protein je 100 kcal gegenüber {pdLow} g — und damit die bessere Wahl für Muskelaufbau oder Sättigung in der Diät.",
+    "verdict.closeProtein": "Beide liefern pro Kalorie etwa gleich viel Protein.",
+
+    "tool.portionSize": "Portionsgröße",
+    "tool.per100": "Je 100 g",
+    "tool.perServing": "Je Portion",
+    "tool.custom": "Eigene Menge",
+    "tool.sum": "{gA} g {a} = {kcalA} kcal · {gB} g {b} = {kcalB} kcal",
+    "tool.key": "Gefüllter Balken = höherer Wert · ",
+    "tool.keyWin": "getönte Zelle",
+    "tool.keyEnd": " = besser für ein kalorienarmes / proteinreiches Ziel",
+  },
 };

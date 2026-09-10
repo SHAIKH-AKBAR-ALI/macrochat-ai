@@ -340,4 +340,102 @@ export const ja: { [S in keyof PageStrings]?: Partial<PageStrings[S]> } = {
     "recipe.p3": "写真や一文から計算したい場合は、",
     "recipe.p3link": "食事チャットを試す",
   },
+
+  foods: {
+    indexEyebrow: "参考データ",
+    indexH1: "食品マクロ一覧（A–Z）",
+    indexLead:
+      "よく食べる{count}品目の100gあたりカロリーとマクロです。実データベース（USDA + INDB）の値で、MacroChatが食事を記録するときと同じものを使っています。",
+    indexTitle: "食品マクロ一覧（A–Z）— MacroChat",
+    indexDesc:
+      "よく食べる食品の100gあたりのカロリー・たんぱく質・炭水化物・脂質。USDAとIndian Nutrient Databankのデータで、推定値は使いません。",
+    indexToCompare: "食品を2つ比較する →",
+
+    crumb: "食品",
+    title: "{name}のマクロ — 100gあたりのカロリー・たんぱく質・炭水化物・脂質",
+    desc: "{name}：100gあたり{kcal}kcal、たんぱく質{protein}g、炭水化物{carb}g、脂質{fat}g。出典：{source}。",
+    h1: "{name}のマクロ",
+    lead: "100gあたりの値で、出典は{source}です。実測データであり、推定値ではありません。",
+    srcUSDA: "USDA FoodData Central",
+    srcINDB: "Indian Nutrient Databank",
+    factsTitle: "{name} · 100g",
+    fiber: "食物繊維",
+    sugars: "糖類",
+    satfat: "飽和脂肪酸",
+    sodium: "ナトリウム",
+    note: "マクロの%は{kcal}kcalに占める割合です（たんぱく質・炭水化物は1gあたり4kcal、脂質は9kcal）。",
+    cta: "これを記録に追加する →",
+    portion:
+      "実際の分量を記録しますか？レシピ計算ツールなら{name}を入力したグラム数に換算して食事全体を合計できます。食事チャットに食べたものを伝えるだけでもOKです。",
+    mealChat: "食事チャット",
+    commonQuestions: "よくある質問",
+    faqQ1: "{name}のカロリーはどれくらいですか？",
+    faqA1:
+      "{name}は100gあたり{kcal}kcalで、たんぱく質{protein}g、炭水化物{carb}g、脂質{fat}gです。",
+    faqQ2: "{name}はたんぱく質が多いですか？",
+    faqA2:
+      "カロリーの{pct}%がたんぱく質で、100kcalあたり{density}gにあたります。35%を超えていれば、たんぱく質源として優秀です。",
+    faqQ3: "このデータの出典は？",
+    faqA3:
+      "{source}の100gあたりの実測値です。MacroChatは食事を記録するときにも同じ出典を使います。",
+    compareH2: "{name}を比較する",
+    vs: "{a} と {b}",
+    relatedH2: "関連する食品",
+    relatedItem: "{name}のマクロ",
+    relatedKcal: "100gあたり{kcal}kcal",
+  },
+
+  compare: {
+    indexTitle: "食品のマクロを比較 — MacroChat",
+    indexDesc:
+      "よく食べる食品のカロリーとマクロを並べて比較し、減量向きか増量向きかをわかりやすく判定します。",
+    indexEyebrow: "参考データ",
+    indexH1: "食品を2つ比較",
+    indexLead:
+      "100gあたりで比べたマクロ比較が{count}件。それぞれに、減量と筋肥大の観点からのルールベースの判定が付いています。",
+    indexPopular: "人気の比較",
+    indexToFoods: "食品マクロのページ一覧 →",
+
+    crumb: "比較",
+    title: "{a} と {b} — 100gあたりのマクロ比較",
+    desc: "{a}と{b}の100gあたり比較：{kcalA} vs {kcalB} kcal、たんぱく質{proteinA} vs {proteinB} g、炭水化物{carbA} vs {carbB} g。目的に合うのはどちらか。",
+    lead: "すべて100gあたりの値で、出典は{source}です。推定値は使っていません。",
+    srcBoth: "USDAとINDB",
+    proteinPer100: "100kcalあたりのたんぱく質 — {a} {pdA}g · {b} {pdB}g",
+    verdictH2: "目的別の判定",
+    quickAnswers: "手早い答え",
+    moreH2: "{name}の比較をもっと見る",
+    macrosLink: "{name}のマクロ",
+    cta: "MacroChatでどちらも記録する →",
+
+    faqQ1: "{a}と{b}では、どちらがたんぱく質が多いですか？",
+    faqA1: "100gあたりでは{winner}のほうが多く、{hi}g対{lo}gです（{gap}）。",
+    faqQ2: "減量に向いているのはどちらですか？",
+    faqA2:
+      "100gあたりのカロリーは{leaner}のほうが低く（{leanerKcal}kcal対{otherKcal}kcal）、減量中は取り入れやすいです。一方、{protein}はカロリーあたりのたんぱく質が多く、満腹感の面で有利です。",
+    faqQ3: "この数値の出典は？",
+    faqA3:
+      "USDA FoodData CentralとIndian Nutrient Databankの、100gあたりの実測値です。推定値ではありません。MacroChatは食事の記録にも同じデータを使います。",
+
+    "gap.allOfIt": "すべて",
+    "gap.same": "同じ",
+    "gap.times": "{n}倍",
+    "gap.pctMore": "{n}%多い",
+    "gap.pctPlain": "{n}%",
+    "verdict.leaner":
+      "100gあたりでは{leaner}のほうがカロリーが{gap}少なく（{leanerKcal}kcal対{otherKcal}kcal）、カロリー不足を作りやすい選択です。",
+    "verdict.closeKcal": "100gあたりのカロリーはほぼ同じです（{kcalA}kcal対{kcalB}kcal）。",
+    "verdict.protein":
+      "{protein}のほうがたんぱく質密度が高く、100kcalあたり{pdHigh}g対{pdLow}gです。筋肥大や減量中の満腹感にはこちらが向いています。",
+    "verdict.closeProtein": "カロリーあたりのたんぱく質量は、どちらも同じくらいです。",
+
+    "tool.portionSize": "分量",
+    "tool.per100": "100gあたり",
+    "tool.perServing": "1食あたり",
+    "tool.custom": "自分で入力",
+    "tool.sum": "{a} {gA}g = {kcalA}kcal · {b} {gB}g = {kcalB}kcal",
+    "tool.key": "塗りつぶしバー = 数値が大きいほう · ",
+    "tool.keyWin": "色付きのセル",
+    "tool.keyEnd": " = 低カロリー・高たんぱくの目的に向くほう",
+  },
 };

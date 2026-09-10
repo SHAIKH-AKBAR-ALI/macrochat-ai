@@ -1,34 +1,36 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
 import { comparePairs } from "../../../lib/seo";
-import { localePaths } from "../../../i18n/config";
+import { localeHref, localePaths, toLocale } from "../../../i18n/config";
+import { fmt, pageT } from "../../../i18n/pages";
 
 // One file, eight routes: /calculator and /es/calculator, /ja/... etc.
 export const getStaticPaths = localePaths;
+
+const lang = toLocale(Astro.params.lang);
+const lp = (path: string) => localeHref(lang, path);
+const C = pageT(lang, "compare");
+const F = pageT(lang, "foods");
 
 
 const pairs = comparePairs();
 const popular = pairs.slice(0, 24);
 ---
-<Layout
-  title="Compare food macros — MacroChat"
-  description="Side-by-side calorie and macro comparisons for common foods, with a plain verdict on which fits a cut or a bulk."
->
+<Layout title={C("indexTitle")} description={C("indexDesc")}>
   <section class="section">
     <div class="wrap" style="max-width:820px;">
-      <p class="eyebrow">Reference</p>
-      <h1 style="margin:0.6rem 0 0.8rem;">Compare two foods</h1>
+      <p class="eyebrow">{C("indexEyebrow")}</p>
+      <h1 style="margin:0.6rem 0 0.8rem;">{C("indexH1")}</h1>
       <p class="hero__lead" style="margin:0 0 2rem;">
-        {pairs.length} head-to-head macro comparisons, per 100 g, each with a
-        rule-based verdict for fat loss vs muscle gain.
+        {fmt(C("indexLead"), { count: pairs.length })}
       </p>
-      <h2 style="font-size:1.1rem; margin:0 0 0.6rem; color:var(--amber-ink);">Popular comparisons</h2>
+      <h2 style="font-size:1.1rem; margin:0 0 0.6rem; color:var(--amber-ink);">{C("indexPopular")}</h2>
       <ul class="foods-az">
         {popular.map(([a, b]) => (
-          <li><a href={`/compare/${a.slug}-vs-${b.slug}/`}>{a.name} vs {b.name}</a></li>
+          <li><a href={lp(`/compare/${a.slug}-vs-${b.slug}/`)}>{fmt(F("vs"), { a: a.name, b: b.name })}</a></li>
         ))}
       </ul>
-      <p style="margin-top:1.5rem;"><a href="/foods/">All food macro pages →</a></p>
+      <p style="margin-top:1.5rem;"><a href={lp("/foods/")}>{C("indexToFoods")}</a></p>
     </div>
   </section>
 </Layout>

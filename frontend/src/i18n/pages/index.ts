@@ -17,6 +17,13 @@ const pages: Record<Locale, PageStrings | Partialised> = {
   en, es, ja, fr, de, pt, ko, it,
 };
 
+/** Fill {placeholders} in a translated string: fmt(P("faqA1"), { name, kcal }).
+ * Food names and numbers come from the database, so they are substituted rather
+ * than translated — which also keeps word order the translator's choice. */
+export function fmt(tpl: string, vars: Record<string, string | number>): string {
+  return tpl.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+}
+
 /** The whole section as a plain object, English-filled. Islands take this as a
  * prop — a function like pageT() can't cross the server/client boundary. */
 export function pageDict<S extends keyof PageStrings>(
