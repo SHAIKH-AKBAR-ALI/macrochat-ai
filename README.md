@@ -26,7 +26,8 @@ Live: frontend <https://macrochat-d6oi.onrender.com> · API
 ### Signed in
 - 📷 Photo and/or text meal logging (GPT-4o-mini vision; Gemini/Groq for guests).
 - ✅ Confirm-before-save for low-confidence portion guesses; exact text portions
-  auto-log. Guest demo: 3 analyses per session.
+  auto-log. Guest demo is metered server-side (5/hour, 20/day per IP, plus a
+  global daily backstop) — see `app/ratelimit.py`.
 - 🔎 Manual food search + one-tap re-log of recent meals (no LLM).
 - 📊 Time-zone-aware daily dashboard, week trend chart + streak, meal edit/delete,
   30-day history.
@@ -94,6 +95,7 @@ Frontend: `PUBLIC_API_URL` — backend base URL (defaults to `http://<host>:8000
 ```bash
 .venv\Scripts\python test_nutrition.py      # nutrition layer, no LLM
 .venv\Scripts\python test_identity.py       # identity reconciliation, no LLM
+.venv\Scripts\python test_ratelimit.py      # rate limit / guest budget, no network
 .venv\Scripts\python test_phase2.py         # signup/login/confirm/today — needs live Supabase
 node frontend/src/lib/macros.test.ts        # calc-engine parity vs app/db.py (Node 24)
 ```

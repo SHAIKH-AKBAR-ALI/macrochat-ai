@@ -316,6 +316,18 @@
         res = await fetch(API + "/analyze", { method: "POST", headers: authHeaders(), body: fd });
       }
       const result = await res.json();
+      // 429 = server-side guest/rate budget. Show it plainly and mark the guest
+      // allowance spent — the localStorage counter is only a hint, this is truth.
+      if (res.status === 429) {
+        clearTimeout(coldTimer);
+        thinking.remove();
+        if (!token()) {
+          try { localStorage.setItem("mc_ai_uses", String(GUEST_CAP)); } catch { /* ignore */ }
+          renderGuestNote();
+        }
+        addMsg("bot", result.detail || "Free limit reached. Sign up to keep going.");
+        return;
+      }
       if (!res.ok) throw new Error(result.detail || `Analyze failed (${res.status})`);
 
       clearTimeout(coldTimer);

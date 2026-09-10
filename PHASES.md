@@ -621,6 +621,64 @@ comparisons"); `/calculator`'s common-foods table cross-links to `/compare/`.
 
 ---
 
+## S — Security hardening (audit 2026-09-10)
+
+Full audit of `app/*.py`, `frontend/src/**`, CORS and the Supabase access
+pattern. **Clean:** no SQL injection (FTS input stripped to `[a-z0-9]+` *and*
+bound as a parameter; sqlite opened `mode=ro` on constant paths; Supabase via
+postgrest), no IDOR (cross-user `PATCH`/`DELETE /meals/{id}` → 404, verified),
+no XSS (all user/LLM strings go through `textContent`/`createElement`; the three
+`innerHTML` sites use static or numeric-only values), no secrets in git, and the
+LLM cannot forge macro numbers (they come from the DB).
+
+Work top-down; each item is independent.
+
+- [x] **S1 · 🔴 `/analyze` unauthenticated + unmetered LLM spend** — ✅ FIXED
+      2026-09-10. `app/ratelimit.py`: stdlib sliding-window counters (no Redis —
+      one Render instance; swap the `_hits` store if we scale out).
+      `check_analyze()` runs in `/analyze` **before** `photo.read()` and the
+      pipeline, so a blocked call costs ~7 ms and zero LLM tokens (verified).
+      Limits: guest **5/h, 20/day per IP**, signed-in **60/h per IP**, plus a
+      **300/day global guest backstop** so a distributed attack still can't drain
+      credits. `client_ip()` takes the **rightmost** `X-Forwarded-For` entry —
+      the leftmost is attacker-supplied. Frontend surfaces the 429 detail and
+      marks the guest allowance spent; `mc_ai_uses` stays UX-only.
+      Tests: `test_ratelimit.py` (window expiry, blocked hits not recorded, key
+      isolation, XFF spoof resistance, guest cap, global backstop).
+- [ ] **S2 · 🟠 No upload size/type limit** — `main.py:86`
+      `base64.b64encode(await photo.read())` pulls the whole body into RAM (+33%
+      for base64) on a 512 MB Render instance. Unauthenticated OOM DoS.
+      Fix: reject `> ~8 MB` and non-`image/*` before reading.
+- [ ] **S3 · 🟠 `/foods/lookup` request amplification** — 50 ingredients × a live
+      USDA call at 10 s timeout ⇒ one unauthenticated request can pin a worker
+      ~500 s and burn the USDA quota. Fix: cap live fallbacks per request (~5),
+      drop timeout to ~3 s, rate-limit.
+- [ ] **S4 · 🟠 Service-role key bypasses RLS** — `db.py:15` uses
+      `supabase_secret_key`, so RLS is off and the *only* tenant boundary is the
+      hand-written `.eq("user_id", …)`. All 14 current queries are correctly
+      filtered, but there is no defense-in-depth — one future omission is a
+      cross-tenant breach. Fix: use a JWT-scoped client for user data; keep the
+      service client for signup/admin only.
+- [ ] **S5 · 🟡 Signup abuse + weak validation** — `/signup` is unmetered and
+      `email_confirm: True` (no verification); `password: str` has no min length
+      at the API (frontend-only `minlength=6`). Also `str(e)` from Supabase is
+      returned to the client (`main.py:52`) — internal error disclosure.
+- [ ] **S6 · 🟡 CORS too broad + no security headers** — `main.py:16` allows any
+      `https://<anything>.onrender.com`, not just ours; the static site sends no
+      CSP / `X-Frame-Options` / `Referrer-Policy`, so `/dashboard` is
+      clickjackable.
+- [ ] **S7 · 🟡 `time_zone` unvalidated** — stored raw, later `ZoneInfo(tz_name)`
+      (`db.py:109,211,233`). A junk value permanently 500s `/today`, `/trends`
+      and `/meals/today` for that account. (No traversal — `zoneinfo` rejects
+      `..`/absolute keys.) Fix: validate against `available_timezones()`.
+- [ ] **S8 · 🔵 Small stuff** — `MealPatch.grams` non-numeric key → `int()`
+      ValueError → 500 (`db.py:172`); `/foods/search?q=` has no length cap;
+      token lives in `localStorage` with a 1 h expiry and no refresh (accepted
+      trade-off, no XSS found); orphan auth user if the signup profile insert
+      fails (pre-existing, documented in CLAUDE.md).
+
+---
+
 ## After R10
 
 Regroup with user. Candidates: guides/editorial, restaurant pages, PWA,

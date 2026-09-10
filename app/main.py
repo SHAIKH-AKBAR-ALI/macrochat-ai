@@ -1,12 +1,12 @@
 import base64
 from typing import Literal
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
-from app import db, nutrition
+from app import db, nutrition, ratelimit
 from app.graph import aggregate, lookup, pipeline
 
 app = FastAPI(title="MacroChat AI — Phase 3")
@@ -77,13 +77,13 @@ def login(body: LoginBody):
 
 @app.post("/analyze")
 async def analyze(
+    request: Request,
     photo: UploadFile | None = File(None),
     text: str | None = Form(None),
     cred: HTTPAuthorizationCredentials | None = Depends(_optional_bearer),
 ):
     if photo is None and not text:
         raise HTTPException(422, "Provide a photo, text, or both.")
-    image_b64 = base64.b64encode(await photo.read()).decode() if photo else None
     # Stale/expired token must not hard-fail analysis — degrade to guest and flag it
     # so the client can clear the token. Save/confirm/today still require real auth.
     auth_expired = False
@@ -93,6 +93,11 @@ async def analyze(
             user_id = db.current_user_id(cred)
         except HTTPException:
             auth_expired = True
+    # Budget gate BEFORE any LLM work — this endpoint needs no auth, so it is the
+    # only thing standing between a curl loop and the API bill. The frontend's
+    # localStorage counter is UX; this is the control.
+    ratelimit.check_analyze(request, is_guest=user_id is None)
+    image_b64 = base64.b64encode(await photo.read()).decode() if photo else None
     # today's totals go INTO the pipeline so the reply can narrate remaining macros
     today = db.today_totals(user_id) if user_id else None
     result = pipeline.invoke({"image_b64": image_b64, "text": text, "today": today,
