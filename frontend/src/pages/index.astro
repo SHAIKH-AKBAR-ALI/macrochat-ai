@@ -9,6 +9,8 @@ const tools = [
   { href: "/protein-calculator", name: "Protein calculator", note: "A daily protein target scaled to your weight." },
   { href: "/calorie-deficit-calculator", name: "Calorie deficit", note: "Pick a deficit, see the weekly rate and goal date." },
   { href: "/recipe-macro-calculator", name: "Recipe macros", note: "Add ingredients and grams, get the whole-meal total." },
+  { href: "/compare/", name: "Compare two foods", note: "Chicken vs rice, roti vs bread — bars, per-serving portions, a verdict for your goal." },
+  { href: "/foods/", name: "Food macros A–Z", note: "Per-100 g calories and macros for ~500 foods, USDA and INDB." },
 ];
 ---
 <Layout
@@ -40,7 +42,7 @@ const tools = [
         </p>
         <ul class="checks" data-rise="3">
           <li>Six calculators — macro, TDEE, BMR, protein, deficit, recipe</li>
-          <li>Macro pages for 99+ common foods, USDA and INDB</li>
+          <li>Macro pages for ~500 foods, plus side-by-side food comparisons</li>
           <li>Your inputs save on this device — no account needed</li>
         </ul>
         <div data-rise="4">
@@ -71,8 +73,9 @@ const tools = [
       <div class="section__head reveal">
         <p class="eyebrow">Free · no account</p>
         <h2>Every tool, no sign-up wall.</h2>
-        <p>Each one runs client-side and remembers your last inputs. Sign up only
-          when you want them to track a day.</p>
+        <p>Six calculators that run in your browser and remember your last inputs,
+          plus ~500 food macro pages and thousands of head-to-head comparisons.
+          Sign up only when you want them to track a day.</p>
       </div>
       <div class="gridfeat reveal">
         {tools.map((t) => (
@@ -82,12 +85,6 @@ const tools = [
             <span class="cell__go">Open →</span>
           </a>
         ))}
-        <a class="cell cell--link cell--wide" href="/foods/">
-          <h3>Food macros A–Z + compare</h3>
-          <p>Per-100 g calories and macros for 99 common foods, plus 120 side-by-side
-            comparisons with a verdict for a cut or a bulk.</p>
-          <span class="cell__go">Browse foods →</span>
-        </a>
       </div>
     </div>
   </section>

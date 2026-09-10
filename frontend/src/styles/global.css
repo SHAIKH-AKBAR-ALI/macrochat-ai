@@ -268,7 +268,14 @@ main { flex: 1; }
   text-decoration: none;
 }
 .nav__menu a:hover { color: var(--ink); background: color-mix(in srgb, var(--amber) 12%, transparent); }
-.nav__menu small { display: block; padding: 0.5rem 0.7rem 0.3rem; color: var(--mute); font-size: 0.72rem; }
+.nav__menu small {
+  display: block; padding: 0.5rem 0.7rem 0.35rem; color: var(--mute);
+  font-family: var(--font-mono); font-size: 0.62rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.12em;
+}
+.nav__menu small:not(:first-child) {
+  border-top: var(--border); margin-top: 0.4rem; padding-top: 0.65rem;
+}
 
 @media (max-width: 640px) {
   .nav__drop { display: none; }  /* ponytail: mobile nav keeps the core 3 links; full menu is the footer sitemap */

@@ -45,15 +45,18 @@ const ogImage = SITE + "/og-default.jpg";
         <a class="nav__logo" href="/"><img src="/logo-mark.png" alt="" width="22" height="22" />MACRO<b>CHAT</b></a>
         <div class="nav__links">
           <div class="nav__drop" id="nav-drop">
-            <button type="button" aria-haspopup="true" aria-expanded="false" id="nav-drop-btn">Calculators</button>
-            <div class="nav__menu" role="menu" aria-label="Calculators">
-              <small>Free · no signup</small>
+            <button type="button" aria-haspopup="true" aria-expanded="false" id="nav-drop-btn">Free tools</button>
+            <div class="nav__menu" role="menu" aria-label="Free tools">
+              <small>Calculators · no signup</small>
               <a href="/calculator" role="menuitem">Macro calculator</a>
               <a href="/tdee-calculator" role="menuitem">TDEE calculator</a>
               <a href="/bmr-calculator" role="menuitem">BMR calculator</a>
               <a href="/protein-calculator" role="menuitem">Protein calculator</a>
               <a href="/calorie-deficit-calculator" role="menuitem">Calorie-deficit calculator</a>
               <a href="/recipe-macro-calculator" role="menuitem">Recipe macro calculator</a>
+              <small>Food data</small>
+              <a href="/compare/" role="menuitem">Compare two foods</a>
+              <a href="/foods/" role="menuitem">Food macros A–Z</a>
             </div>
           </div>
           <a href="/chat" id="nav-meal" class={active === "chat" || active === "add" ? "active" : ""}>Log a meal</a>
