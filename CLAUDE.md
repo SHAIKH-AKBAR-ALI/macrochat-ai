@@ -474,6 +474,11 @@ jpeg → 413.
   permanently 500 `/today`, `/trends`, `/meals/today`.
 - `MealPatch.grams` is `dict[int, float]` (422, not a 500); signup deletes the
   auth user if the profile insert fails (no orphan accounts).
+- **Left for later** (see `PHASES.md` "S — left for later", both 🔵, both have a
+  first layer already): static-site headers must be set in the Render dashboard
+  (do it at launch, ~2 min — frame-buster covers it meanwhile); a real CSP needs
+  hashes for Astro's inline island scripts (do it when there's real traffic — no
+  XSS sink exists today).
 - Known ceiling, matters at scale not now: `current_user_id` costs one Supabase
   round-trip per request (verify the JWT locally instead); rate-limit counters are
   per-process (Redis if we ever run 2+ instances).

@@ -747,6 +747,38 @@ Live-verified on `macrochat-api` after the deploy: short password → 422,
       found; a refresh flow is a Phase-4 item).
       Test: `test_security.py::test_meal_patch_keys`.
 
+### S — left for later (nothing urgent)
+
+Both leftovers are 🔵 **second-layer** defences, not open holes — the first layer
+is already in place for each. Ordered by when they start to matter.
+
+- [ ] **Static-site security headers — do this at launch (~2 min).** Render takes
+      static-site headers from *service settings*, not from a file in `dist/`, so
+      this can't ship in code. Render dashboard → `macrochat` → Redirects/Rewrites
+      → Headers, path `/*`:
+      `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
+      `Referrer-Policy: strict-origin-when-cross-origin`.
+      Covers: clickjacking (someone framing `/dashboard` invisibly to steal a
+      click). Already covered by the `Layout.astro` frame-buster — the header is
+      the version that can't be turned off by a script-blocking edge case. Low
+      because it needs a logged-in user *and* a reason to target us: no domain, no
+      users yet.
+- [ ] **A real CSP — when there's real traffic or money.** Astro islands ship
+      inline `<script>`s, so a useful policy needs per-script hashes (or a nonce +
+      SSR, which we don't run) — an hour of work, not five minutes. Covers: limits
+      the blast radius *if* an XSS ever lands. Low because the audit found no XSS
+      sink — every user/LLM string goes through `textContent`/`createElement`, and
+      the three `innerHTML` sites use static or numeric-only values. This is the
+      second layer, not the first.
+
+Not security, but the same "matters at scale, not now" bucket — see the ceilings
+noted in S1 and S4:
+- `current_user_id` costs one Supabase round-trip per request; verify the JWT
+  locally when latency starts to show.
+- Rate-limit counters live in process memory; they need Redis the day we run more
+  than one instance.
+- `mc_token` in `localStorage`, 1 h, no refresh flow (Phase-4 session polish).
+
 ---
 
 ## After R10
