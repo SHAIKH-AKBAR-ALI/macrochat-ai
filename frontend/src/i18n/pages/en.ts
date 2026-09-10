@@ -1,0 +1,174 @@
+/** Page copy, English — the source of truth. Every other locale file mirrors
+ * these keys; `pageT()` falls back here for anything missing.
+ *
+ * Sections are added as pages get translated: `landing` first, calculators,
+ * /foods/ and /compare/ after.
+ */
+export const en = {
+  landing: {
+    "hero.pill": "Free · No signup · Saved on your device",
+    "hero.h1a": "Free macro tools.",
+    "hero.h1b": "Real database numbers.",
+    "hero.lead":
+      "Work out your calories and macro split, break down a recipe, compare two foods — all free, all in your browser, nothing to sign up for. Every number traces back to USDA or INDB, never a guess.",
+    "hero.check1": "Six calculators — macro, TDEE, BMR, protein, deficit, recipe",
+    "hero.check2": "Macro pages for ~500 foods, plus side-by-side food comparisons",
+    "hero.check3": "Your inputs save on this device — no account needed",
+    "hero.ctaCalc": "Open the calculator",
+    "hero.ctaTracking": "See meal tracking ↓",
+    "hero.quickLabel": "Quick macro calculator",
+    "hero.quickEyebrow": "Try it now · quick calculator",
+
+    "trust.1": "Free forever",
+    "trust.2": "No email to start",
+    "trust.3": "Under 60 seconds",
+    "trust.4": "We don't sell supplements or coaching",
+
+    "tools.eyebrow": "Free · no account",
+    "tools.h2": "Every tool, no sign-up wall.",
+    "tools.lead":
+      "Six calculators that run in your browser and remember your last inputs, plus ~500 food macro pages and thousands of head-to-head comparisons. Sign up only when you want them to track a day.",
+    "tools.open": "Open →",
+    "tool.macro": "Calories + protein/carb/fat split from your body stats.",
+    "tool.tdee": "Your maintenance calories — what you burn in a day.",
+    "tool.bmr": "Resting burn, Mifflin-St Jeor or Katch-McArdle.",
+    "tool.protein": "A daily protein target scaled to your weight.",
+    "tool.deficit": "Pick a deficit, see the weekly rate and goal date.",
+    "tool.recipe": "Add ingredients and grams, get the whole-meal total.",
+    "tool.compare":
+      "Chicken vs rice, roti vs bread — bars, per-serving portions, a verdict for your goal.",
+    "tool.az": "Per-100 g calories and macros for ~500 foods, USDA and INDB.",
+
+    "stats.usda": "USDA food entries",
+    "stats.indb": "INDB regional recipes",
+    "stats.guessed": "Numbers the AI guessed",
+    "stats.calcs": "Free calculators",
+
+    "tracker.eyebrow": "The signed-in layer",
+    "tracker.h2": "Want it to track your day? Sign up free.",
+    "tracker.lead":
+      "Everything above works with no account. Make one and the same real-database engine logs your meals — a photo or a sentence in, calories and macros out, checked against your goal.",
+    "tracker.imgAlt":
+      "Describe your meal, MacroChat looks it up in a real database, you confirm the portion.",
+
+    "step1.label": "Step 1",
+    "step1.title": "Say it or snap it",
+    "step1.body":
+      "Type your meal, attach a photo, or both. The AI names each food and spots the prep style — grilled, fried, curry.",
+    "step2.label": "Step 2",
+    "step2.title": "Real database lookup",
+    "step2.body":
+      "Every calorie comes from the Indian Nutrient Databank or USDA FoodData Central — matched to your food, never guessed from the AI's memory.",
+    "step3.label": "Step 3",
+    "step3.title": "You stay in control",
+    "step3.body":
+      "Stated a portion? Logged instantly. Photo-only estimate? You confirm the grams before anything counts toward your day.",
+
+    "shot.eyebrow": "Signed in",
+    "shot.h2": "A meal in, the facts out.",
+    "shot.lead":
+      "No dropdowns, no barcode hunt. Snap the plate, and MacroChat hands back a nutrition-facts panel with the macro split and every source labelled — INDB or USDA, right on the row.",
+    "shot.cta": "Create a free account",
+    "shot.you": "You",
+    "shot.msg": "1 bowl veg biryani",
+    "shot.factsTitle": "Meal facts",
+    "shot.calories": "Calories",
+    "shot.protein": "Protein",
+    "shot.carbs": "Carbs",
+    "shot.fat": "Fat",
+    "shot.item": "Veg biryani · 1 bowl",
+    "shot.donutLabel": "Protein 22%, Carbs 58%, Fat 20%",
+
+    "feat.eyebrow": "What tracking adds",
+    "feat.h2": "Built for how you actually eat.",
+    "feat1.title": "Photo, text, or both",
+    "feat1.body":
+      "Snap the plate, type the portion, or do both. Text with grams logs instantly.",
+    "feat2.title": "Real meals, not just packages",
+    "feat2.body":
+      "USDA for everyday foods worldwide, plus 1,000+ INDB recipes for regional dishes — dal, biryani, dosa.",
+    "feat3.title": "You confirm the grams",
+    "feat3.body":
+      "Estimated a portion from a photo? Nothing counts until you approve it.",
+    "feat4.title": "Manual search too",
+    "feat4.body":
+      "Skip the AI — search the same database, set the grams, log it straight to your day.",
+    "feat5.title": "Week trends",
+    "feat5.body":
+      "A 7-day chart against your goal, a logging streak, and plain-language nudges — no AI cost.",
+    "feat6.title": "Your midnight, not ours",
+    "feat6.body":
+      "Daily totals reset on your timezone's midnight — captured once at signup.",
+
+    "vs.eyebrow": "Why it's different",
+    "vs.h2": "A typical calorie app vs. MacroChat.",
+    "vs.them": "Typical app",
+    "vs.us": "MacroChat",
+    "vs.them1": "Signup wall before you can use anything",
+    "vs.us1": "Calculators + food data, no account",
+    "vs.them2": "AI or crowd guesses the numbers",
+    "vs.us2": "Only INDB + USDA lookups",
+    "vs.them3": "Endless food-search dropdowns",
+    "vs.us3": "One sentence, or one photo",
+    "vs.them4": "Silently logs whatever it thinks",
+    "vs.us4": "You confirm estimated portions",
+    "vs.them5": "Barcode-first, home cooking missing",
+    "vs.us5": "USDA + INDB, cooked dishes included",
+
+    "receipts.eyebrow": "Real logs",
+    "receipts.h2": "Not reviews. Receipts.",
+    "receipts.q1": "2 rotis and dal — logged in 6 seconds, 348 kcal, source INDB.",
+    "receipts.by1": "— A real log, not a review",
+    "receipts.q2":
+      "Photo of a plate → “grilled chicken breast, 210g?” → confirmed → 347 kcal.",
+    "receipts.by2": "— The confirm step, working",
+    "receipts.q3":
+      "“boiled quinoa” resolved to USDA quinoa, not chicken feet. Fixed, tested.",
+    "receipts.by3": "— One less junk match",
+
+    "faq.eyebrow": "FAQ",
+    "faq.h2": "Fair questions.",
+    "faq.q1": "Do the calculators cost anything?",
+    "faq.a1":
+      "No. Every calculator and food page is free and needs no account — your inputs save in your browser. You only sign up if you want meal tracking with saved history and daily totals.",
+    "faq.q2": "How accurate are the calorie counts?",
+    "faq.a2":
+      "Numbers come from the Indian Nutrient Databank and USDA FoodData Central — real lab-measured data, never AI guesses. The uncertain part is portion size: state grams in text and it's as exact as your scale; from a photo it's an estimate, and we always ask you to confirm it before it counts.",
+    "faq.q3": "What formulas do the calculators use?",
+    "faq.a3":
+      "Mifflin-St Jeor for BMR by default, Katch-McArdle if you enter a body-fat %. TDEE multiplies by an activity factor; the macro split uses 1.8 g/kg protein, 25% of calories from fat, carbs for the rest. All shown on the ",
+    "faq.a3link": "calculator page",
+    "faq.q4": "Can I try the meal tracker without an account?",
+    "faq.a4pre": "Yes — ",
+    "faq.a4link": "guest mode",
+    "faq.a4post":
+      " analyses up to three meals per session. An account saves them, tracks your day, and lifts the limit.",
+    "faq.q5": "Does it know Indian food?",
+    "faq.a5":
+      "Yes — 1,000+ recipes and ingredients from the Indian Nutrient Databank: roti, dal, sabzi, biryani, dosa. Everything else falls back to USDA's database.",
+    "faq.q6": "Why does the first meal analysis sometimes take ~50 seconds?",
+    "faq.a6":
+      "The AI backend runs on a free tier that sleeps when idle; the first request wakes it. The calculators don't touch it — they're instant.",
+    "faq.q7": "Does it scan barcodes?",
+    "faq.a7":
+      "No, on purpose. Barcodes only cover packaged food; most real meals — dal, sabzi, home-cooked anything — have no barcode. Describe or photograph the plate instead.",
+    "faq.q8": "Is there a dark mode?",
+    "faq.a8":
+      "Yes — the ◐ toggle in the nav. Same ink-on-paper system, inverted; the teal holds. Your choice is remembered and follows your OS by default.",
+    "faq.q9": "What happens to my photos and data?",
+    "faq.a9":
+      "Photos are used only to identify the food. Your meal history is stored in Supabase with row-level security — only your account can read it. See the ",
+    "faq.a9link": "privacy policy",
+
+    "cta.h2": "Start with a number.",
+    "cta.btn1": "Open the calculator",
+    "cta.btn2": "Sign up to track",
+    "cta.sub": "No card. No barcode. No AI-invented numbers.",
+
+    "meta.title": "MacroChat — Free macro calculators + real-database meal tracking",
+    "meta.description":
+      "Free macro, TDEE, BMR, protein, deficit and recipe calculators — no signup, saved on your device. Calorie and macro numbers come from USDA and INDB, never guessed.",
+  },
+} as const;
+
+export type PageStrings = typeof en;
