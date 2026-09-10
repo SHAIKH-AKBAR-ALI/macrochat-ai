@@ -1,8 +1,20 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import QuickCalc from "../components/QuickCalc.tsx";
+
+const tools = [
+  { href: "/calculator", name: "Macro calculator", note: "Calories + protein/carb/fat split from your body stats." },
+  { href: "/tdee-calculator", name: "TDEE calculator", note: "Your maintenance calories — what you burn in a day." },
+  { href: "/bmr-calculator", name: "BMR calculator", note: "Resting burn, Mifflin-St Jeor or Katch-McArdle." },
+  { href: "/protein-calculator", name: "Protein calculator", note: "A daily protein target scaled to your weight." },
+  { href: "/calorie-deficit-calculator", name: "Calorie deficit", note: "Pick a deficit, see the weekly rate and goal date." },
+  { href: "/recipe-macro-calculator", name: "Recipe macros", note: "Add ingredients and grams, get the whole-meal total." },
+];
 ---
-<Layout title="MacroChat AI — Tell it what you ate">
+<Layout
+  title="MacroChat — Free macro calculators + real-database meal tracking"
+  description="Free macro, TDEE, BMR, protein, deficit and recipe calculators — no signup, saved on your device. Calorie and macro numbers come from USDA and INDB, never guessed."
+>
   <script is:inline>
     // Logged in -> the landing page isn't your home; the dashboard is.
     try {
@@ -13,31 +25,32 @@ import QuickCalc from "../components/QuickCalc.tsx";
       }
     } catch (e) {}
   </script>
+
   <section class="hero">
     <div class="wrap hero__grid">
       <div>
-        <span class="pill" data-rise="1">Free tools · No signup</span>
+        <span class="pill" data-rise="1">Free · No signup · Saved on your device</span>
         <h1 style="margin-top:1.1rem;" data-rise="2">
-          Tell it what<br />you ate.<br /><span>It does the math.</span>
+          Free macro tools.<br /><span>Real database numbers.</span>
         </h1>
         <p class="hero__lead" data-rise="3">
-          Send a meal photo or a line of text — “200g grilled chicken, 2 rotis”.
-          MacroChat identifies the food, resolves the portion, and pulls calories
-          and macros from real nutrition databases. The AI never invents a number.
+          Work out your calories and macro split, break down a recipe, compare two
+          foods — all free, all in your browser, nothing to sign up for. Every
+          number traces back to USDA or INDB, never a guess.
         </p>
         <ul class="checks" data-rise="3">
-          <li>Calories from USDA and INDB — lab data, not AI guesses</li>
-          <li>Photo or text, no food-search dropdowns</li>
-          <li>You confirm any portion estimated from a photo</li>
+          <li>Six calculators — macro, TDEE, BMR, protein, deficit, recipe</li>
+          <li>Macro pages for 99+ common foods, USDA and INDB</li>
+          <li>Your inputs save on this device — no account needed</li>
         </ul>
         <div data-rise="4">
-          <a class="btn" href="/signup">Start tracking</a>
-          <a class="btn btn--ghost" href="/chat" style="margin-left:0.6rem;">Try it without an account</a>
+          <a class="btn" href="/calculator">Open the calculator</a>
+          <a class="btn btn--ghost" href="#tracker" style="margin-left:0.6rem;">See meal tracking ↓</a>
         </div>
       </div>
 
       <div class="demo-exchange" aria-label="Quick macro calculator" data-rise="3">
-        <p class="eyebrow" style="margin-bottom:0.8rem;">Quick calculator · free, no signup</p>
+        <p class="eyebrow" style="margin-bottom:0.8rem;">Try it now · quick calculator</p>
         <QuickCalc client:load />
       </div>
     </div>
@@ -51,6 +64,33 @@ import QuickCalc from "../components/QuickCalc.tsx";
       <span>We don't sell supplements or coaching</span>
     </div>
   </div>
+
+  <!-- FREE TOOLS -->
+  <section class="section" id="tools">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <p class="eyebrow">Free · no account</p>
+        <h2>Every tool, no sign-up wall.</h2>
+        <p>Each one runs client-side and remembers your last inputs. Sign up only
+          when you want them to track a day.</p>
+      </div>
+      <div class="gridfeat reveal">
+        {tools.map((t) => (
+          <a class="cell cell--link" href={t.href}>
+            <h3>{t.name}</h3>
+            <p>{t.note}</p>
+            <span class="cell__go">Open →</span>
+          </a>
+        ))}
+        <a class="cell cell--link cell--wide" href="/foods/">
+          <h3>Food macros A–Z + compare</h3>
+          <p>Per-100 g calories and macros for 99 common foods, plus 120 side-by-side
+            comparisons with a verdict for a cut or a bulk.</p>
+          <span class="cell__go">Browse foods →</span>
+        </a>
+      </div>
+    </div>
+  </section>
 
   <!-- STATS -->
   <section class="band band--amber">
@@ -69,19 +109,22 @@ import QuickCalc from "../components/QuickCalc.tsx";
           <span class="lbl">Numbers the AI guessed</span>
         </div>
         <div class="stat">
-          <span class="num" data-count="2">0</span>
-          <span class="lbl">Lab-grade databases</span>
+          <span class="num" data-count="6">0</span>
+          <span class="lbl">Free calculators</span>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- HOW IT WORKS -->
-  <section class="section">
+  <!-- THE TRACKER (scroll payoff) -->
+  <section class="section" id="tracker">
     <div class="wrap">
       <div class="section__head reveal">
-        <p class="eyebrow">How it works</p>
-        <h2>Three steps. No food-search forms.</h2>
+        <p class="eyebrow">The signed-in layer</p>
+        <h2>Want it to track your day? Sign up free.</h2>
+        <p>Everything above works with no account. Make one and the same
+          real-database engine logs your meals — a photo or a sentence in,
+          calories and macros out, checked against your goal.</p>
       </div>
       <img class="how-strip reveal" src="/how-it-works.png" alt="Describe your meal, MacroChat looks it up in a real database, you confirm the portion." width="1600" height="533" loading="lazy" />
       <div class="steps">
@@ -127,13 +170,14 @@ import QuickCalc from "../components/QuickCalc.tsx";
     <div class="wrap">
       <div class="shot__grid">
         <div class="reveal">
-          <p class="eyebrow">The whole app</p>
+          <p class="eyebrow">Signed in</p>
           <h2 style="margin:0.8rem 0 1rem;">A meal in, the facts out.</h2>
-          <p style="color:var(--mute); font-size:1.05rem;">
+          <p style="color:var(--ink-2); font-size:1.05rem;">
             No dropdowns, no barcode hunt. Snap the plate, and MacroChat hands
             back a nutrition-facts panel with the macro split and every source
             labelled — INDB or USDA, right on the row.
           </p>
+          <a class="btn btn--ghost" href="/signup" style="margin-top:1.2rem;">Create a free account</a>
         </div>
         <div class="shot reveal">
           <div class="shot__bar" aria-hidden="true">
@@ -177,7 +221,7 @@ import QuickCalc from "../components/QuickCalc.tsx";
   <section class="section" style="padding-top:0;">
     <div class="wrap">
       <div class="section__head reveal">
-        <p class="eyebrow">What's inside</p>
+        <p class="eyebrow">What tracking adds</p>
         <h2>Built for how you actually eat.</h2>
       </div>
       <div class="gridfeat reveal">
@@ -198,13 +242,13 @@ import QuickCalc from "../components/QuickCalc.tsx";
         </div>
         <div class="cell">
           <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><circle cx="20" cy="14" r="7"/><path d="M7 34 C7 26 13 23 20 23 C27 23 33 26 33 34"/></svg>
-          <h3>No signup wall</h3>
-          <p>Guest mode analyzes any meal free. Make an account only when you want to track a day.</p>
+          <h3>Manual search too</h3>
+          <p>Skip the AI — search the same database, set the grams, log it straight to your day.</p>
         </div>
         <div class="cell">
-          <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><path d="M27 22 A11 11 0 1 1 18 8 A9 9 0 1 0 27 22"/></svg>
-          <h3>Dark mode built in</h3>
-          <p>The whole editorial system, inverted. The teal holds. Follows your OS by default.</p>
+          <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><path d="M6 30 L14 20 L22 26 L34 10"/><circle cx="34" cy="10" r="2"/></svg>
+          <h3>Week trends</h3>
+          <p>A 7-day chart against your goal, a logging streak, and plain-language nudges — no AI cost.</p>
         </div>
         <div class="cell">
           <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><circle cx="20" cy="20" r="14"/><polyline points="20,11 20,20 27,24"/></svg>
@@ -228,6 +272,10 @@ import QuickCalc from "../components/QuickCalc.tsx";
           <div class="compare__cell compare__cell--us compare__head">MacroChat</div>
         </div>
         <div class="compare__row">
+          <div class="compare__cell compare__cell--them">Signup wall before you can use anything</div>
+          <div class="compare__cell compare__cell--us">Calculators + food data, no account</div>
+        </div>
+        <div class="compare__row">
           <div class="compare__cell compare__cell--them">AI or crowd guesses the numbers</div>
           <div class="compare__cell compare__cell--us">Only INDB + USDA lookups</div>
         </div>
@@ -242,10 +290,6 @@ import QuickCalc from "../components/QuickCalc.tsx";
         <div class="compare__row">
           <div class="compare__cell compare__cell--them">Barcode-first, home cooking missing</div>
           <div class="compare__cell compare__cell--us">USDA + INDB, cooked dishes included</div>
-        </div>
-        <div class="compare__row">
-          <div class="compare__cell compare__cell--them">Account wall before you can look</div>
-          <div class="compare__cell compare__cell--us">Guest mode, no signup</div>
         </div>
       </div>
     </div>
@@ -285,6 +329,12 @@ import QuickCalc from "../components/QuickCalc.tsx";
       <h2 style="margin:1rem 0 1.5rem;">Fair questions.</h2>
 
       <details class="faq">
+        <summary>Do the calculators cost anything?</summary>
+        <p>No. Every calculator and food page is free and needs no account — your
+        inputs save in your browser. You only sign up if you want meal tracking
+        with saved history and daily totals.</p>
+      </details>
+      <details class="faq">
         <summary>How accurate are the calorie counts?</summary>
         <p>Numbers come from the Indian Nutrient Databank and USDA FoodData Central —
         real lab-measured data, never AI guesses. The uncertain part is portion size:
@@ -292,16 +342,16 @@ import QuickCalc from "../components/QuickCalc.tsx";
         estimate, and we always ask you to confirm it before it counts.</p>
       </details>
       <details class="faq">
-        <summary>Do I need to weigh my food?</summary>
-        <p>No — but it helps. "2 rotis" or "a bowl of dal" works; the AI converts
-        common portions to grams. Photos alone work too, you just confirm the
-        estimated grams before logging.</p>
+        <summary>What formulas do the calculators use?</summary>
+        <p>Mifflin-St Jeor for BMR by default, Katch-McArdle if you enter a body-fat
+        %. TDEE multiplies by an activity factor; the macro split uses 1.8 g/kg
+        protein, 25% of calories from fat, carbs for the rest. All shown on the
+        <a href="/calculator">calculator page</a>.</p>
       </details>
       <details class="faq">
-        <summary>Photo or text — which is better?</summary>
-        <p>Text with stated portions ("200g chicken") is exact and logs instantly.
-        Photos are great for identification, but portion size is estimated — you'll
-        confirm the grams. Best of both: send a photo <em>and</em> a line of text.</p>
+        <summary>Can I try the meal tracker without an account?</summary>
+        <p>Yes — <a href="/chat">guest mode</a> analyses up to three meals per
+        session. An account saves them, tracks your day, and lifts the limit.</p>
       </details>
       <details class="faq">
         <summary>Does it know Indian food?</summary>
@@ -310,21 +360,9 @@ import QuickCalc from "../components/QuickCalc.tsx";
         database.</p>
       </details>
       <details class="faq">
-        <summary>Can I try it without an account?</summary>
-        <p>Yes. <a href="/chat">Guest mode</a> analyzes any meal — you only need an
-        account to save meals and track daily totals against your goal.</p>
-      </details>
-      <details class="faq">
-        <summary>Why does the first message sometimes take ~50 seconds?</summary>
-        <p>We run on a free tier that sleeps when idle. The first request wakes the
-        server — a cold start of up to ~50 seconds — and everything after is fast.
-        Leave the tab open; it will answer.</p>
-      </details>
-      <details class="faq">
-        <summary>Why does it sometimes ask me to confirm?</summary>
-        <p>When a portion is estimated from a photo (or the food identification is
-        uncertain), nothing is saved until you check the grams. We never silently log
-        a guess.</p>
+        <summary>Why does the first meal analysis sometimes take ~50 seconds?</summary>
+        <p>The AI backend runs on a free tier that sleeps when idle; the first
+        request wakes it. The calculators don't touch it — they're instant.</p>
       </details>
       <details class="faq">
         <summary>Does it scan barcodes?</summary>
@@ -334,15 +372,14 @@ import QuickCalc from "../components/QuickCalc.tsx";
       </details>
       <details class="faq">
         <summary>Is there a dark mode?</summary>
-        <p>Yes — the ◐ toggle in the nav. Same ink-on-paper system, inverted; amber
-        stays amber. Your choice is remembered, and it follows your OS preference by
-        default.</p>
+        <p>Yes — the ◐ toggle in the nav. Same ink-on-paper system, inverted; the
+        teal holds. Your choice is remembered and follows your OS by default.</p>
       </details>
       <details class="faq">
         <summary>What happens to my photos and data?</summary>
         <p>Photos are used only to identify the food. Your meal history is stored
-        encrypted in Supabase with row-level security — only your account can read it.
-        See the <a href="/privacy">privacy policy</a>.</p>
+        in Supabase with row-level security — only your account can read it. See the
+        <a href="/privacy">privacy policy</a>.</p>
       </details>
     </div>
   </section>
@@ -354,8 +391,11 @@ import QuickCalc from "../components/QuickCalc.tsx";
         <path d="M6 10 C30 4 44 18 40 40" />
         <polyline points="32,34 40,42 48,34" />
       </svg>
-      <h2>Stop guessing.<br />Start logging.</h2>
-      <a class="btn btn--ghost" href="/signup" style="font-size:1rem; padding:1.1rem 2.4rem;">Start tracking — free</a>
+      <h2>Start with a number.</h2>
+      <div class="cta-mega__btns">
+        <a class="btn btn--ghost" href="/calculator" style="font-size:1rem; padding:1.1rem 2.2rem;">Open the calculator</a>
+        <a class="btn btn--ghost" href="/signup" style="font-size:1rem; padding:1.1rem 2.2rem;">Sign up to track</a>
+      </div>
       <p class="sub">No card. No barcode. No AI-invented numbers.</p>
     </div>
   </section>
