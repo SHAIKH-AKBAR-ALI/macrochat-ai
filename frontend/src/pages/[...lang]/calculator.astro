@@ -1,10 +1,15 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import FullCalc from "../../components/FullCalc.tsx";
-import { localePaths } from "../../i18n/config";
+import { localeHref, localePaths, toLocale } from "../../i18n/config";
+import { pageDict } from "../../i18n/pages";
 
 // One file, eight routes: /calculator and /es/calculator, /ja/... etc.
 export const getStaticPaths = localePaths;
+
+const lang = toLocale(Astro.params.lang);
+const lp = (path: string) => localeHref(lang, path);
+const calc = pageDict(lang, "calc");
 
 
 // Static reference data. Macros per typical serving. Rows link to /foods/<slug>-macros/
@@ -40,7 +45,7 @@ const COMMON_FOODS = [
         </p>
       </div>
 
-      <FullCalc client:load />
+      <FullCalc t={calc} client:load />
     </div>
   </section>
 

@@ -1,10 +1,15 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import MiniCalc from "../../components/MiniCalc.tsx";
-import { localePaths } from "../../i18n/config";
+import { localeHref, localePaths, toLocale } from "../../i18n/config";
+import { pageDict } from "../../i18n/pages";
 
 // One file, eight routes: /calculator and /es/calculator, /ja/... etc.
 export const getStaticPaths = localePaths;
+
+const lang = toLocale(Astro.params.lang);
+const lp = (path: string) => localeHref(lang, path);
+const calc = pageDict(lang, "calc");
 
 ---
 <Layout title="Calorie-deficit calculator — MacroChat">
@@ -18,7 +23,7 @@ export const getStaticPaths = localePaths;
           the weekly rate of loss, and roughly when you'd hit the goal.
         </p>
       </div>
-      <MiniCalc mode="deficit" client:load />
+      <MiniCalc t={calc} calcHref={lp("/calculator")} mode="deficit" client:load />
     </div>
   </section>
 

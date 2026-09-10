@@ -61,7 +61,11 @@ const num = (s: string) => {
 const sel = (e: Event) => (e.target as HTMLSelectElement).value;
 const inp = (e: Event) => (e.target as HTMLInputElement).value;
 
-export default function MiniCalc({ mode }: { mode: Mode }) {
+export default function MiniCalc({ mode, t, calcHref = "/calculator" }: {
+  mode: Mode;
+  t: Record<string, string>;
+  calcHref?: string;
+}) {
   const [s, setS] = useState<State>(DEFAULTS);
   useEffect(() => setS(load()), []);
   useEffect(() => {
@@ -90,21 +94,21 @@ export default function MiniCalc({ mode }: { mode: Mode }) {
   if (valid) {
     if (mode === "bmr") {
       out = [
-        { label: "BMR", value: `${Math.round(bmr)} kcal/day` },
-        { label: "Formula", value: bf > 0 ? "Katch-McArdle" : "Mifflin-St Jeor" },
+        { label: t.bmr, value: `${Math.round(bmr)} ${t["unit.kcalDay"]}` },
+        { label: t.formula, value: bf > 0 ? "Katch-McArdle" : "Mifflin-St Jeor" },
       ];
     } else if (mode === "tdee") {
       out = [
-        { label: "TDEE (maintenance)", value: `${Math.round(maint)} kcal/day` },
-        { label: "BMR", value: `${Math.round(bmr)} kcal/day` },
-        { label: "Activity factor", value: `×${ACTIVITY_FACTORS[s.activity]}` },
+        { label: t.tdeeMaint, value: `${Math.round(maint)} ${t["unit.kcalDay"]}` },
+        { label: t.bmr, value: `${Math.round(bmr)} ${t["unit.kcalDay"]}` },
+        { label: t["mini.activityFactor"], value: `×${ACTIVITY_FACTORS[s.activity]}` },
       ];
     } else if (mode === "protein") {
       out = [
-        { label: "Target (1.8 g/kg)", value: `${Math.round(1.8 * wKg)} g/day` },
+        { label: t["mini.proteinTarget"], value: `${Math.round(1.8 * wKg)} ${t["unit.gDay"]}` },
         {
-          label: "Reasonable range",
-          value: `${Math.round(1.6 * wKg)}–${Math.round(2.2 * wKg)} g/day`,
+          label: t["mini.range"],
+          value: `${Math.round(1.6 * wKg)}–${Math.round(2.2 * wKg)} ${t["unit.gDay"]}`,
         },
       ];
     } else {
@@ -123,12 +127,14 @@ export default function MiniCalc({ mode }: { mode: Mode }) {
           })
         : "—";
       out = [
-        { label: "Daily calories", value: `${Math.round(target)} kcal/day` },
-        { label: "Maintenance", value: `${Math.round(maint)} kcal/day` },
-        { label: "Weekly rate", value: `${weeklyKg.toFixed(2)} kg/week` },
+        { label: t["mini.dailyCalories"], value: `${Math.round(target)} ${t["unit.kcalDay"]}` },
+        { label: t["mini.maintenance"], value: `${Math.round(maint)} ${t["unit.kcalDay"]}` },
+        { label: t["mini.weeklyRate"], value: `${weeklyKg.toFixed(2)} ${t["unit.kgWeek"]}` },
         {
-          label: "Time to goal",
-          value: weeks ? `${Math.ceil(weeks)} weeks · ${date}` : "set a lower goal weight",
+          label: t["mini.timeToGoal"],
+          value: weeks
+            ? `${Math.ceil(weeks)} ${t["unit.weeks"]} · ${date}`
+            : t["mini.setLower"],
         },
       ];
     }
@@ -140,25 +146,25 @@ export default function MiniCalc({ mode }: { mode: Mode }) {
     <div class="qc">
       <div class="qc__form">
         <label class="field">
-          <span>Units</span>
+          <span>{t.units}</span>
           <select value={s.units} onChange={(e) => set({ units: sel(e) as Units })}>
-            <option value="metric">Metric (kg, cm)</option>
-            <option value="imperial">Imperial (lb, ft/in)</option>
+            <option value="metric">{t["units.metric"]}</option>
+            <option value="imperial">{t["units.imperial"]}</option>
           </select>
         </label>
 
         {mode !== "protein" && (
           <label class="field">
-            <span>Sex</span>
+            <span>{t.sex}</span>
             <select value={s.sex} onChange={(e) => set({ sex: sel(e) as Sex })}>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
+              <option value="male">{t["sex.male"]}</option>
+              <option value="female">{t["sex.female"]}</option>
             </select>
           </label>
         )}
 
         <label class="field">
-          <span>Age</span>
+          <span>{t.age}</span>
           <input type="number" inputMode="numeric" min="14" max="100" value={s.age}
             onInput={(e) => set({ age: inp(e) })} />
         </label>
@@ -172,17 +178,17 @@ export default function MiniCalc({ mode }: { mode: Mode }) {
         {needsHeight &&
           (s.units === "metric" ? (
             <label class="field">
-              <span>Height (cm)</span>
+              <span>{t.heightCm}</span>
               <input type="number" inputMode="decimal" min="0" value={s.heightCm}
                 onInput={(e) => set({ heightCm: inp(e) })} />
             </label>
           ) : (
             <div class="field qc__hrow">
-              <span>Height</span>
+              <span>{t.height}</span>
               <div>
-                <input type="number" inputMode="numeric" min="0" aria-label="Height feet"
+                <input type="number" inputMode="numeric" min="0" aria-label={t["height.feet"]}
                   value={s.heightFt} onInput={(e) => set({ heightFt: inp(e) })} />
-                <input type="number" inputMode="numeric" min="0" max="11" aria-label="Height inches"
+                <input type="number" inputMode="numeric" min="0" max="11" aria-label={t["height.inches"]}
                   value={s.heightIn} onInput={(e) => set({ heightIn: inp(e) })} />
               </div>
             </div>
@@ -190,21 +196,21 @@ export default function MiniCalc({ mode }: { mode: Mode }) {
 
         {(mode === "tdee" || mode === "deficit") && (
           <label class="field">
-            <span>Activity</span>
+            <span>{t.activity}</span>
             <select value={s.activity} onChange={(e) => set({ activity: sel(e) as Activity })}>
-              <option value="sedentary">Sedentary</option>
-              <option value="light">Light — 1–3 workouts/week</option>
-              <option value="moderate">Moderate — 3–5 workouts/week</option>
-              <option value="active">Active — 6–7 workouts/week</option>
-              <option value="very_active">Very active</option>
+              <option value="sedentary">{t["act.sedentary"]}</option>
+              <option value="light">{t["act.lightLong"]}</option>
+              <option value="moderate">{t["act.moderateLong"]}</option>
+              <option value="active">{t["act.activeLong"]}</option>
+              <option value="very_active">{t["act.veryActive"]}</option>
             </select>
           </label>
         )}
 
         {(mode === "bmr" || mode === "tdee" || mode === "deficit") && (
           <label class="field">
-            <span>Body fat % (optional → Katch-McArdle)</span>
-            <input type="number" inputMode="decimal" min="0" max="60" placeholder="optional"
+            <span>{t.bodyfatShort}</span>
+            <input type="number" inputMode="decimal" min="0" max="60" placeholder={t.optional}
               value={s.bodyFat} onInput={(e) => set({ bodyFat: inp(e) })} />
           </label>
         )}
@@ -212,12 +218,12 @@ export default function MiniCalc({ mode }: { mode: Mode }) {
         {mode === "deficit" && (
           <>
             <label class="field">
-              <span>Goal weight ({wLabel})</span>
+              <span>{t["mini.goalWeight"]} ({wLabel})</span>
               <input type="number" inputMode="decimal" min="0" value={s.goalWeight}
                 onInput={(e) => set({ goalWeight: inp(e) })} />
             </label>
             <label class="field">
-              <span>Daily deficit (kcal)</span>
+              <span>{t["mini.dailyDeficit"]}</span>
               <input type="number" inputMode="numeric" min="0" step="50" value={s.deficit}
                 onInput={(e) => set({ deficit: inp(e) })} />
             </label>
@@ -226,7 +232,7 @@ export default function MiniCalc({ mode }: { mode: Mode }) {
       </div>
 
       <div class="facts" aria-live="polite">
-        <div class="facts__title">Result</div>
+        <div class="facts__title">{t.result}</div>
         {out.length ? (
           out.map((o, i) => (
             <div class={`facts__row${i === 0 ? " facts__row--hero" : ""}`}>
@@ -235,13 +241,13 @@ export default function MiniCalc({ mode }: { mode: Mode }) {
             </div>
           ))
         ) : (
-          <div class="facts__row"><span>Fill in the fields</span><span class="num">—</span></div>
+          <div class="facts__row"><span>{t.fillFields}</span><span class="num">—</span></div>
         )}
         <div class="facts__note">
           Runs in your browser — saved on this device, no account. Sign up to track
           meals against these numbers.
         </div>
-        <a class="btn btn--ghost qc__full" href="/calculator">Full macro calculator →</a>
+        <a class="btn btn--ghost qc__full" href={calcHref}>{t["qc.fullMini"]}</a>
       </div>
     </div>
   );

@@ -17,6 +17,18 @@ const pages: Record<Locale, PageStrings | Partialised> = {
   en, es, ja, fr, de, pt, ko, it,
 };
 
+/** The whole section as a plain object, English-filled. Islands take this as a
+ * prop — a function like pageT() can't cross the server/client boundary. */
+export function pageDict<S extends keyof PageStrings>(
+  lang: Locale,
+  section: S,
+): Record<string, string> {
+  return {
+    ...(pages[DEFAULT_LOCALE][section] as Record<string, string>),
+    ...(((pages[lang] as Partialised)[section] ?? {}) as Record<string, string>),
+  };
+}
+
 /** Translator for one page section, e.g. pageT("es", "landing")("hero.h1a"). */
 export function pageT<S extends keyof PageStrings>(lang: Locale, section: S) {
   const dict = (pages[lang] as Partialised)[section] ?? {};

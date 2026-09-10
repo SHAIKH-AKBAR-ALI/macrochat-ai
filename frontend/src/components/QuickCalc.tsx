@@ -51,7 +51,10 @@ function num(s: string): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-export default function QuickCalc() {
+export default function QuickCalc({ t, calcHref = "/calculator" }: {
+  t: Record<string, string>;
+  calcHref?: string;
+}) {
   const [s, setS] = useState<State>(DEFAULTS);
 
   // Restore after mount so SSR markup and first client render match.
@@ -89,29 +92,29 @@ export default function QuickCalc() {
     <div class="qc">
       <div class="qc__form">
         <label class="field">
-          <span>Units</span>
+          <span>{t.units}</span>
           <select
             value={s.units}
             onChange={(e) => set({ units: (e.target as HTMLSelectElement).value as Units })}
           >
-            <option value="metric">Metric (kg, cm)</option>
-            <option value="imperial">Imperial (lb, ft/in)</option>
+            <option value="metric">{t["units.metric"]}</option>
+            <option value="imperial">{t["units.imperial"]}</option>
           </select>
         </label>
 
         <label class="field">
-          <span>Sex</span>
+          <span>{t.sex}</span>
           <select
             value={s.sex}
             onChange={(e) => set({ sex: (e.target as HTMLSelectElement).value as Sex })}
           >
-            <option value="male">Male</option>
-            <option value="female">Female</option>
+            <option value="male">{t["sex.male"]}</option>
+            <option value="female">{t["sex.female"]}</option>
           </select>
         </label>
 
         <label class="field">
-          <span>Age</span>
+          <span>{t.age}</span>
           <input
             type="number"
             inputMode="numeric"
@@ -123,7 +126,7 @@ export default function QuickCalc() {
         </label>
 
         <label class="field">
-          <span>Weight ({s.units === "metric" ? "kg" : "lb"})</span>
+          <span>{t.weight} ({s.units === "metric" ? "kg" : "lb"})</span>
           <input
             type="number"
             inputMode="decimal"
@@ -135,7 +138,7 @@ export default function QuickCalc() {
 
         {s.units === "metric" ? (
           <label class="field">
-            <span>Height (cm)</span>
+            <span>{t.heightCm}</span>
             <input
               type="number"
               inputMode="decimal"
@@ -146,13 +149,13 @@ export default function QuickCalc() {
           </label>
         ) : (
           <div class="field qc__hrow">
-            <span>Height</span>
+            <span>{t.height}</span>
             <div>
               <input
                 type="number"
                 inputMode="numeric"
                 min="0"
-                aria-label="Height feet"
+                aria-label={t["height.feet"]}
                 value={s.heightFt}
                 onInput={(e) => set({ heightFt: (e.target as HTMLInputElement).value })}
               />
@@ -161,7 +164,7 @@ export default function QuickCalc() {
                 inputMode="numeric"
                 min="0"
                 max="11"
-                aria-label="Height inches"
+                aria-label={t["height.inches"]}
                 value={s.heightIn}
                 onInput={(e) => set({ heightIn: (e.target as HTMLInputElement).value })}
               />
@@ -170,63 +173,58 @@ export default function QuickCalc() {
         )}
 
         <label class="field">
-          <span>Activity</span>
+          <span>{t.activity}</span>
           <select
             value={s.activity}
             onChange={(e) =>
               set({ activity: (e.target as HTMLSelectElement).value as Activity })
             }
           >
-            <option value="sedentary">Sedentary — desk job, little exercise</option>
-            <option value="light">Light — 1–3 workouts/week</option>
-            <option value="moderate">Moderate — 3–5 workouts/week</option>
-            <option value="active">Active — 6–7 workouts/week</option>
-            <option value="very_active">Very active — hard training / physical job</option>
+            <option value="sedentary">{t["act.sedentaryLong"]}</option>
+            <option value="light">{t["act.lightLong"]}</option>
+            <option value="moderate">{t["act.moderateLong"]}</option>
+            <option value="active">{t["act.activeLong"]}</option>
+            <option value="very_active">{t["act.veryActiveLong"]}</option>
           </select>
         </label>
 
         <label class="field">
-          <span>Goal</span>
+          <span>{t.goal}</span>
           <select
             value={s.goal}
             onChange={(e) => set({ goal: (e.target as HTMLSelectElement).value as Goal })}
           >
-            <option value="lose">Lose fat (−500 kcal)</option>
-            <option value="maintain">Maintain</option>
-            <option value="gain">Gain (+300 kcal)</option>
+            <option value="lose">{t["goal.lose"]}</option>
+            <option value="maintain">{t["goal.maintain"]}</option>
+            <option value="gain">{t["goal.gain"]}</option>
           </select>
         </label>
       </div>
 
       <div class="facts" aria-live="polite">
-        <div class="facts__title">Your daily target</div>
+        <div class="facts__title">{t.yourTarget}</div>
         <div class="facts__row facts__row--hero">
-          <b>Calories</b>
+          <b>{t.calories}</b>
           <span class="num">{r ? `${r.calories} kcal` : "—"}</span>
         </div>
         <div class="facts__row facts__row--thick">
-          <span>BMR {r ? `${r.bmr}` : "—"} · TDEE {r ? `${r.tdee}` : "—"}</span>
+          <span>{t.bmr} {r ? `${r.bmr}` : "—"} · TDEE {r ? `${r.tdee}` : "—"}</span>
           <span class="num" />
         </div>
         <div class="facts__row">
-          <b>Protein</b>
+          <b>{t.protein}</b>
           <span class="num">{r ? `${r.protein} g` : "—"}</span>
         </div>
         <div class="facts__row">
-          <b>Carbs</b>
+          <b>{t.carbs}</b>
           <span class="num">{r ? `${r.carbs} g` : "—"}</span>
         </div>
         <div class="facts__row">
-          <b>Fat</b>
+          <b>{t.fat}</b>
           <span class="num">{r ? `${r.fat} g` : "—"}</span>
         </div>
-        <div class="facts__note">
-          Mifflin-St Jeor · protein 1.8 g/kg · fat 25% of calories. Saved on this
-          device, no account.
-        </div>
-        <a class="btn btn--ghost qc__full" href="/calculator">
-          Use the full calculator →
-        </a>
+        <div class="facts__note">{t["qc.note"]}</div>
+        <a class="btn btn--ghost qc__full" href={calcHref}>{t["qc.full"]}</a>
       </div>
     </div>
   );

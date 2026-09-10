@@ -2,7 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import QuickCalc from "../../components/QuickCalc.tsx";
 import { localeHref, localePaths, toLocale } from "../../i18n/config";
-import { pageT } from "../../i18n/pages";
+import { pageDict, pageT } from "../../i18n/pages";
 import { useT } from "../../i18n/ui";
 
 // One file, eight routes: /calculator and /es/calculator, /ja/... etc.
@@ -12,6 +12,7 @@ const lang = toLocale(Astro.params.lang);
 const L = pageT(lang, "landing");
 const t = useT(lang);
 const lp = (path: string) => localeHref(lang, path);
+const calc = pageDict(lang, "calc");
 
 // Names come from the shared nav dictionary so a tool is called the same thing
 // in the nav, the footer and here.
@@ -59,7 +60,7 @@ const tools = [
 
       <div class="demo-exchange" aria-label={L("hero.quickLabel")} data-rise="3">
         <p class="eyebrow" style="margin-bottom:0.8rem;">{L("hero.quickEyebrow")}</p>
-        <QuickCalc client:load />
+        <QuickCalc t={calc} calcHref={lp("/calculator")} client:load />
       </div>
     </div>
   </section>

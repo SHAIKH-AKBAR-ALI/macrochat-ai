@@ -43,7 +43,7 @@ function load(): Row[] {
   return BLANK;
 }
 
-export default function RecipeCalc() {
+export default function RecipeCalc({ t }: { t: Record<string, string> }) {
   const [rows, setRows] = useState<Row[]>(BLANK);
   const [res, setRes] = useState<Result | null>(null);
   const [busy, setBusy] = useState(false);
@@ -107,7 +107,7 @@ export default function RecipeCalc() {
           <div class="recipe__row">
             <input
               type="text"
-              placeholder="Ingredient (e.g. paneer, oats, banana)"
+              placeholder={t["recipe.ingredient"]}
               value={r.name}
               onInput={(e) => setRow(i, { name: (e.target as HTMLInputElement).value })}
             />
@@ -115,14 +115,14 @@ export default function RecipeCalc() {
               type="number"
               inputMode="decimal"
               min="0"
-              placeholder="g"
+              placeholder={t["recipe.grams"]}
               value={r.grams}
               onInput={(e) => setRow(i, { grams: (e.target as HTMLInputElement).value })}
             />
             <button
               type="button"
               class="recipe__del"
-              aria-label={`Remove ${r.name || "ingredient"}`}
+              aria-label={`${t["recipe.remove"]} ${r.name}`.trim()}
               onClick={() => delRow(i)}
               disabled={rows.length === 1}
             >
@@ -131,20 +131,20 @@ export default function RecipeCalc() {
           </div>
         ))}
         <div class="recipe__actions">
-          <button type="button" class="btn btn--ghost" onClick={addRow}>+ Add ingredient</button>
+          <button type="button" class="btn btn--ghost" onClick={addRow}>{t["recipe.add"]}</button>
           <button type="submit" class="btn" disabled={busy}>
-            {busy ? (slow ? "Waking the server…" : "Calculating…") : "Calculate macros"}
+            {busy ? (slow ? t["recipe.waking"] : t["recipe.calculating"]) : t["recipe.calc"]}
           </button>
         </div>
         {err && <p class="form-error show">{err}</p>}
       </form>
 
       <div class="facts" aria-live="polite">
-        <div class="facts__title">Recipe total</div>
+        <div class="facts__title">{t["recipe.total"]}</div>
         {res ? (
           <>
             <div class="facts__row facts__row--hero">
-              <b>Calories</b>
+              <b>{t.calories}</b>
               <span class="num">{res.totals.kcal} kcal</span>
             </div>
             {res.items.map((it) =>
@@ -158,14 +158,14 @@ export default function RecipeCalc() {
                 </div>
               ) : (
                 <div class="facts__row">
-                  <span>{it.name} · {it.grams} g <span class="tag">no match</span></span>
+                  <span>{it.name} · {it.grams} g <span class="tag">{t["recipe.noMatch"]}</span></span>
                   <span class="num">—</span>
                 </div>
               ),
             )}
-            <div class="facts__row facts__row--thick"><b>Protein</b><span class="num">{res.totals.protein} g</span></div>
-            <div class="facts__row"><b>Carbs</b><span class="num">{res.totals.carbs} g</span></div>
-            <div class="facts__row"><b>Fat</b><span class="num">{res.totals.fat} g</span></div>
+            <div class="facts__row facts__row--thick"><b>{t.protein}</b><span class="num">{res.totals.protein} g</span></div>
+            <div class="facts__row"><b>{t.carbs}</b><span class="num">{res.totals.carbs} g</span></div>
+            <div class="facts__row"><b>{t.fat}</b><span class="num">{res.totals.fat} g</span></div>
             {res.unmatched.length > 0 && (
               <div class="facts__note">
                 Not found: {res.unmatched.join(", ")}. Total excludes these — try a
@@ -174,7 +174,7 @@ export default function RecipeCalc() {
             )}
           </>
         ) : (
-          <div class="facts__row"><span>Add ingredients and calculate</span><span class="num">—</span></div>
+          <div class="facts__row"><span>{t["recipe.empty"]}</span><span class="num">—</span></div>
         )}
         <div class="facts__note">
           Numbers from USDA + INDB — the same databases MacroChat uses to log a

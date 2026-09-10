@@ -1,10 +1,15 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import RecipeCalc from "../../components/RecipeCalc.tsx";
-import { localePaths } from "../../i18n/config";
+import { localeHref, localePaths, toLocale } from "../../i18n/config";
+import { pageDict } from "../../i18n/pages";
 
 // One file, eight routes: /calculator and /es/calculator, /ja/... etc.
 export const getStaticPaths = localePaths;
+
+const lang = toLocale(Astro.params.lang);
+const lp = (path: string) => localeHref(lang, path);
+const calc = pageDict(lang, "calc");
 
 ---
 <Layout title="Recipe macro calculator — MacroChat">
@@ -19,7 +24,7 @@ export const getStaticPaths = localePaths;
           AI estimate.
         </p>
       </div>
-      <RecipeCalc client:load />
+      <RecipeCalc t={calc} client:load />
     </div>
   </section>
 

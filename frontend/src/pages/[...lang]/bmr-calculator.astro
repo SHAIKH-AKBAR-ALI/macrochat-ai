@@ -1,10 +1,15 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import MiniCalc from "../../components/MiniCalc.tsx";
-import { localePaths } from "../../i18n/config";
+import { localeHref, localePaths, toLocale } from "../../i18n/config";
+import { pageDict } from "../../i18n/pages";
 
 // One file, eight routes: /calculator and /es/calculator, /ja/... etc.
 export const getStaticPaths = localePaths;
+
+const lang = toLocale(Astro.params.lang);
+const lp = (path: string) => localeHref(lang, path);
+const calc = pageDict(lang, "calc");
 
 ---
 <Layout title="BMR calculator — MacroChat">
@@ -18,7 +23,7 @@ export const getStaticPaths = localePaths;
           keeping you alive. It's the floor your daily calorie target is built on.
         </p>
       </div>
-      <MiniCalc mode="bmr" client:load />
+      <MiniCalc t={calc} calcHref={lp("/calculator")} mode="bmr" client:load />
     </div>
   </section>
 
