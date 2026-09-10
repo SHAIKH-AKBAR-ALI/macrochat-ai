@@ -1,9 +1,13 @@
 ---
-import Layout from "../../layouts/Layout.astro";
-import { FOODS, bySlug, relatedFor, nutritionJsonLd, faqJsonLd, type Food } from "../../lib/seo";
+import Layout from "../../../layouts/Layout.astro";
+import { FOODS, bySlug, relatedFor, nutritionJsonLd, faqJsonLd, type Food } from "../../../lib/seo";
+import { localePaths } from "../../../i18n/config";
 
 export function getStaticPaths() {
-  return FOODS.map((f) => ({ params: { slug: `${f.slug}-macros` }, props: { food: f } }));
+  // 8 locales x every food — one file builds the lot.
+  return localePaths().flatMap(({ params: { lang } }) =>
+    FOODS.map((f) => ({ params: { lang, slug: `${f.slug}-macros` }, props: { food: f } }))
+  );
 }
 
 const { food } = Astro.props as { food: Food };

@@ -1,6 +1,11 @@
 ---
-import Layout from "../../layouts/Layout.astro";
-import { FOODS } from "../../lib/seo";
+import Layout from "../../../layouts/Layout.astro";
+import { FOODS } from "../../../lib/seo";
+import { localePaths } from "../../../i18n/config";
+
+// One file, eight routes: /calculator and /es/calculator, /ja/... etc.
+export const getStaticPaths = localePaths;
+
 
 const groups = new Map<string, typeof FOODS>();
 for (const f of [...FOODS].sort((a, b) => a.name.localeCompare(b.name))) {

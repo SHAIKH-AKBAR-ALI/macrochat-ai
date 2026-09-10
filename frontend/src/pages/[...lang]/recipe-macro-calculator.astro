@@ -1,6 +1,11 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import RecipeCalc from "../components/RecipeCalc.tsx";
+import Layout from "../../layouts/Layout.astro";
+import RecipeCalc from "../../components/RecipeCalc.tsx";
+import { localePaths } from "../../i18n/config";
+
+// One file, eight routes: /calculator and /es/calculator, /ja/... etc.
+export const getStaticPaths = localePaths;
+
 ---
 <Layout title="Recipe macro calculator — MacroChat">
   <section class="section calc-page">

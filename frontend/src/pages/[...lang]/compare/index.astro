@@ -1,6 +1,11 @@
 ---
-import Layout from "../../layouts/Layout.astro";
-import { comparePairs } from "../../lib/seo";
+import Layout from "../../../layouts/Layout.astro";
+import { comparePairs } from "../../../lib/seo";
+import { localePaths } from "../../../i18n/config";
+
+// One file, eight routes: /calculator and /es/calculator, /ja/... etc.
+export const getStaticPaths = localePaths;
+
 
 const pairs = comparePairs();
 const popular = pairs.slice(0, 24);

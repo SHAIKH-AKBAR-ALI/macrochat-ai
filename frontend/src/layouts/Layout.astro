@@ -1,16 +1,26 @@
 ---
 import "../styles/global.css";
+import { LOCALES, LOCALE_CODES, localeHref, stripLocale, toLocale } from "../i18n/config";
+import { useT } from "../i18n/ui";
 const {
   title = "MacroChat AI",
   active = "",
   description = "Tell MacroChat what you ate — photo or text — and it pulls the calories and macros from real nutrition databases. The AI never guesses a number.",
+  // Signed-in app pages (login, dashboard, chat…) exist in English only: no
+  // locale routes, so no hreflang set and no language switcher for them.
+  localized = true,
 } = Astro.props;
 // ponytail: no domain bought yet — swap SITE when it is (also referenced by R10 sitemap).
 const SITE = "https://macrochat-d6oi.onrender.com";
 const ogImage = SITE + "/og-default.jpg";
+const lang = toLocale(Astro.currentLocale);
+const t = useT(lang);
+// The locale-free path this page's hreflang set is built from.
+const basePath = stripLocale(Astro.url.pathname);
+const lp = (path: string) => localeHref(lang, path);
 ---
 <!doctype html>
-<html lang="en">
+<html lang={LOCALES[lang].htmlLang}>
   <head>
     <meta charset="utf-8" />
     <!-- Clickjacking guard. A real X-Frame-Options / CSP frame-ancestors header
@@ -20,6 +30,11 @@ const ogImage = SITE + "/og-default.jpg";
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={SITE + Astro.url.pathname} />
+    {localized && LOCALE_CODES.map((l) => (
+      <link rel="alternate" hreflang={LOCALES[l].htmlLang} href={SITE + localeHref(l, basePath)} />
+    ))}
+    {localized && <link rel="alternate" hreflang="x-default" href={SITE + basePath} />}
     <link rel="icon" type="image/png" href="/logo-mark.png" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta property="og:type" content="website" />
@@ -46,28 +61,43 @@ const ogImage = SITE + "/og-default.jpg";
   <body>
     <nav class="nav">
       <div class="wrap">
-        <a class="nav__logo" href="/"><img src="/logo-mark.png" alt="" width="22" height="22" />MACRO<b>CHAT</b></a>
+        <a class="nav__logo" href={lp("/")}><img src="/logo-mark.png" alt="" width="22" height="22" />MACRO<b>CHAT</b></a>
         <div class="nav__links">
           <div class="nav__drop" id="nav-drop">
-            <button type="button" aria-haspopup="true" aria-expanded="false" id="nav-drop-btn">Free tools</button>
-            <div class="nav__menu" role="menu" aria-label="Free tools">
-              <small>Calculators · no signup</small>
-              <a href="/calculator" role="menuitem">Macro calculator</a>
-              <a href="/tdee-calculator" role="menuitem">TDEE calculator</a>
-              <a href="/bmr-calculator" role="menuitem">BMR calculator</a>
-              <a href="/protein-calculator" role="menuitem">Protein calculator</a>
-              <a href="/calorie-deficit-calculator" role="menuitem">Calorie-deficit calculator</a>
-              <a href="/recipe-macro-calculator" role="menuitem">Recipe macro calculator</a>
-              <small>Food data</small>
-              <a href="/compare/" role="menuitem">Compare two foods</a>
-              <a href="/foods/" role="menuitem">Food macros A–Z</a>
+            <button type="button" aria-haspopup="true" aria-expanded="false" id="nav-drop-btn">{t("nav.tools")}</button>
+            <div class="nav__menu" role="menu" aria-label={t("nav.tools")}>
+              <small>{t("nav.calcNoSignup")}</small>
+              <a href={lp("/calculator")} role="menuitem">{t("calc.macro")}</a>
+              <a href={lp("/tdee-calculator")} role="menuitem">{t("calc.tdee")}</a>
+              <a href={lp("/bmr-calculator")} role="menuitem">{t("calc.bmr")}</a>
+              <a href={lp("/protein-calculator")} role="menuitem">{t("calc.protein")}</a>
+              <a href={lp("/calorie-deficit-calculator")} role="menuitem">{t("calc.deficit")}</a>
+              <a href={lp("/recipe-macro-calculator")} role="menuitem">{t("calc.recipe")}</a>
+              <small>{t("nav.foodData")}</small>
+              <a href={lp("/compare/")} role="menuitem">{t("food.compare")}</a>
+              <a href={lp("/foods/")} role="menuitem">{t("food.az")}</a>
             </div>
           </div>
-          <a href="/chat" id="nav-meal" class={active === "chat" || active === "add" ? "active" : ""}>Log a meal</a>
-          <a href="/dashboard" id="nav-today" class={active === "dashboard" ? "active" : ""}>Today</a>
-          <a href="/history" id="nav-history" hidden class={active === "history" ? "active" : ""}>History</a>
-          <a href="/login" id="nav-auth" class={active === "login" ? "active" : ""}>Log in</a>
-          <button class="nav__theme" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">◐</button>
+          {localized && (
+            <div class="nav__drop" id="nav-lang">
+              <button type="button" aria-haspopup="true" aria-expanded="false" id="nav-lang-btn">
+                {LOCALES[lang].label}
+              </button>
+              <div class="nav__menu" role="menu" aria-label={t("nav.language")}>
+                <small>{t("nav.language")}</small>
+                {LOCALE_CODES.map((l) => (
+                  <a href={localeHref(l, basePath)} role="menuitem" lang={LOCALES[l].htmlLang}
+                     aria-current={l === lang ? "true" : undefined}>{LOCALES[l].label}</a>
+                ))}
+              </div>
+            </div>
+          )}
+          <a href="/chat" id="nav-meal" class={active === "chat" || active === "add" ? "active" : ""}>{t("nav.logMeal")}</a>
+          <a href="/dashboard" id="nav-today" class={active === "dashboard" ? "active" : ""}>{t("nav.today")}</a>
+          <a href="/history" id="nav-history" hidden class={active === "history" ? "active" : ""}>{t("nav.history")}</a>
+          <a href="/login" id="nav-auth" class={active === "login" ? "active" : ""}
+             data-logout={t("nav.logout")} data-add={t("nav.addMeal")} data-dash={t("nav.dashboard")}>{t("nav.login")}</a>
+          <button class="nav__theme" id="theme-toggle" aria-label={t("nav.theme")} title={t("nav.theme")}>◐</button>
         </div>
       </div>
     </nav>
@@ -78,49 +108,49 @@ const ogImage = SITE + "/og-default.jpg";
       <div class="wrap footer__map">
         <div class="footer__brand">
           <span>MACRO<b>CHAT</b></span>
-          <p>A worldwide macro tracker. Numbers come from USDA and INDB &mdash; never guessed by the AI.</p>
+          <p>{t("footer.tagline")}</p>
         </div>
         <div>
-          <h4>Calculators</h4>
+          <h4>{t("footer.calculators")}</h4>
           <ul>
-            <li><a href="/calculator">Macro calculator</a></li>
-            <li><a href="/tdee-calculator">TDEE calculator</a></li>
-            <li><a href="/bmr-calculator">BMR calculator</a></li>
-            <li><a href="/protein-calculator">Protein calculator</a></li>
-            <li><a href="/calorie-deficit-calculator">Calorie deficit</a></li>
-            <li><a href="/recipe-macro-calculator">Recipe macros</a></li>
+            <li><a href={lp("/calculator")}>{t("calc.macro")}</a></li>
+            <li><a href={lp("/tdee-calculator")}>{t("calc.tdee")}</a></li>
+            <li><a href={lp("/bmr-calculator")}>{t("calc.bmr")}</a></li>
+            <li><a href={lp("/protein-calculator")}>{t("calc.protein")}</a></li>
+            <li><a href={lp("/calorie-deficit-calculator")}>{t("calc.deficitShort")}</a></li>
+            <li><a href={lp("/recipe-macro-calculator")}>{t("calc.recipeShort")}</a></li>
           </ul>
         </div>
         <div>
-          <h4>Food data</h4>
+          <h4>{t("nav.foodData")}</h4>
           <ul>
-            <li><a href="/foods/">Food macros A–Z</a></li>
-            <li><a href="/compare/">Compare foods</a></li>
+            <li><a href={lp("/foods/")}>{t("food.az")}</a></li>
+            <li><a href={lp("/compare/")}>{t("food.compare")}</a></li>
           </ul>
         </div>
         <div>
-          <h4>Product</h4>
+          <h4>{t("footer.product")}</h4>
           <ul>
-            <li><a href="/chat">Log a meal</a></li>
-            <li><a href="/dashboard">Today</a></li>
-            <li><a href="/signup">Sign up</a></li>
-            <li><a href="/login">Log in</a></li>
+            <li><a href="/chat">{t("nav.logMeal")}</a></li>
+            <li><a href="/dashboard">{t("nav.today")}</a></li>
+            <li><a href="/signup">{t("nav.signup")}</a></li>
+            <li><a href="/login">{t("nav.login")}</a></li>
           </ul>
         </div>
         <div>
-          <h4>About</h4>
+          <h4>{t("footer.about")}</h4>
           <ul>
-            <li><a href="/about">About us</a></li>
-            <li><a href="/#faq">FAQ</a></li>
-            <li><a href="/contact">Contact</a></li>
+            <li><a href={lp("/about")}>{t("footer.aboutUs")}</a></li>
+            <li><a href={lp("/") + "#faq"}>{t("footer.faq")}</a></li>
+            <li><a href={lp("/contact")}>{t("footer.contact")}</a></li>
           </ul>
         </div>
       </div>
       <div class="wrap footer__legal">
         <span>&copy; {new Date().getFullYear()} MacroChat</span>
         <span>
-          <a href="/privacy">Privacy</a> &nbsp;·&nbsp;
-          <a href="/terms">Terms</a>
+          <a href={lp("/privacy")}>{t("footer.privacy")}</a> &nbsp;·&nbsp;
+          <a href={lp("/terms")}>{t("footer.terms")}</a>
         </span>
       </div>
     </footer>
@@ -132,10 +162,11 @@ const ogImage = SITE + "/og-default.jpg";
       // user types a meal, the ~50s cold start is already underway or done.
       fetch(API + "/health").catch(() => {});
 
-      // Calculators dropdown (placeholder menu — click to toggle, Esc / outside to close)
-      const drop = document.getElementById("nav-drop");
-      const dropBtn = document.getElementById("nav-drop-btn");
-      if (drop && dropBtn) {
+      // Nav dropdowns (free tools, language) — click to toggle, Esc / outside to close
+      for (const [dropId, btnId] of [["nav-drop", "nav-drop-btn"], ["nav-lang", "nav-lang-btn"]]) {
+        const drop = document.getElementById(dropId);
+        const dropBtn = document.getElementById(btnId);
+        if (!drop || !dropBtn) continue;
         const close = () => { drop.removeAttribute("data-open"); dropBtn.setAttribute("aria-expanded", "false"); };
         dropBtn.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -167,11 +198,11 @@ const ogImage = SITE + "/og-default.jpg";
       if (token()) {
         const meal = document.getElementById("nav-meal")!;
         const today = document.getElementById("nav-today")!;
-        meal.textContent = "Add meal";
+        meal.textContent = link.dataset.add!;
         meal.setAttribute("href", "/add");
-        today.textContent = "Dashboard";
+        today.textContent = link.dataset.dash!;
         document.getElementById("nav-history")!.hidden = false;
-        link.textContent = "Log out";
+        link.textContent = link.dataset.logout!;
         link.setAttribute("href", "#");
         link.addEventListener("click", (e) => {
           e.preventDefault();

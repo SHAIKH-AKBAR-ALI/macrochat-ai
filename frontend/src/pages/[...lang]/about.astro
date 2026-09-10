@@ -1,5 +1,10 @@
 ---
-import Layout from "../layouts/Layout.astro";
+import Layout from "../../layouts/Layout.astro";
+import { localePaths } from "../../i18n/config";
+
+// One file, eight routes: /calculator and /es/calculator, /ja/... etc.
+export const getStaticPaths = localePaths;
+
 ---
 <Layout title="About — MacroChat AI">
   <section class="band">

@@ -1,17 +1,18 @@
 ---
-import Layout from "../../layouts/Layout.astro";
-import CompareTool from "../../components/CompareTool.tsx";
+import Layout from "../../../layouts/Layout.astro";
+import CompareTool from "../../../components/CompareTool.tsx";
 import {
   comparePairs, verdict, proteinDensity, gapPhrase, relatedFor,
   nutritionJsonLd, faqJsonLd, NUTRIENTS, type Food,
-} from "../../lib/seo";
-import { SERVINGS } from "../../lib/servings";
+} from "../../../lib/seo";
+import { SERVINGS } from "../../../lib/servings";
+import { localePaths } from "../../../i18n/config";
 
 export function getStaticPaths() {
-  return comparePairs().map(([a, b]) => ({
-    params: { pair: `${a.slug}-vs-${b.slug}` },
-    props: { a, b },
-  }));
+  // 8 locales x every pair — one file builds the lot.
+  return localePaths().flatMap(({ params: { lang } }) =>
+    comparePairs().map(([a, b]) => ({ params: { lang, pair: `${a.slug}-vs-${b.slug}` }, props: { a, b } }))
+  );
 }
 
 const { a, b } = Astro.props as { a: Food; b: Food };

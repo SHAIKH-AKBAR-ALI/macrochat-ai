@@ -1,6 +1,11 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import FullCalc from "../components/FullCalc.tsx";
+import Layout from "../../layouts/Layout.astro";
+import FullCalc from "../../components/FullCalc.tsx";
+import { localePaths } from "../../i18n/config";
+
+// One file, eight routes: /calculator and /es/calculator, /ja/... etc.
+export const getStaticPaths = localePaths;
+
 
 // Static reference data. Macros per typical serving. Rows link to /foods/<slug>-macros/
 // (built in R10 — dead links until then, that's expected).
