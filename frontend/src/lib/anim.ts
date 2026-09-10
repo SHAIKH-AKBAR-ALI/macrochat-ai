@@ -26,54 +26,78 @@ export function countUp(el: HTMLElement) {
 
 const SVGNS = "http://www.w3.org/2000/svg";
 
-// Weekly kcal bar chart: one bar per day vs a goal line. Bars over goal turn coral.
+// Weekly kcal bar chart vs a goal band. Today's bar is emphasised; over-goal days
+// turn coral. Hover any bar for the exact number (native SVG <title>).
 export function weekChart(
   series: { date: string; kcal: number }[],
   goal: number,
 ): HTMLElement {
-  const W = 100, H = 44, pad = 2;
-  const max = Math.max(goal, ...series.map((d) => d.kcal), 1) * 1.1;
-  const bw = (W - pad * 2) / series.length;
+  const W = 300, H = 132, padX = 6, padTop = 10, padBot = 6;
+  const plotH = H - padTop - padBot;
+  const max = Math.max(goal * 1.25, ...series.map((d) => d.kcal), 1);
+  const slot = (W - padX * 2) / series.length;
+  const bw = Math.min(slot * 0.52, 30);
+  const y = (v: number) => padTop + plotH - (v / max) * plotH;
+
   const svg = document.createElementNS(SVGNS, "svg");
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   svg.setAttribute("class", "weekchart__svg");
-  svg.setAttribute("preserveAspectRatio", "none");
   svg.setAttribute("role", "img");
-  svg.setAttribute("aria-label",
-    `Calories per day for ${series.length} days, goal ${goal}`);
+  svg.setAttribute("aria-label", `Calories per day for ${series.length} days, goal ${goal} kcal`);
+
+  const rect = (x: number, yy: number, w: number, h: number, cls: string, r = 0) => {
+    const el = document.createElementNS(SVGNS, "rect");
+    el.setAttribute("x", String(x)); el.setAttribute("y", String(yy));
+    el.setAttribute("width", String(w)); el.setAttribute("height", String(Math.max(h, 0)));
+    if (r) { el.setAttribute("rx", String(r)); el.setAttribute("ry", String(r)); }
+    el.setAttribute("class", cls);
+    return el;
+  };
+
+  // goal band (±8%) + centre line
+  svg.append(rect(padX, y(goal * 1.08), W - padX * 2, y(goal * 0.92) - y(goal * 1.08), "weekchart__band"));
+  const gline = document.createElementNS(SVGNS, "line");
+  gline.setAttribute("x1", String(padX)); gline.setAttribute("x2", String(W - padX));
+  gline.setAttribute("y1", String(y(goal))); gline.setAttribute("y2", String(y(goal)));
+  gline.setAttribute("class", "weekchart__goal");
+  svg.append(gline);
+
+  // baseline
+  const base = document.createElementNS(SVGNS, "line");
+  base.setAttribute("x1", String(padX)); base.setAttribute("x2", String(W - padX));
+  base.setAttribute("y1", String(padTop + plotH)); base.setAttribute("y2", String(padTop + plotH));
+  base.setAttribute("class", "weekchart__base");
+  svg.append(base);
 
   series.forEach((d, i) => {
-    const h = (d.kcal / max) * (H - pad * 2);
-    const r = document.createElementNS(SVGNS, "rect");
-    r.setAttribute("x", String(pad + i * bw + bw * 0.15));
-    r.setAttribute("y", String(H - pad - h));
-    r.setAttribute("width", String(bw * 0.7));
-    r.setAttribute("height", String(Math.max(h, 0.5)));
-    r.setAttribute("rx", "0.6");
-    r.setAttribute("fill", d.kcal > goal ? "var(--burnt)" : "var(--amber)");
-    if (!d.kcal) r.setAttribute("fill", "var(--border, #ccc)");
-    svg.append(r);
+    const cx = padX + slot * i + slot / 2;
+    const x = cx - bw / 2;
+    const g = document.createElementNS(SVGNS, "g");
+    const isToday = i === series.length - 1;
+    if (!d.kcal) {
+      const stub = rect(x, padTop + plotH - 3, bw, 3, "weekchart__stub", 1.5);
+      g.append(stub);
+    } else {
+      const h = padTop + plotH - y(d.kcal);
+      let cls = "weekchart__bar";
+      if (d.kcal > goal * 1.08) cls += " is-over";
+      if (isToday) cls += " is-today";
+      g.append(rect(x, y(d.kcal), bw, h, cls, 3));
+    }
+    const t = document.createElementNS(SVGNS, "title");
+    t.textContent = `${new Date(d.date + "T00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric" })}: ${Math.round(d.kcal)} kcal`;
+    g.append(t);
+    svg.append(g);
   });
-
-  const gy = H - pad - (goal / max) * (H - pad * 2);
-  const line = document.createElementNS(SVGNS, "line");
-  line.setAttribute("x1", String(pad));
-  line.setAttribute("x2", String(W - pad));
-  line.setAttribute("y1", String(gy));
-  line.setAttribute("y2", String(gy));
-  line.setAttribute("stroke", "var(--ink)");
-  line.setAttribute("stroke-width", "0.5");
-  line.setAttribute("stroke-dasharray", "1.5 1.5");
-  line.setAttribute("opacity", "0.5");
-  svg.append(line);
 
   const wrap = document.createElement("div");
   wrap.className = "weekchart";
   wrap.append(svg);
   const labels = document.createElement("div");
   labels.className = "weekchart__labels";
-  series.forEach((d) => {
+  series.forEach((d, i) => {
     const s = document.createElement("span");
+    if (i === series.length - 1) s.className = "is-today";
     s.textContent = new Date(d.date + "T00:00").toLocaleDateString(undefined, { weekday: "narrow" });
     labels.append(s);
   });

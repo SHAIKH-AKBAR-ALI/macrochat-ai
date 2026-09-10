@@ -107,6 +107,7 @@ export default function MacroSplit({ kcal }: { kcal: number }) {
               step="1"
               value={st.split[k]}
               disabled={st.locked[k]}
+              style={{ "--fill": `${st.split[k]}%` }}
               onInput={(e) => drag(k, Number((e.target as HTMLInputElement).value))}
             />
           </div>
