@@ -648,8 +648,9 @@ Revised view:
 - S1 was fixed first (money path, cheap insurance) but is 🟠, not 🔴.
 - S5–S8 are hygiene.
 
-Work top-down; each item is independent. **S1–S5 done + DEPLOYED 2026-09-10**
-(S5 minus email verification), commit `6e25bad`; S6–S8 open, all hygiene.
+Work top-down; each item is independent. **S1–S8 all done 2026-09-10** (S5 minus
+email verification, S6 minus the static-site headers that need Render dashboard
+config). S1 `b654074`, S2–S5 `6e25bad`, S6–S8 in the round below.
 Live-verified on `macrochat-api` after the deploy: short password → 422,
 `/analyze` with a PDF → 415, with a 9 MB jpeg → 413.
 
@@ -715,19 +716,36 @@ Live-verified on `macrochat-api` after the deploy: short password → 422,
       it means a real signup→confirm→login UX and Supabase's 2/hr email cap; do it
       when there's a domain and real traffic.
       Test: `test_security.py::test_signup_validation`, `::test_public_ratelimit`.
-- [ ] **S6 · 🟡 CORS too broad + no security headers** — `main.py:16` allows any
-      `https://<anything>.onrender.com`, not just ours; the static site sends no
-      CSP / `X-Frame-Options` / `Referrer-Policy`, so `/dashboard` is
-      clickjackable.
-- [ ] **S7 · 🟡 `time_zone` unvalidated** — stored raw, later `ZoneInfo(tz_name)`
-      (`db.py:109,211,233`). A junk value permanently 500s `/today`, `/trends`
-      and `/meals/today` for that account. (No traversal — `zoneinfo` rejects
-      `..`/absolute keys.) Fix: validate against `available_timezones()`.
-- [ ] **S8 · 🔵 Small stuff** — `MealPatch.grams` non-numeric key → `int()`
-      ValueError → 500 (`db.py:172`); `/foods/search?q=` has no length cap;
-      token lives in `localStorage` with a 1 h expiry and no refresh (accepted
-      trade-off, no XSS found); orphan auth user if the signup profile insert
-      fails (pre-existing, documented in CLAUDE.md).
+- [x] **S6 · 🟡 CORS too broad + no security headers** — ✅ FIXED 2026-09-10.
+      `allow_origin_regex` pinned to `macrochat-d6oi.onrender.com` (+ localhost/LAN
+      dev) — `[a-z0-9-]+\.onrender\.com` let *any* Render tenant's page call this
+      API with a user's credentials. A `security_headers` middleware adds
+      `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` and
+      `Referrer-Policy: strict-origin-when-cross-origin` to every API response.
+      Static site: `Layout.astro` ships a one-line frame-buster
+      (`if (window.top !== window.self) …`) because `frame-ancestors` is ignored in
+      a `<meta>` tag. **Still open, needs the Render dashboard** (static sites take
+      headers from service config, not a file in `dist/`): add
+      `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
+      `Referrer-Policy: strict-origin-when-cross-origin` on `macrochat`. A real CSP
+      is a separate job — Astro islands ship inline scripts, so it needs hashes.
+      Test: `test_security.py::test_security_headers_and_cors` (headers present,
+      our origin allowed, another `onrender.com` tenant refused).
+- [x] **S7 · 🟡 `time_zone` unvalidated** — ✅ FIXED 2026-09-10. `SignupBody` has a
+      `field_validator` checking the value against `zoneinfo.available_timezones()`
+      (422 on junk), and every read-side `ZoneInfo(...)` — all 5 call sites — now
+      goes through `db._tz()`, which falls back to UTC. Validation alone would have
+      left any bad row already in the table permanently 500ing.
+      Test: `test_security.py::test_time_zone_validation`.
+- [x] **S8 · 🔵 Small stuff** — ✅ FIXED 2026-09-10. `MealPatch.grams` is now
+      `dict[int, float]`, so pydantic rejects a non-numeric index with a 422
+      instead of `int()` raising a 500 inside `db.update_meal`. `/foods/search?q=`
+      capped at 120 chars (done with S3). Signup wraps the profile insert and
+      deletes the just-created auth user if it fails — no more orphan account that
+      can log in, 500s on `/today` and holds the email hostage. Unchanged by
+      choice: the token lives in `localStorage`, 1 h, no refresh (no XSS sink
+      found; a refresh flow is a Phase-4 item).
+      Test: `test_security.py::test_meal_patch_keys`.
 
 ---
 

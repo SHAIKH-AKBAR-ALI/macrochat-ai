@@ -139,9 +139,19 @@ def chat_history(user_id: str, limit: int = 100) -> list[dict]:
     return rows[::-1]
 
 
+def _tz(tz_name: str) -> ZoneInfo:
+    """Stored time zone -> ZoneInfo, UTC if the stored value is junk. Signup now
+    validates it (S7), but a bad row already in the table must not permanently
+    500 /today, /trends and /meals/today for that account."""
+    try:
+        return ZoneInfo(tz_name)
+    except Exception:
+        return ZoneInfo("UTC")
+
+
 def _today_start_utc(tz_name: str) -> str:
     """User-local-midnight as a UTC ISO string — the 'today' boundary for meals."""
-    tz = ZoneInfo(tz_name)
+    tz = _tz(tz_name)
     local_midnight = datetime.combine(datetime.now(tz).date(), time.min, tzinfo=tz)
     return local_midnight.astimezone(timezone.utc).isoformat()
 
@@ -243,7 +253,7 @@ def meals_range(user_id: str, days: int = 30) -> list[dict]:
         _c(user_id).table("profiles").select("time_zone").eq("id", user_id)
         .single().execute().data["time_zone"]
     )
-    tz = ZoneInfo(tz_name)
+    tz = _tz(tz_name)
     start_local = datetime.now(tz).date() - timedelta(days=days - 1)
     start_utc = datetime.combine(start_local, time.min, tzinfo=tz).astimezone(timezone.utc)
     return (
@@ -265,7 +275,7 @@ def trends(user_id: str, days: int = 7) -> dict:
         .select("time_zone,daily_calorie_goal,daily_protein_goal,daily_carb_goal,daily_fat_goal")
         .eq("id", user_id).single().execute().data
     )
-    tz = ZoneInfo(p["time_zone"])
+    tz = _tz(p["time_zone"])
     start_local = datetime.now(tz).date() - timedelta(days=days - 1)
     start_utc = datetime.combine(start_local, time.min, tzinfo=tz).astimezone(timezone.utc)
     rows = (
@@ -347,7 +357,7 @@ def today_totals(user_id: str) -> dict:
     profile = (
         _c(user_id).table("profiles").select("*").eq("id", user_id).single().execute().data
     )
-    tz = ZoneInfo(profile["time_zone"])
+    tz = _tz(profile["time_zone"])
     local_midnight = datetime.combine(datetime.now(tz).date(), time.min, tzinfo=tz)
     start_utc = local_midnight.astimezone(timezone.utc)
 

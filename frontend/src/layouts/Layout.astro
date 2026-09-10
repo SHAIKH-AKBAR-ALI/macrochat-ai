@@ -13,6 +13,10 @@ const ogImage = SITE + "/og-default.jpg";
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <!-- Clickjacking guard. A real X-Frame-Options / CSP frame-ancestors header
+         has to be configured on the Render static site (frame-ancestors is
+         ignored in a meta tag); this is the fallback that ships with the code. -->
+    <script is:inline>if (window.top !== window.self) window.top.location = window.self.location;</script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />

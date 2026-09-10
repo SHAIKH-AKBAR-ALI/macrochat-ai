@@ -1,10 +1,12 @@
 import base64
 from typing import Literal
 
+from zoneinfo import available_timezones
+
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app import db, nutrition, ratelimit
 from app.graph import aggregate, lookup, pipeline
@@ -12,11 +14,24 @@ from app.graph import aggregate, lookup, pipeline
 app = FastAPI(title="MacroChat AI — Phase 3")
 app.add_middleware(
     CORSMiddleware,
-    # Astro dev on this machine or any device on the private LAN
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):4321|https://[a-z0-9-]+\.onrender\.com",
+    # Astro dev on this machine or any device on the private LAN, plus OUR static
+    # site only — `[a-z0-9-]+.onrender.com` let any Render tenant call this API
+    # with a user's browser credentials.
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):4321|https://macrochat-d6oi\.onrender\.com",
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    """Cheap, always-safe response headers. The JSON API is never framed and never
+    needs content sniffing; a CSP belongs on the static site, not here."""
+    r = await call_next(request)
+    r.headers["X-Content-Type-Options"] = "nosniff"
+    r.headers["X-Frame-Options"] = "DENY"
+    r.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return r
+
 
 _optional_bearer = HTTPBearer(auto_error=False)
 
@@ -44,6 +59,15 @@ class SignupBody(BaseModel):
     goal: Literal["lose", "maintain", "gain"]
     time_zone: str  # IANA name, e.g. "Asia/Kolkata"; frontend auto-detects, user confirms
 
+    @field_validator("time_zone")
+    @classmethod
+    def known_zone(cls, v: str) -> str:
+        # Stored once, then fed to ZoneInfo on every /today, /trends and
+        # /meals/today — junk here bricks those endpoints for the account forever.
+        if v not in available_timezones():
+            raise ValueError("Unknown IANA time zone")
+        return v
+
 
 @app.post("/signup")
 def signup(body: SignupBody, request: Request):
@@ -60,13 +84,19 @@ def signup(body: SignupBody, request: Request):
         raise HTTPException(400, "Could not create that account. Check the email and try again.")
     goals = db.daily_goals(body.height_cm, body.weight_kg, body.age,
                            body.sex, body.activity_level, body.goal)
-    db.sb.table("profiles").insert({
-        "id": res.user.id,
-        "height_cm": body.height_cm, "weight_kg": body.weight_kg,
-        "age": body.age, "sex": body.sex,
-        "activity_level": body.activity_level, "goal": body.goal,
-        "time_zone": body.time_zone, **goals,
-    }).execute()
+    try:
+        db.sb.table("profiles").insert({
+            "id": res.user.id,
+            "height_cm": body.height_cm, "weight_kg": body.weight_kg,
+            "age": body.age, "sex": body.sex,
+            "activity_level": body.activity_level, "goal": body.goal,
+            "time_zone": body.time_zone, **goals,
+        }).execute()
+    except Exception:
+        # Signup is not half-done: an auth user with no profile can log in but
+        # 500s on /today forever, and the email is then taken.
+        db.sb.auth.admin.delete_user(res.user.id)
+        raise HTTPException(500, "Could not finish signup. Try again.")
     return {"user_id": res.user.id, "goals": goals}  # then POST /login for a token
 
 
@@ -330,8 +360,9 @@ def meals_history(days: int = 30, user_id: str = Depends(db.current_user_id)):
 
 
 class MealPatch(BaseModel):
-    # index (as string) -> new grams for that item
-    grams: dict[str, float] = Field(min_length=1)
+    # item index -> new grams. dict[int, ...] makes pydantic coerce/reject the key,
+    # instead of int() blowing up as a 500 deeper in db.update_meal.
+    grams: dict[int, float] = Field(min_length=1)
 
 
 @app.patch("/meals/{meal_id}")

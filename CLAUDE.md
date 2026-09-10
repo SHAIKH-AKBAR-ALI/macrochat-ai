@@ -438,8 +438,9 @@ staple/gate round and the UI redesign in one push.
 - Tests: qualified-dal → STAPLE (+ dal makhani → INDB), unmatched → `needs_confirmation`
   + `totals_partial` in `test_nutrition.py`.
 
-### Security hardening S1–S5 — ✅ DONE + DEPLOYED (2026-09-10, `6e25bad`)
-Audit + fixes in `PHASES.md` "S — Security hardening" (S6–S8 still open, hygiene).
+### Security hardening S1–S8 — ✅ DONE + DEPLOYED (2026-09-10)
+Audit + fixes in `PHASES.md` "S — Security hardening". S1 `b654074`, S2–S5
+`6e25bad`, S6–S8 after that.
 Live-verified after deploy: short password → 422, `/analyze` PDF → 415, 9 MB
 jpeg → 413.
 - `app/ratelimit.py` — stdlib in-memory sliding windows, no Redis (one Render
@@ -462,6 +463,17 @@ jpeg → 413.
   `minlength` 6→8) and no longer returns Supabase's `str(e)`.
 - Tests: `test_security.py` (offline), `test_phase2.py` extended with a live
   PATCH+DELETE round-trip that exercises the RLS path.
+- CORS pinned to `macrochat-d6oi.onrender.com` + localhost/LAN (was any
+  `*.onrender.com` tenant); `security_headers` middleware sends nosniff /
+  `X-Frame-Options: DENY` / `Referrer-Policy` on every API response;
+  `Layout.astro` has a frame-buster. **Open:** the static site's own headers must
+  be set in the Render dashboard (Render reads them from service config, not from
+  a file in `dist/`); a real CSP needs hashes for Astro's inline island scripts.
+- `time_zone` validated against `zoneinfo.available_timezones()` at signup, and
+  every read goes through `db._tz()` (UTC fallback) so a bad stored row can't
+  permanently 500 `/today`, `/trends`, `/meals/today`.
+- `MealPatch.grams` is `dict[int, float]` (422, not a 500); signup deletes the
+  auth user if the profile insert fails (no orphan accounts).
 - Known ceiling, matters at scale not now: `current_user_id` costs one Supabase
   round-trip per request (verify the JWT locally instead); rate-limit counters are
   per-process (Redis if we ever run 2+ instances).

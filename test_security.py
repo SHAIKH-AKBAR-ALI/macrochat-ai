@@ -1,4 +1,4 @@
-"""Security-hardening checks (S2-S5). No network, no LLM.
+"""Security-hardening checks (S2-S8). No network, no LLM.
 
 Run: .venv\Scripts\python test_security.py
 """
@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from app import db, nutrition, ratelimit
-from app.main import MAX_PHOTO_BYTES, SignupBody, app
+from app.main import MAX_PHOTO_BYTES, MealPatch, SignupBody, app
 
 
 def test_upload_guard():
@@ -59,6 +59,44 @@ def test_signup_validation():
             pass
 
 
+def test_security_headers_and_cors():
+    """S6: API responses carry the cheap headers; CORS is pinned to our origins."""
+    h = TestClient(app).get("/health").headers
+    assert h["X-Content-Type-Options"] == "nosniff"
+    assert h["X-Frame-Options"] == "DENY"
+    assert h["Referrer-Policy"] == "strict-origin-when-cross-origin"
+    for origin, allowed in (("https://macrochat-d6oi.onrender.com", True),
+                            ("https://evil-tenant.onrender.com", False),
+                            ("http://localhost:4321", True)):
+        r = TestClient(app).get("/health", headers={"Origin": origin})
+        assert ("access-control-allow-origin" in r.headers) is allowed, origin
+
+
+def test_time_zone_validation():
+    """S7: a junk zone is rejected at signup, and a junk zone already stored
+    degrades to UTC instead of 500ing the account's endpoints forever."""
+    good = dict(email="a@b.co", password="longenough", height_cm=170, weight_kg=70,
+                age=30, sex="male", activity_level="light", goal="maintain")
+    SignupBody(**good, time_zone="Asia/Kolkata")
+    try:
+        SignupBody(**good, time_zone="Mars/Olympus")
+        raise AssertionError("accepted a junk time zone")
+    except ValidationError:
+        pass
+    assert db._tz("Not/AZone").key == "UTC"
+    assert db._tz("Asia/Kolkata").key == "Asia/Kolkata"
+
+
+def test_meal_patch_keys():
+    """S8: a non-numeric grams key is a 422 at the model, not an int() 500 in db."""
+    assert MealPatch(grams={"0": 150}).grams == {0: 150.0}
+    try:
+        MealPatch(grams={"abc": 150})
+        raise AssertionError("accepted a non-numeric index")
+    except ValidationError:
+        pass
+
+
 def test_public_ratelimit():
     """S5/S3: unauthenticated non-LLM endpoints are capped per IP."""
     import types
@@ -78,5 +116,8 @@ if __name__ == "__main__":
     test_live_usda_optout()
     test_rls_scoped_client()
     test_signup_validation()
+    test_security_headers_and_cors()
+    test_time_zone_validation()
+    test_meal_patch_keys()
     test_public_ratelimit()
     print("security checks OK")
