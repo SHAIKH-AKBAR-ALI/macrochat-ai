@@ -109,8 +109,9 @@ export function verdict(a: Food, b: Food): string {
   const protein = proteinDensity(a) >= proteinDensity(b) ? a : b;
   const parts: string[] = [];
   if (Math.abs(a.kcal - b.kcal) > 5) {
+    const g = gapPhrase(a.kcal, b.kcal).replace(/ more$/, "");
     parts.push(
-      `Per 100 g, ${lean.name} has ${gapPhrase(a.kcal, b.kcal)} fewer calories ` +
+      `Per 100 g, ${lean.name} has ${g} fewer calories ` +
       `(${lean.kcal} vs ${other.kcal} kcal) — the easier fit in a calorie deficit.`
     );
   } else {
