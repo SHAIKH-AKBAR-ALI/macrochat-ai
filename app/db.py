@@ -1,5 +1,6 @@
 """Supabase auth + persistence. Daily-total math lives here (Python), never in the LLM."""
 from datetime import datetime, time, timedelta, timezone
+from functools import lru_cache
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -19,6 +20,38 @@ sb = create_client(
 )
 
 _bearer = HTTPBearer(auto_error=False)
+
+
+# --- per-caller, RLS-scoped access -------------------------------------------
+# The service key above bypasses RLS, which made the hand-written .eq("user_id")
+# the ONLY tenant boundary. User data now goes through a client authenticated as
+# the caller, so Postgres RLS enforces the boundary too (defense in depth).
+
+@lru_cache(maxsize=256)
+def _user_client(token: str):
+    """Anon-key client speaking as `token`'s user. Cached per token (tokens live
+    ~1h); creating one is pure object setup, no network."""
+    c = create_client(
+        settings.supabase_url,
+        settings.supabase_publishable_key,
+        SyncClientOptions(auto_refresh_token=False, persist_session=False),
+    )
+    c.postgrest.auth(token)
+    return c
+
+
+class AuthUser(str):
+    """The user id — a plain str everywhere it is used — carrying the caller's JWT
+    so db helpers can reach Supabase as that user. Subclassing str keeps every
+    existing `user_id: str` signature and call site unchanged."""
+    token: str = ""
+
+
+def _c(user_id: str):
+    """RLS-scoped client for this caller. Falls back to the service client when
+    there is no token (signup, tests, internal calls)."""
+    token = getattr(user_id, "token", "")
+    return _user_client(token) if token and settings.supabase_publishable_key else sb
 
 
 def password_login(email: str, password: str) -> dict:
@@ -42,7 +75,9 @@ def current_user_id(
         raise HTTPException(401, "Missing bearer token")
     try:
         # ponytail: network round-trip per request; verify JWT locally if latency matters
-        return sb.auth.get_user(cred.credentials).user.id
+        u = AuthUser(sb.auth.get_user(cred.credentials).user.id)
+        u.token = cred.credentials
+        return u
     except Exception:
         raise HTTPException(401, "Invalid or expired token")
 
@@ -74,7 +109,7 @@ def daily_goals(height_cm: float, weight_kg: float, age: int, sex: str,
 # --- meals ---
 
 def save_meal(user_id: str, items: list[dict], totals: dict) -> None:
-    sb.table("meals").insert({
+    _c(user_id).table("meals").insert({
         "user_id": user_id,
         "items": items,
         "total_calories": totals["kcal"],
@@ -85,7 +120,7 @@ def save_meal(user_id: str, items: list[dict], totals: dict) -> None:
 
 
 def save_chat(user_id: str, role: str, content: dict) -> None:
-    sb.table("chat_messages").insert(
+    _c(user_id).table("chat_messages").insert(
         {"user_id": user_id, "role": role, "content": content}
     ).execute()
 
@@ -93,7 +128,7 @@ def save_chat(user_id: str, role: str, content: dict) -> None:
 def chat_history(user_id: str, limit: int = 100) -> list[dict]:
     """Last `limit` messages, oldest first (fetch newest-first, then reverse)."""
     rows = (
-        sb.table("chat_messages")
+        _c(user_id).table("chat_messages")
         .select("role,content,created_at")
         .eq("user_id", user_id)
         .order("created_at", desc=True)
@@ -114,11 +149,11 @@ def _today_start_utc(tz_name: str) -> str:
 def today_meals(user_id: str) -> list[dict]:
     """Today's meal rows (newest first), user time zone aware. For the dashboard list."""
     tz_name = (
-        sb.table("profiles").select("time_zone").eq("id", user_id)
+        _c(user_id).table("profiles").select("time_zone").eq("id", user_id)
         .single().execute().data["time_zone"]
     )
     return (
-        sb.table("meals")
+        _c(user_id).table("meals")
         .select("id,created_at,items,total_calories,total_protein,total_carbs,total_fat")
         .eq("user_id", user_id)
         .gte("created_at", _today_start_utc(tz_name))
@@ -131,7 +166,7 @@ def today_meals(user_id: str) -> list[dict]:
 def recent_meals(user_id: str, limit: int = 3) -> list[dict]:
     """Last `limit` DISTINCT meals (by item-name set), newest first — for re-log chips."""
     rows = (
-        sb.table("meals")
+        _c(user_id).table("meals")
         .select("id,created_at,items,total_calories")
         .eq("user_id", user_id)
         .order("created_at", desc=True)
@@ -160,7 +195,7 @@ def _sum_items(items: list[dict]) -> dict:
 
 def _meal_or_404(user_id: str, meal_id: str, cols: str) -> dict:
     row = (
-        sb.table("meals").select(cols)
+        _c(user_id).table("meals").select(cols)
         .eq("user_id", user_id).eq("id", meal_id)
         .execute().data
     )
@@ -188,7 +223,7 @@ def update_meal(user_id: str, meal_id: str, grams_by_index: dict[str, float]) ->
         it["portion_grams"] = new_g
     totals = _sum_items(items)
     (
-        sb.table("meals").update({
+        _c(user_id).table("meals").update({
             "items": items,
             "total_calories": totals["kcal"], "total_protein": totals["protein"],
             "total_carbs": totals["carbs"], "total_fat": totals["fat"],
@@ -199,20 +234,20 @@ def update_meal(user_id: str, meal_id: str, grams_by_index: dict[str, float]) ->
 
 def delete_meal(user_id: str, meal_id: str) -> None:
     _meal_or_404(user_id, meal_id, "id")
-    sb.table("meals").delete().eq("user_id", user_id).eq("id", meal_id).execute()
+    _c(user_id).table("meals").delete().eq("user_id", user_id).eq("id", meal_id).execute()
 
 
 def meals_range(user_id: str, days: int = 30) -> list[dict]:
     """All meal rows in the last `days` (user-local), newest first — for /history."""
     tz_name = (
-        sb.table("profiles").select("time_zone").eq("id", user_id)
+        _c(user_id).table("profiles").select("time_zone").eq("id", user_id)
         .single().execute().data["time_zone"]
     )
     tz = ZoneInfo(tz_name)
     start_local = datetime.now(tz).date() - timedelta(days=days - 1)
     start_utc = datetime.combine(start_local, time.min, tzinfo=tz).astimezone(timezone.utc)
     return (
-        sb.table("meals")
+        _c(user_id).table("meals")
         .select("id,created_at,items,total_calories,total_protein,total_carbs,total_fat")
         .eq("user_id", user_id)
         .gte("created_at", start_utc.isoformat())
@@ -226,7 +261,7 @@ def trends(user_id: str, days: int = 7) -> dict:
     """Per-day totals for the last `days`, streak, and rule-based insight strings.
     All backend math + SQL — zero LLM (per CLAUDE.md non-goals)."""
     p = (
-        sb.table("profiles")
+        _c(user_id).table("profiles")
         .select("time_zone,daily_calorie_goal,daily_protein_goal,daily_carb_goal,daily_fat_goal")
         .eq("id", user_id).single().execute().data
     )
@@ -234,7 +269,7 @@ def trends(user_id: str, days: int = 7) -> dict:
     start_local = datetime.now(tz).date() - timedelta(days=days - 1)
     start_utc = datetime.combine(start_local, time.min, tzinfo=tz).astimezone(timezone.utc)
     rows = (
-        sb.table("meals")
+        _c(user_id).table("meals")
         .select("created_at,total_calories,total_protein,total_carbs,total_fat")
         .eq("user_id", user_id).gte("created_at", start_utc.isoformat())
         .execute().data
@@ -294,7 +329,7 @@ def trends(user_id: str, days: int = 7) -> dict:
 def relog_meal(user_id: str, meal_id: str) -> dict:
     """Clone a past meal's items + totals to a new row at now. No lookup, no LLM."""
     row = (
-        sb.table("meals")
+        _c(user_id).table("meals")
         .select("items,total_calories,total_protein,total_carbs,total_fat")
         .eq("user_id", user_id).eq("id", meal_id)
         .single().execute().data
@@ -310,14 +345,14 @@ def relog_meal(user_id: str, meal_id: str) -> dict:
 def today_totals(user_id: str) -> dict:
     """Sum today's meals using the user's stored time zone (local midnight boundary)."""
     profile = (
-        sb.table("profiles").select("*").eq("id", user_id).single().execute().data
+        _c(user_id).table("profiles").select("*").eq("id", user_id).single().execute().data
     )
     tz = ZoneInfo(profile["time_zone"])
     local_midnight = datetime.combine(datetime.now(tz).date(), time.min, tzinfo=tz)
     start_utc = local_midnight.astimezone(timezone.utc)
 
     meals = (
-        sb.table("meals")
+        _c(user_id).table("meals")
         .select("total_calories,total_protein,total_carbs,total_fat")
         .eq("user_id", user_id)
         .gte("created_at", start_utc.isoformat())

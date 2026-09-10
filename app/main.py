@@ -20,6 +20,10 @@ app.add_middleware(
 
 _optional_bearer = HTTPBearer(auto_error=False)
 
+# A meal photo off any phone is < 8 MB. Anything bigger is not a meal photo, and
+# base64 inflates it another 33% in RAM on a 512 MB instance.
+MAX_PHOTO_BYTES = 8 * 1024 * 1024
+
 
 @app.get("/health")
 def health():
@@ -29,8 +33,9 @@ def health():
 # --- auth ---
 
 class SignupBody(BaseModel):
-    email: str
-    password: str
+    # The API is the trust boundary — the frontend's minlength/type are not validation.
+    email: str = Field(min_length=5, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    password: str = Field(min_length=8, max_length=128)
     height_cm: float
     weight_kg: float
     age: int
@@ -41,15 +46,18 @@ class SignupBody(BaseModel):
 
 
 @app.post("/signup")
-def signup(body: SignupBody):
+def signup(body: SignupBody, request: Request):
+    ratelimit.check_public(request, "signup", 5)
     try:
         # ponytail: admin create with instant confirm — skips confirmation email
         # (and its 2/hr rate limit). Switch to sign_up if email verification ever matters.
         res = db.sb.auth.admin.create_user(
             {"email": body.email, "password": body.password, "email_confirm": True}
         )
-    except Exception as e:
-        raise HTTPException(400, str(e))
+    except Exception:
+        # Never echo the provider's error — it leaks internals and confirms which
+        # emails exist. Server logs keep the detail.
+        raise HTTPException(400, "Could not create that account. Check the email and try again.")
     goals = db.daily_goals(body.height_cm, body.weight_kg, body.age,
                            body.sex, body.activity_level, body.goal)
     db.sb.table("profiles").insert({
@@ -63,12 +71,13 @@ def signup(body: SignupBody):
 
 
 class LoginBody(BaseModel):
-    email: str
-    password: str
+    email: str = Field(max_length=254)
+    password: str = Field(max_length=128)
 
 
 @app.post("/login")
-def login(body: LoginBody):
+def login(body: LoginBody, request: Request):
+    ratelimit.check_public(request, "login", 20)
     res = db.password_login(body.email, body.password)
     return {"access_token": res["access_token"], "user_id": res["user"]["id"]}
 
@@ -84,6 +93,13 @@ async def analyze(
 ):
     if photo is None and not text:
         raise HTTPException(422, "Provide a photo, text, or both.")
+    if photo is not None:
+        # Checked BEFORE read()/base64 so a huge body costs nothing but the
+        # multipart spool. ponytail: a true request-body cap belongs at the proxy.
+        if not (photo.content_type or "").startswith("image/"):
+            raise HTTPException(415, "That file isn't an image.")
+        if photo.size is not None and photo.size > MAX_PHOTO_BYTES:
+            raise HTTPException(413, "Image too large — keep it under 8 MB.")
     # Stale/expired token must not hard-fail analysis — degrade to guest and flag it
     # so the client can clear the token. Save/confirm/today still require real auth.
     auth_expired = False
@@ -170,14 +186,23 @@ class RecipeBody(BaseModel):
     ingredients: list[Ingredient] = Field(min_length=1, max_length=50)
 
 
+# 50 ingredients x one live USDA call would pin a worker for minutes and burn the
+# API quota, unauthenticated. Local data (staples/INDB/USDA seed) stays unlimited.
+MAX_LIVE_USDA_PER_RECIPE = 5
+
+
 @app.post("/foods/lookup")
-def foods_lookup(body: RecipeBody):
+def foods_lookup(body: RecipeBody, request: Request):
     """Sum macros for a list of (name, grams) via nutrition.lookup — INDB then USDA,
     no LLM. Powers the recipe-macro calculator; same DB the AI layer uses."""
+    ratelimit.check_public(request, "foods_lookup", 60)
     items = []
+    live_left = MAX_LIVE_USDA_PER_RECIPE
     totals = {"kcal": 0.0, "protein": 0.0, "carbs": 0.0, "fat": 0.0}
     for ing in body.ingredients:
-        hit = nutrition.lookup(ing.name)
+        hit = nutrition.lookup(ing.name, allow_live=live_left > 0)
+        if hit and hit.get("live"):
+            live_left -= 1
         if not hit or hit.get("kcal_100g") is None:
             items.append({"name": ing.name, "grams": ing.grams, "matched": None})
             continue
@@ -215,14 +240,15 @@ def meals_today(user_id: str = Depends(db.current_user_id)):
 # --- manual food search + log (no LLM) ---
 
 @app.get("/foods/search")
-def foods_search(q: str):
+def foods_search(q: str, request: Request):
     """Name search for the manual-log picker. INDB FTS (fast); one USDA hit if INDB
     has nothing. ponytail: USDA stays a live single lookup until R10 bulk-local."""
-    q = q.strip()
+    q = q.strip()[:120]
     if len(q) < 2:
         return {"results": []}
     hits = nutrition.search_indb(q, limit=8)
     if not hits:
+        ratelimit.check_public(request, "foods_search_live", 60)  # only the live path
         u = nutrition.lookup_usda(q)
         if u:
             hits = [u]

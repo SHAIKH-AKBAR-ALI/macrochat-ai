@@ -54,6 +54,14 @@ assert r.status_code == 200, r.text
 msgs = r.json()["messages"]
 assert msgs and msgs[-1]["role"] == "bot" and msgs[-1]["content"]["saved"], msgs
 
+# edit + delete the meal — exercises the RLS update/delete policies (S4)
+meal_id = client.get("/meals/today", headers=headers).json()["meals"][0]["id"]
+r = client.patch(f"/meals/{meal_id}", headers=headers, json={"grams": {"0": 100}})
+assert r.status_code == 200, r.text
+assert r.json()["totals"]["kcal"] == round(body["totals"]["kcal"] / 2, 1), r.text
+r = client.delete(f"/meals/{meal_id}", headers=headers)
+assert r.status_code == 200 and r.json()["today"]["meals_logged"] == 0, r.text
+
 # cleanup test user (cascades to profile + meals + chat)
 db.sb.auth.admin.delete_user(user_id)
 

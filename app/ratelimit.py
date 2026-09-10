@@ -94,6 +94,13 @@ def check_analyze(request: Request, is_guest: bool) -> None:
         )
 
 
+def check_public(request: Request, bucket: str, limit: int, window: int = HOUR) -> None:
+    """Per-IP cap for an unauthenticated non-LLM endpoint (signup, recipe lookup).
+    Cheap insurance against a curl loop pinning the single free-tier worker."""
+    if not hit(bucket, client_ip(request), limit, window):
+        raise HTTPException(429, "Too many requests — give it a minute and try again.")
+
+
 def _reset_for_tests() -> None:
     with _lock:
         _hits.clear()

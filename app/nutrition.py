@@ -221,6 +221,10 @@ def search_indb(query: str, limit: int = 10) -> list[dict]:
 # ponytail: calibration knob — how strongly the USDA description must contain the
 # actual food name. Raise if junk slips through, lower if real foods get filtered.
 USDA_NAME_MATCH = 70
+# ponytail: calibration knob — a live USDA call blocks the worker for this long.
+# 10 s x a batch of ingredients was a self-inflicted DoS; the local seed covers
+# the common foods anyway.
+USDA_TIMEOUT = 3
 
 
 def lookup_usda(query: str, name: str | None = None) -> dict | None:
@@ -235,7 +239,7 @@ def lookup_usda(query: str, name: str | None = None) -> dict | None:
                 # "Apples, raw") — fetch wide, rank locally
                 "pageSize": 25,
             },
-            timeout=10,
+            timeout=USDA_TIMEOUT,
         )
         resp.raise_for_status()
     except httpx.HTTPError:
@@ -302,6 +306,7 @@ def lookup_usda(query: str, name: str | None = None) -> dict | None:
         return {
             "matched_name": best["description"],
             "source": "USDA",
+            "live": True,  # live API hit, not the local seed — /foods/lookup caps these
             "kcal_100g": float(macros.get("kcal", 0)),
             "protein_100g": float(macros.get("protein_g", 0)),
             "carb_100g": float(macros.get("carb_g", 0)),
@@ -312,10 +317,11 @@ def lookup_usda(query: str, name: str | None = None) -> dict | None:
     return None
 
 
-def lookup(name: str, prep_style: str | None = None) -> dict | None:
+def lookup(name: str, prep_style: str | None = None, allow_live: bool = True) -> dict | None:
     """Staples first, then INDB (with prep style), then USDA. None = unmatched.
 
     Every hit carries "score" (0-100 match confidence) and "candidates" (alt names).
+    `allow_live=False` stops before the live USDA API — local data only, no network.
     """
     queries = [f"{prep_style} {name}".strip(), name] if prep_style else [name]
     for q in queries:
@@ -333,6 +339,8 @@ def lookup(name: str, prep_style: str | None = None) -> dict | None:
     for q in queries:
         if hit := lookup_usda_local(q):
             return hit
+    if not allow_live:
+        return None
     for q in queries:
         if hit := lookup_usda(q, name=name):
             return hit

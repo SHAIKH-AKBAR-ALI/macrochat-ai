@@ -648,7 +648,8 @@ Revised view:
 - S1 was fixed first (money path, cheap insurance) but is 🟠, not 🔴.
 - S5–S8 are hygiene.
 
-Work top-down; each item is independent.
+Work top-down; each item is independent. **S1–S5 done 2026-09-10** (S5 minus
+email verification); S6–S8 open, all hygiene.
 
 - [x] **S1 · 🟠 (orig. 🔴) `/analyze` unauthenticated + unmetered LLM spend** — ✅ FIXED
       2026-09-10. `app/ratelimit.py`: stdlib sliding-window counters (no Redis —
@@ -662,24 +663,52 @@ Work top-down; each item is independent.
       marks the guest allowance spent; `mc_ai_uses` stays UX-only.
       Tests: `test_ratelimit.py` (window expiry, blocked hits not recorded, key
       isolation, XFF spoof resistance, guest cap, global backstop).
-- [ ] **S2 · 🟠 No upload size/type limit — highest real-world likelihood** — `main.py:86`
-      `base64.b64encode(await photo.read())` pulls the whole body into RAM (+33%
-      for base64) on a 512 MB Render instance. Unauthenticated OOM DoS.
-      Fix: reject `> ~8 MB` and non-`image/*` before reading.
-- [ ] **S3 · 🟠 `/foods/lookup` request amplification** — 50 ingredients × a live
-      USDA call at 10 s timeout ⇒ one unauthenticated request can pin a worker
-      ~500 s and burn the USDA quota. Fix: cap live fallbacks per request (~5),
-      drop timeout to ~3 s, rate-limit.
-- [ ] **S4 · 🟠 Service-role key bypasses RLS — worst blast radius** — `db.py:15` uses
-      `supabase_secret_key`, so RLS is off and the *only* tenant boundary is the
-      hand-written `.eq("user_id", …)`. All 14 current queries are correctly
-      filtered, but there is no defense-in-depth — one future omission is a
-      cross-tenant breach. Fix: use a JWT-scoped client for user data; keep the
-      service client for signup/admin only.
-- [ ] **S5 · 🟡 Signup abuse + weak validation** — `/signup` is unmetered and
-      `email_confirm: True` (no verification); `password: str` has no min length
-      at the API (frontend-only `minlength=6`). Also `str(e)` from Supabase is
-      returned to the client (`main.py:52`) — internal error disclosure.
+- [x] **S2 · 🟠 No upload size/type limit — highest real-world likelihood** — ✅ FIXED
+      2026-09-10. `/analyze` now rejects a non-`image/*` content type (415) and
+      anything over `MAX_PHOTO_BYTES` = 8 MB (413) **before** `photo.read()` and
+      the base64 blow-up, so a huge body costs only Starlette's multipart spool
+      (which goes to disk past 1 MB, not RAM). ponytail: a true request-body cap
+      belongs at the proxy — Render's free tier gives us no such knob.
+      Test: `test_security.py::test_upload_guard` (9 MB jpeg → 413, PDF → 415).
+- [x] **S3 · 🟠 `/foods/lookup` request amplification** — ✅ FIXED 2026-09-10.
+      `nutrition.lookup(..., allow_live=False)` stops before the live USDA API;
+      `/foods/lookup` allows `MAX_LIVE_USDA_PER_RECIPE` = 5 live calls per request
+      and goes local-only after that (live hits are tagged `"live": True` so the
+      local R10 seed — same `source: "USDA"` — doesn't spend the budget). Live
+      `USDA_TIMEOUT` 10 s → 3 s (knob in `nutrition.py`). Worst case per request
+      ~15 s, was ~500 s. Also `ratelimit.check_public` at 60/h per IP on
+      `/foods/lookup`, 60/h on the `/foods/search` **live** path only (INDB FTS
+      stays unmetered), and `q` capped at 120 chars.
+      Test: `test_security.py::test_live_usda_optout` (no network when off).
+- [x] **S4 · 🟠 Service-role key bypasses RLS — worst blast radius** — ✅ FIXED
+      2026-09-10. All 16 user-data queries now run through `db._c(user_id)`, which
+      returns an anon-key client authenticated as the caller
+      (`create_client(...).postgrest.auth(jwt)`, `@lru_cache(256)` per token — pure
+      object setup, no network), so Postgres RLS is a second boundary behind the
+      `.eq("user_id", …)` filter. `current_user_id` returns `db.AuthUser`, a **str
+      subclass** carrying the JWT — every existing `user_id: str` signature and call
+      site is unchanged, which is what kept this a ~30-line diff. Service client
+      stays for signup/admin (`db.sb`) and is the fallback when there is no token.
+      Supabase needed two missing policies (migration
+      `own_meals_update_delete_policies`): `meals` had SELECT/INSERT but no UPDATE
+      or DELETE for `authenticated`, so `PATCH`/`DELETE /meals/{id}` would have
+      silently no-opped once scoped.
+      Tests: `test_security.py::test_rls_scoped_client`; `test_phase2.py` extended
+      with a live PATCH + DELETE round-trip — the whole live path (profile select,
+      meal insert/select/update/delete, chat insert/select) passes under RLS.
+      **Deploy:** `SUPABASE_PUBLISHABLE_KEY` set on the Render backend
+      (`macrochat-api`) 2026-09-10 — without it `_c()` falls back to the service
+      client and S4 is inert in prod (deliberate: degrade, never crash).
+- [x] **S5 · 🟡 Signup abuse + weak validation** — ✅ FIXED 2026-09-10 (except email
+      verification). `SignupBody`: email `pattern` + 254-char cap, password
+      `min_length=8, max_length=128` (frontend `minlength` 6 → 8 to match);
+      `LoginBody` length-capped. `/signup` metered at 5/h per IP, `/login` at 20/h
+      via `ratelimit.check_public`. Supabase's `str(e)` no longer reaches the
+      client — generic 400, so no internals and no "this email exists" oracle.
+      Still open by choice: `email_confirm: True` (no verification email) — flipping
+      it means a real signup→confirm→login UX and Supabase's 2/hr email cap; do it
+      when there's a domain and real traffic.
+      Test: `test_security.py::test_signup_validation`, `::test_public_ratelimit`.
 - [ ] **S6 · 🟡 CORS too broad + no security headers** — `main.py:16` allows any
       `https://<anything>.onrender.com`, not just ours; the static site sends no
       CSP / `X-Frame-Options` / `Referrer-Policy`, so `/dashboard` is

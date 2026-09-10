@@ -438,6 +438,32 @@ staple/gate round and the UI redesign in one push.
 - Tests: qualified-dal → STAPLE (+ dal makhani → INDB), unmatched → `needs_confirmation`
   + `totals_partial` in `test_nutrition.py`.
 
+### Security hardening S1–S5 — ✅ DONE + DEPLOYED (2026-09-10)
+Audit + fixes in `PHASES.md` "S — Security hardening" (S6–S8 still open, hygiene).
+- `app/ratelimit.py` — stdlib in-memory sliding windows, no Redis (one Render
+  instance). `check_analyze` gates `/analyze` before any LLM work; `check_public`
+  caps `/signup` 5/h, `/login` 20/h, `/foods/lookup` 60/h, live `/foods/search`
+  60/h per IP. `client_ip` takes the RIGHTMOST `X-Forwarded-For` entry.
+- `/analyze` rejects non-`image/*` (415) and >8 MB (413) before `read()`+base64.
+- `nutrition.lookup(..., allow_live=False)` = local data only; `/foods/lookup`
+  allows 5 live USDA calls per request (live hits tagged `"live": True`);
+  `USDA_TIMEOUT` 3 s.
+- **RLS is now a real boundary**: `db._c(user_id)` returns an anon-key client
+  authenticated as the caller (`postgrest.auth(jwt)`, `lru_cache` per token);
+  `current_user_id` returns `db.AuthUser`, a **str subclass carrying the JWT**, so
+  every `user_id: str` signature is unchanged. Service client (`db.sb`) is now
+  signup/admin only + the no-token fallback. Needs `SUPABASE_PUBLISHABLE_KEY` in
+  the backend env (set on Render) or the fallback silently disables it.
+  Supabase migration `own_meals_update_delete_policies` added the missing `meals`
+  UPDATE/DELETE policies.
+- `/signup` validates email pattern + password `min_length=8` (frontend
+  `minlength` 6→8) and no longer returns Supabase's `str(e)`.
+- Tests: `test_security.py` (offline), `test_phase2.py` extended with a live
+  PATCH+DELETE round-trip that exercises the RLS path.
+- Known ceiling, matters at scale not now: `current_user_id` costs one Supabase
+  round-trip per request (verify the JWT locally instead); rate-limit counters are
+  per-process (Redis if we ever run 2+ instances).
+
 ### Phase 4+ — Later / not yet scoped
 Full 10-phase future plan lives in `ROADMAP.txt` (2026-07-05): session polish (token
 refresh, cold-start UX), meal edit/delete/re-log, history & trends, quick-log
