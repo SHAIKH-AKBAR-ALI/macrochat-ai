@@ -2,15 +2,19 @@
 
 Per CLAUDE.md: this module is the ONLY source of truth for macro numbers.
 """
+import os
+import re
+import sqlite3
 from pathlib import Path
 
 import httpx
-import pandas as pd
 from rapidfuzz import fuzz, process, utils
 
 from app.config import settings
 
-INDB_PATH = Path(__file__).resolve().parent.parent / "data" / "INDB.xlsx"
+# INDB now lives in SQLite (foods table + FTS5 name index), built from INDB.xlsx by
+# scripts/build_indb_db.py. Dropped pandas as a runtime dependency (R5).
+INDB_DB_PATH = Path(__file__).resolve().parent.parent / "data" / "indb.sqlite"
 
 # ponytail: score cutoff is a calibration knob — lower it if real foods miss,
 # raise it if garbage matches slip through. 88 keeps "chicken breast" from
@@ -82,45 +86,95 @@ def match_staple_token(query: str) -> dict | None:
     return None
 
 
+# R10: a curated set of common global foods lives in data/indb.sqlite (usda_foods
+# + usda_fts, built by scripts/build_usda_db.py). Checked before the live FDC API —
+# offline, zero latency, and it fixes the outage -> null-macro save bug for anything
+# in the set. Set USDA_LOCAL=0 to force the live API only.
+USDA_LOCAL = os.getenv("USDA_LOCAL", "1") != "0"
+
+
+def lookup_usda_local(query: str) -> dict | None:
+    """Best match from the local usda_foods FTS index, or None."""
+    if not USDA_LOCAL:
+        return None
+    expr = _fts_query(query)
+    if not expr:
+        return None
+    con = sqlite3.connect(f"file:{INDB_DB_PATH}?mode=ro", uri=True)
+    con.row_factory = sqlite3.Row
+    try:
+        row = con.execute(
+            "SELECT f.name, f.kcal, f.protein, f.carb, f.fat "
+            "FROM usda_fts x JOIN usda_foods f ON f.rowid = x.rowid "
+            "WHERE usda_fts MATCH ? ORDER BY rank LIMIT 1",
+            (expr,),
+        ).fetchone()
+    except sqlite3.OperationalError:
+        return None  # table not built yet
+    finally:
+        con.close()
+    if not row:
+        return None
+    # Confidence like lookup_usda: is the seed's (single-phrase) name covered by the
+    # query? seed names are already the primary food phrase, so containment decides.
+    qwords = set(re.findall(r"[a-z]+", query.lower()))
+    nwords = set(re.findall(r"[a-z]+", row["name"].lower()))
+    score = 100.0 if (nwords and nwords <= qwords) else (80.0 if nwords & qwords else 50.0)
+    return {
+        "matched_name": row["name"], "source": "USDA",
+        "kcal_100g": float(row["kcal"]), "protein_100g": float(row["protein"]),
+        "carb_100g": float(row["carb"]), "fat_100g": float(row["fat"]),
+        "score": score, "candidates": [],
+    }
+
+
 USDA_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 # USDA nutrient numbers for kcal/protein/fat/carbs
 USDA_NUTRIENTS = {"208": "kcal", "203": "protein_g", "204": "fat_g", "205": "carb_g"}
 
-_indb: pd.DataFrame | None = None
+_indb_rows: list[dict] | None = None
+_indb_names: list[str] = []
 
 
-def load_indb() -> pd.DataFrame:
-    global _indb
-    if _indb is None:
-        df = pd.read_excel(INDB_PATH, sheet_name="Nutrient Data")
-        _indb = df[["food_name", "energy_kcal", "protein_g", "carb_g", "fat_g"]].dropna(
-            subset=["food_name"]
-        )
-    return _indb
+def _rows() -> list[dict]:
+    """All INDB rows, loaded once from SQLite. Shape mirrors the old DataFrame cols."""
+    global _indb_rows, _indb_names
+    if _indb_rows is None:
+        con = sqlite3.connect(f"file:{INDB_DB_PATH}?mode=ro", uri=True)
+        con.row_factory = sqlite3.Row
+        _indb_rows = [
+            dict(r)
+            for r in con.execute(
+                "SELECT name, kcal, protein, carb, fat FROM foods"
+            )
+        ]
+        con.close()
+        _indb_names = [r["name"] for r in _indb_rows]
+    return _indb_rows
 
 
-def _row_to_hit(row) -> dict:
+def _row_to_hit(row: dict) -> dict:
     return {
-        "matched_name": row["food_name"],
+        "matched_name": row["name"],
         "source": "INDB",
-        "kcal_100g": float(row["energy_kcal"]),
-        "protein_100g": float(row["protein_g"]),
-        "carb_100g": float(row["carb_g"]),
-        "fat_100g": float(row["fat_g"]),
+        "kcal_100g": float(row["kcal"]),
+        "protein_100g": float(row["protein"]),
+        "carb_100g": float(row["carb"]),
+        "fat_100g": float(row["fat"]),
     }
 
 
 def match_indb(query: str) -> dict | None:
-    df = load_indb()
+    rows = _rows()
     q = query.lower().strip()
     # exact pass: INDB names like "Chapati/Roti" or "Hot tea (Garam Chai)" —
     # match query against each alias split on "/" and parentheses
-    aliases = df["food_name"].str.lower().str.replace(r"[()]", "/", regex=True)
-    exact = df[aliases.str.split("/").apply(lambda parts: q in [p.strip() for p in parts])]
-    if not exact.empty:
-        return _row_to_hit(exact.iloc[0]) | {"score": 100.0, "candidates": []}
+    for row in rows:
+        parts = [p.strip() for p in re.split(r"[()/]", row["name"].lower())]
+        if q in parts:
+            return _row_to_hit(row) | {"score": 100.0, "candidates": []}
     hit = process.extractOne(
-        query, df["food_name"], scorer=fuzz.WRatio, score_cutoff=FUZZ_CUTOFF
+        query, _indb_names, scorer=fuzz.WRatio, score_cutoff=FUZZ_CUTOFF
     )
     if hit is None:
         return None
@@ -129,12 +183,39 @@ def match_indb(query: str) -> dict | None:
     # ponytail: 60 is a calibration knob like FUZZ_CUTOFF.
     if fuzz.token_sort_ratio(query, hit[0], processor=utils.default_process) < 60:
         return None
-    # extractOne on a Series returns the index LABEL — .loc, not .iloc
-    row = df.loc[hit[2]]
+    # extractOne on a list returns (choice, score, positional index)
+    row = rows[hit[2]]
     # top alternative INDB names (for the confidence gate / future disambiguation UI)
-    alts = process.extract(query, df["food_name"], scorer=fuzz.WRatio, limit=4)
+    alts = process.extract(query, _indb_names, scorer=fuzz.WRatio, limit=4)
     candidates = [a[0] for a in alts if a[0] != hit[0]][:3]
     return _row_to_hit(row) | {"score": float(hit[1]), "candidates": candidates}
+
+
+def _fts_query(query: str) -> str:
+    """Turn a free-text query into a safe FTS5 prefix-AND expression."""
+    toks = re.findall(r"[a-z0-9]+", query.lower())
+    return " AND ".join(f"{t}*" for t in toks)
+
+
+def search_indb(query: str, limit: int = 10) -> list[dict]:
+    """FTS5 name search — ranked shortlist for manual food lookup (R5+)."""
+    expr = _fts_query(query)
+    if not expr:
+        return []
+    con = sqlite3.connect(f"file:{INDB_DB_PATH}?mode=ro", uri=True)
+    con.row_factory = sqlite3.Row
+    try:
+        rows = con.execute(
+            "SELECT f.name, f.kcal, f.protein, f.carb, f.fat "
+            "FROM foods_fts x JOIN foods f ON f.id = x.rowid "
+            "WHERE foods_fts MATCH ? ORDER BY rank LIMIT ?",
+            (expr, limit),
+        ).fetchall()
+    except sqlite3.OperationalError:
+        return []
+    finally:
+        con.close()
+    return [_row_to_hit(dict(r)) for r in rows]
 
 
 # ponytail: calibration knob — how strongly the USDA description must contain the
@@ -247,6 +328,10 @@ def lookup(name: str, prep_style: str | None = None) -> dict | None:
     # win, but qualified dal INDB/USDA both miss ("dal fry") still resolves to plain dal
     for q in queries:
         if hit := match_staple_token(q):
+            return hit
+    # local USDA seed (R10) before the live API — offline, no latency, no outage bug
+    for q in queries:
+        if hit := lookup_usda_local(q):
             return hit
     for q in queries:
         if hit := lookup_usda(q, name=name):

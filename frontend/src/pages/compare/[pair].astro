@@ -1,0 +1,51 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { comparePairs, verdict, proteinDensity } from "../../lib/seo";
+
+export function getStaticPaths() {
+  return comparePairs().map(([a, b]) => ({
+    params: { pair: `${a.slug}-vs-${b.slug}` },
+    props: { a, b },
+  }));
+}
+
+const { a, b } = Astro.props;
+const rows = [
+  ["Calories", `${a.kcal} kcal`, `${b.kcal} kcal`],
+  ["Protein", `${a.protein} g`, `${b.protein} g`],
+  ["Carbs", `${a.carb} g`, `${b.carb} g`],
+  ["Fat", `${a.fat} g`, `${b.fat} g`],
+  ["Protein / 100 kcal", `${proteinDensity(a).toFixed(1)} g`, `${proteinDensity(b).toFixed(1)} g`],
+];
+const desc = `${a.name} vs ${b.name} per 100 g: ${a.kcal} vs ${b.kcal} kcal, ${a.protein} vs ${b.protein} g protein. Which fits your goal.`;
+---
+<Layout title={`${a.name} vs ${b.name} — macros compared`} description={desc}>
+  <section class="section">
+    <div class="wrap calc-doc" style="max-width:640px;">
+      <p class="mono" style="color:var(--mute);"><a href="/compare/">Compare</a> / {a.name} vs {b.name}</p>
+      <h1 style="margin:0.6rem 0 0.4rem;">{a.name} vs {b.name}</h1>
+      <p class="hero__lead" style="margin:0 0 1.5rem;">Per 100 g, side by side. Database values, not estimates.</p>
+
+      <div class="calc-tbl-wrap">
+        <table>
+          <thead><tr><th></th><th>{a.name}</th><th>{b.name}</th></tr></thead>
+          <tbody>
+            {rows.map(([label, av, bv]) => (
+              <tr><td>{label}</td><td>{av}</td><td>{bv}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h2 style="margin:1.6rem 0 0.5rem;">Better for your goal</h2>
+      <p>{verdict(a, b)}</p>
+
+      <p style="margin-top:1.5rem;">
+        <a href={`/foods/${a.slug}-macros/`}>{a.name} macros</a> ·
+        <a href={`/foods/${b.slug}-macros/`}>{b.name} macros</a> ·
+        <a href="/calculator">macro calculator</a>
+      </p>
+      <a class="btn qc__full" href="/signup" style="margin-top:0.6rem;">Track either in MacroChat →</a>
+    </div>
+  </section>
+</Layout>

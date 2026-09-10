@@ -26,6 +26,61 @@ export function countUp(el: HTMLElement) {
 
 const SVGNS = "http://www.w3.org/2000/svg";
 
+// Weekly kcal bar chart: one bar per day vs a goal line. Bars over goal turn coral.
+export function weekChart(
+  series: { date: string; kcal: number }[],
+  goal: number,
+): HTMLElement {
+  const W = 100, H = 44, pad = 2;
+  const max = Math.max(goal, ...series.map((d) => d.kcal), 1) * 1.1;
+  const bw = (W - pad * 2) / series.length;
+  const svg = document.createElementNS(SVGNS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("class", "weekchart__svg");
+  svg.setAttribute("preserveAspectRatio", "none");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label",
+    `Calories per day for ${series.length} days, goal ${goal}`);
+
+  series.forEach((d, i) => {
+    const h = (d.kcal / max) * (H - pad * 2);
+    const r = document.createElementNS(SVGNS, "rect");
+    r.setAttribute("x", String(pad + i * bw + bw * 0.15));
+    r.setAttribute("y", String(H - pad - h));
+    r.setAttribute("width", String(bw * 0.7));
+    r.setAttribute("height", String(Math.max(h, 0.5)));
+    r.setAttribute("rx", "0.6");
+    r.setAttribute("fill", d.kcal > goal ? "var(--burnt)" : "var(--amber)");
+    if (!d.kcal) r.setAttribute("fill", "var(--border, #ccc)");
+    svg.append(r);
+  });
+
+  const gy = H - pad - (goal / max) * (H - pad * 2);
+  const line = document.createElementNS(SVGNS, "line");
+  line.setAttribute("x1", String(pad));
+  line.setAttribute("x2", String(W - pad));
+  line.setAttribute("y1", String(gy));
+  line.setAttribute("y2", String(gy));
+  line.setAttribute("stroke", "var(--ink)");
+  line.setAttribute("stroke-width", "0.5");
+  line.setAttribute("stroke-dasharray", "1.5 1.5");
+  line.setAttribute("opacity", "0.5");
+  svg.append(line);
+
+  const wrap = document.createElement("div");
+  wrap.className = "weekchart";
+  wrap.append(svg);
+  const labels = document.createElement("div");
+  labels.className = "weekchart__labels";
+  series.forEach((d) => {
+    const s = document.createElement("span");
+    s.textContent = new Date(d.date + "T00:00").toLocaleDateString(undefined, { weekday: "narrow" });
+    labels.append(s);
+  });
+  wrap.append(labels);
+  return wrap;
+}
+
 // Macro donut: protein/carbs/fat as share of kcal (4/4/9 per gram).
 // Returns null when any macro is missing (photo miss) — caller skips the row.
 export function donut(p: number | null, c: number | null, f: number | null): HTMLElement | null {

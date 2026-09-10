@@ -11,6 +11,52 @@ source of truth for calorie/macro numbers — those always come from a real data
 (INDB for Indian foods, USDA for everything else). The LLM should also never be trusted
 to do arithmetic for daily totals — that's backend/SQL, not a chat response.
 
+## >>> FULL REWORK — R1–R10 CODE-COMPLETE, NOT YET DEPLOYED (2026-09-10) <<<
+The app was fully reworked. Read `LATEST_UPDATE.md` (plan + locked decisions +
+competitor research) and `PHASES.md` (10-phase breakdown R1–R10, every phase has a
+✅ done-note) before touching rework code. **All of R1–R10 is built and locally
+verified but nothing since commit 8aef953 is deployed** — next real step is a
+deploy pass (see LATEST_UPDATE "Next"). Original phases 1–3 + the bug-fix rounds
+below are DONE and LIVE (commit 8aef953) —
+that history stays for reference but the product direction now follows the rework docs.
+
+Rework in one line: **public free calculators / food pages as the funnel (no signup,
+no LLM cost); the existing AI photo pipeline + tracking become the signed-in layer;
+2–3 free guest AI uses/session.** Design north star: macronutrients.com (editorial).
+Positioning is a **worldwide** tracker (USDA default) — Indian-food support (INDB) is
+a mentioned plus, never the headline; no "India-first" copy in user-facing text.
+(The data-routing rule below — INDB for Indian dishes, USDA otherwise — is unchanged;
+that's backend behavior, not marketing.)
+Work ONE phase at a time, run its done-check, report to the user, wait for go-ahead.
+Rework progress: **R1 ✅** (editorial restyle) · **R2 ✅** (client-side calc engine
+`frontend/src/lib/macros.ts` + `QuickCalc.tsx` hero island) · **R3 ✅** (full
+`/calculator` page — `FullCalc.tsx` island w/ Katch-McArdle, formulas + refs +
+common-foods table) · **R4 ✅** (`MacroSplit.tsx` — lockable P/C/F sliders +
+5 diet preset cards + live summary, wired into `FullCalc`) · **R5 ✅** (Part A:
+INDB xlsx→`data/indb.sqlite` + FTS5, `scripts/build_indb_db.py`, pandas dropped
+from runtime deps, `nutrition.py` rewired, both test files green; Part B: 4 thin
+calc routes via one `MiniCalc.tsx` island + `/recipe-macro-calculator` with new
+`POST /foods/lookup` backend endpoint, nav dropdown wired) · **R6 ✅** (`MealChat.astro`
+extracted, guest AI gate `mc_ai_uses` cap 3, login→/dashboard) · **R7 ✅**
+(`/add` page, dashboard meal list `GET /meals/today`, logged-in nav, `/`→/dashboard
+redirect) · **R8 ✅** (`GET /foods/search` INDB-FTS+USDA, `POST /meals/manual`,
+`/meals/recent` + `/meals/relog`, `FoodSearch.astro` + re-log chips) — all
+2026-09-10, `frontend/` + backend, undeployed. Preact pinned `@astrojs/preact@4.1.3`.
+· **R9 ✅** (`GET /trends`, `PATCH`/`DELETE /meals/{id}` RLS-safe, `/meals/history`,
+dashboard week chart + insights, `mealRowEl` inline edit/delete, `/history` page) ·
+**R10 ✅** (`lookup_usda_local` — ~75-food FDC seed in `data/indb.sqlite`
+`usda_foods`+FTS, tried before live API; `/foods/<slug>-macros/` ×99 +
+`/compare/<a>-vs-<b>/` ×120 SEO pages + sitemap + JSON-LD; **240-page build**) —
+all 2026-09-10, undeployed.
+**Rework R1–R10 COMPLETE.** Nothing since commit 8aef953 is deployed yet.
+New backend endpoints since 8aef953: `/foods/lookup` `/foods/search` `/meals/today`
+`/meals/manual` `/meals/recent` `/meals/relog` `/trends` `/meals/history`
+`PATCH|DELETE /meals/{id}`. Frontend meal-input UI now `components/MealChat.astro`.
+Food data build: `scripts/build_indb_db.py`, `scripts/build_usda_db.py`,
+`scripts/export_seo_data.py` → committed `data/indb.sqlite` + `frontend/src/data/seo-foods.json`.
+The AI pipeline (`app/graph.py`, `app/nutrition.py`) is finished — do not rebuild it.
+Images/animation: Claude writes a prompt, user generates in ChatGPT.
+
 ## Tech stack
 - LLM (logged-in): OpenAI GPT-4o-mini (food identification, cheap/high-volume) and
   GPT-4o (reasoning, conversational responses)
@@ -20,9 +66,13 @@ to do arithmetic for daily totals — that's backend/SQL, not a chat response.
 - Backend: FastAPI (Python)
 - Frontend: Astro
 - Auth + DB: Supabase (Postgres)
-- Nutrition data: INDB (Indian Nutrient Databank — recipes + ingredients) loaded
-  in-memory from `data/INDB.xlsx` (NOT in Supabase — locked decision, no benefit for
-  single server), plus USDA FoodData Central API for generic/international foods
+- Nutrition data: INDB (Indian Nutrient Databank — recipes + ingredients) in
+  `data/indb.sqlite` (built from `data/INDB.xlsx` by `scripts/build_indb_db.py` —
+  `foods` table + FTS5 name index; committed to the repo). NOT in Supabase —
+  locked decision, no benefit for a single server. Plus USDA FoodData Central API
+  for generic/international foods. (Was an in-memory pandas load of the xlsx until
+  R5, 2026-09-10 — pandas is no longer a runtime dependency; openpyxl is
+  build-time only.)
 - Fuzzy matching: rapidfuzz (Python) to map LLM food descriptions to database entries
 - Hosting: Render (Singapore, free tier) — see Deployment section
 - No barcode scanning in this project (explicitly out of scope)
@@ -375,6 +425,9 @@ packaged foods. Highlights previously listed here (barcode, multi-day trends, RA
 meal-history querying) are folded into it.
 
 ## Project docs (root, not code)
+- `LATEST_UPDATE.md` — full-rework plan, locked decisions, competitor research
+- `PHASES.md` — 10-phase rework breakdown (R1–R10) + per-phase done-notes
+- `ASSETS.md` — per-phase image-generation prompts + which assets are wired in
 - `ROADMAP.txt` — 10 future phases ordered by user value, with sequencing logic
 - `INTERVIEW_QA.txt` — 35 Q&A prep: project overview (10), problems faced + approach
   (15), tech stack & architecture (10)

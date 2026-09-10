@@ -4,7 +4,12 @@ import Layout from "../layouts/Layout.astro";
 <Layout title="Sign up — MacroChat AI">
   <div class="wrap" style="max-width:560px; padding:4rem 0;">
     <p class="eyebrow" data-rise="1">Goals computed from your body — not vibes</p>
-    <h1 style="font-size:clamp(2.2rem,6vw,3.5rem); margin:1rem 0 2rem;" data-rise="2">Sign up</h1>
+    <h1 style="font-size:clamp(2.2rem,6vw,3.5rem); margin:1rem 0 1rem;" data-rise="2">Sign up</h1>
+    <ul class="checks" data-rise="2" style="margin-bottom:2rem;">
+      <li>Free forever — no card, unlimited AI meal logging</li>
+      <li>Calories from USDA + INDB, never AI-guessed</li>
+      <li>Export or delete your data anytime</li>
+    </ul>
     <form id="signup-form" class="block auth-card" data-rise="3">
       <p class="form-error" id="err" role="alert"></p>
 
@@ -16,11 +21,23 @@ import Layout from "../layouts/Layout.astro";
       </label>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:0 1rem;">
-        <label class="field"><span>Height (cm)</span>
-          <input type="number" name="height_cm" required min="100" max="250" step="0.1" />
+        <label class="field"><span>Height
+          <select id="h-unit" style="width:auto; margin-left:.5rem;">
+            <option value="cm">cm</option>
+            <option value="ft">ft / in</option>
+          </select></span>
+          <input type="number" id="h-cm" required min="100" max="250" step="0.1" placeholder="cm" />
+          <div id="h-ftin" style="display:none; gap:.5rem;">
+            <input type="number" id="h-ft" min="3" max="8" placeholder="ft" style="flex:1;" />
+            <input type="number" id="h-in" min="0" max="11" step="0.5" placeholder="in" style="flex:1;" />
+          </div>
         </label>
-        <label class="field"><span>Weight (kg)</span>
-          <input type="number" name="weight_kg" required min="30" max="300" step="0.1" />
+        <label class="field"><span>Weight
+          <select id="w-unit" style="width:auto; margin-left:.5rem;">
+            <option value="kg">kg</option>
+            <option value="lb">lb</option>
+          </select></span>
+          <input type="number" id="w-val" required min="30" max="300" step="0.1" placeholder="kg" />
         </label>
         <label class="field"><span>Age</span>
           <input type="number" name="age" required min="13" max="120" />
@@ -66,6 +83,32 @@ import Layout from "../layouts/Layout.astro";
     (document.getElementById("tz") as HTMLInputElement).value =
       Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+    // Unit toggles — backend stays metric; convert on submit.
+    const $ = (id: string) => document.getElementById(id) as HTMLInputElement;
+    const hUnit = $("h-unit"), wUnit = $("w-unit");
+    hUnit.addEventListener("change", () => {
+      const ft = hUnit.value === "ft";
+      $("h-cm").hidden = ft;
+      $("h-cm").required = !ft;
+      $("h-ftin").style.display = ft ? "flex" : "none";
+      $("h-ft").required = ft;
+      $("h-in").required = ft;
+    });
+    wUnit.addEventListener("change", () => {
+      const lb = wUnit.value === "lb";
+      $("w-val").min = lb ? "66" : "30";
+      $("w-val").max = lb ? "660" : "300";
+      $("w-val").placeholder = wUnit.value;
+    });
+    const heightCm = () =>
+      hUnit.value === "ft"
+        ? Math.round((Number($("h-ft").value) * 12 + Number($("h-in").value)) * 2.54 * 10) / 10
+        : Number($("h-cm").value);
+    const weightKg = () =>
+      wUnit.value === "lb"
+        ? Math.round((Number($("w-val").value) / 2.20462) * 10) / 10
+        : Number($("w-val").value);
+
     const form = document.getElementById("signup-form") as HTMLFormElement;
     const err = document.getElementById("err")!;
     const submit = document.getElementById("submit") as HTMLButtonElement;
@@ -78,8 +121,8 @@ import Layout from "../layouts/Layout.astro";
       const body = {
         email: fd.get("email"),
         password: fd.get("password"),
-        height_cm: Number(fd.get("height_cm")),
-        weight_kg: Number(fd.get("weight_kg")),
+        height_cm: heightCm(),
+        weight_kg: weightKg(),
         age: Number(fd.get("age")),
         sex: fd.get("sex"),
         activity_level: fd.get("activity_level"),

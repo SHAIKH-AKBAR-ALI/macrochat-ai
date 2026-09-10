@@ -1,0 +1,196 @@
+---
+// Manual food search + log (no LLM). Logged-in only; lives on /add under the
+// describe-a-meal chat. Also renders one-tap re-log chips for recent meals.
+---
+<section class="wrap foodsearch" style="max-width:820px;">
+  <h2 style="margin:2.5rem 0 0.4rem;">Search a food</h2>
+  <p class="mono" style="color:var(--mute); margin:0 0 1rem;">
+    Pick from USDA + INDB, set the grams, log it straight to your day — no AI.
+  </p>
+
+  <div id="relog" class="chips" hidden></div>
+
+  <div class="foodsearch__box">
+    <input type="search" id="fs-q" placeholder="e.g. paneer, oats, chicken breast" autocomplete="off" />
+    <div id="fs-results" class="foodsearch__results" hidden></div>
+  </div>
+
+  <div id="fs-staged"></div>
+
+  <div class="foodsearch__actions" hidden id="fs-actions">
+    <button type="button" class="btn" id="fs-log">Log meal</button>
+    <span class="mono" id="fs-total"></span>
+  </div>
+  <p class="form-error" id="fs-err" role="alert"></p>
+  <div id="fs-done"></div>
+</section>
+
+<script>
+  import { API, token, authHeaders, jsonPost } from "../lib/api";
+
+  if (!token()) {
+    // /add already redirects guests; this is just belt-and-braces.
+  }
+
+  const q = document.getElementById("fs-q") as HTMLInputElement;
+  const results = document.getElementById("fs-results")!;
+  const stagedEl = document.getElementById("fs-staged")!;
+  const actions = document.getElementById("fs-actions")!;
+  const totalEl = document.getElementById("fs-total")!;
+  const errEl = document.getElementById("fs-err")!;
+  const doneEl = document.getElementById("fs-done")!;
+  const relogEl = document.getElementById("relog")!;
+
+  type Hit = {
+    name: string; source: string | null;
+    kcal_100g: number; protein_100g: number; carb_100g: number; fat_100g: number;
+  };
+  type Staged = Hit & { grams: number };
+  const staged: Staged[] = [];
+
+  const el = (t: string, c = "", txt = "") => {
+    const n = document.createElement(t);
+    if (c) n.className = c;
+    if (txt) n.textContent = txt;
+    return n;
+  };
+
+  // --- search (debounced) ---
+  let timer: number;
+  q.addEventListener("input", () => {
+    clearTimeout(timer);
+    const term = q.value.trim();
+    if (term.length < 2) { results.hidden = true; return; }
+    timer = window.setTimeout(() => runSearch(term), 250);
+  });
+
+  async function runSearch(term: string) {
+    try {
+      const res = await fetch(API + "/foods/search?q=" + encodeURIComponent(term), {
+        headers: authHeaders(),
+      });
+      const data = await res.json();
+      results.innerHTML = "";
+      const hits: Hit[] = data.results || [];
+      if (!hits.length) {
+        results.append(el("div", "foodsearch__empty", "No match — try a plainer name."));
+      } else {
+        for (const h of hits) {
+          const b = el("button", "foodsearch__hit") as HTMLButtonElement;
+          b.type = "button";
+          b.append(
+            el("span", "foodsearch__hit-name", h.name),
+            el("span", "foodsearch__hit-meta",
+              `${Math.round(h.kcal_100g)} kcal/100g · ${h.source ?? ""}`)
+          );
+          b.addEventListener("click", () => addStaged(h));
+          results.append(b);
+        }
+      }
+      results.hidden = false;
+    } catch {
+      results.innerHTML = "";
+      results.append(el("div", "foodsearch__empty", "Search failed — the server may be waking up."));
+      results.hidden = false;
+    }
+  }
+
+  function addStaged(h: Hit) {
+    staged.push({ ...h, grams: 100 });
+    q.value = "";
+    results.hidden = true;
+    renderStaged();
+  }
+
+  function renderStaged() {
+    stagedEl.innerHTML = "";
+    staged.forEach((s, i) => {
+      const row = el("div", "foodsearch__row");
+      row.append(el("span", "foodsearch__row-name", s.name));
+      const g = el("input", "foodsearch__grams") as HTMLInputElement;
+      g.type = "number"; g.min = "1"; g.step = "1"; g.value = String(s.grams);
+      g.addEventListener("input", () => {
+        s.grams = Number(g.value) || 0;
+        renderTotal();
+      });
+      const rm = el("button", "foodsearch__rm", "×") as HTMLButtonElement;
+      rm.type = "button";
+      rm.setAttribute("aria-label", `Remove ${s.name}`);
+      rm.addEventListener("click", () => { staged.splice(i, 1); renderStaged(); });
+      row.append(g, el("span", "foodsearch__g", "g"), rm);
+      stagedEl.append(row);
+    });
+    actions.hidden = staged.length === 0;
+    renderTotal();
+  }
+
+  function renderTotal() {
+    const kcal = staged.reduce((t, s) => t + (s.kcal_100g * s.grams) / 100, 0);
+    totalEl.textContent = staged.length ? `≈ ${Math.round(kcal)} kcal total` : "";
+  }
+
+  document.getElementById("fs-log")!.addEventListener("click", async () => {
+    errEl.classList.remove("show");
+    if (!staged.length) return;
+    const btn = document.getElementById("fs-log") as HTMLButtonElement;
+    btn.disabled = true;
+    try {
+      const res = await jsonPost("/meals/manual", {
+        items: staged.map((s) => ({
+          name: s.name, grams: s.grams, source: s.source,
+          kcal_100g: s.kcal_100g, protein_100g: s.protein_100g,
+          carb_100g: s.carb_100g, fat_100g: s.fat_100g,
+        })),
+      });
+      staged.length = 0;
+      renderStaged();
+      doneEl.append(logged(res.totals, res.today));
+      loadRecent();
+    } catch (ex: any) {
+      errEl.textContent = ex.message;
+      errEl.classList.add("show");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  function logged(totals: any, today: any) {
+    const p = el("div", "facts__note facts__note--logged");
+    p.textContent =
+      `Logged ✓ ${totals.kcal} kcal · ${totals.protein}g P · ${totals.carbs}g C · ${totals.fat}g F` +
+      (today ? ` — ${today.remaining.kcal} kcal left today` : "");
+    return p;
+  }
+
+  // --- recent-meal re-log chips ---
+  async function loadRecent() {
+    try {
+      const res = await fetch(API + "/meals/recent", { headers: authHeaders() });
+      if (!res.ok) return;
+      const { meals } = await res.json();
+      relogEl.innerHTML = "";
+      if (!meals.length) { relogEl.hidden = true; return; }
+      relogEl.append(el("span", "mono", "Re-log: "));
+      for (const m of meals) {
+        const label = (m.items || []).map((i: any) => i.name).filter(Boolean).join(", ") || "meal";
+        const chip = el("button", "chip") as HTMLButtonElement;
+        chip.type = "button";
+        chip.textContent = `${label} · ${Math.round(m.total_calories)} kcal`;
+        chip.addEventListener("click", async () => {
+          chip.disabled = true;
+          try {
+            const r = await jsonPost("/meals/relog", { meal_id: m.id });
+            doneEl.append(logged(r.totals, r.today));
+          } catch (ex: any) {
+            errEl.textContent = ex.message;
+            errEl.classList.add("show");
+            chip.disabled = false;
+          }
+        });
+        relogEl.append(chip);
+      }
+      relogEl.hidden = false;
+    } catch { /* best-effort */ }
+  }
+  loadRecent();
+</script>

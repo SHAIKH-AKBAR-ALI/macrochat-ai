@@ -1,0 +1,32 @@
+---
+import Layout from "../layouts/Layout.astro";
+import MiniCalc from "../components/MiniCalc.tsx";
+---
+<Layout title="Protein calculator — MacroChat">
+  <section class="section calc-page">
+    <div class="wrap">
+      <div style="max-width:46rem; margin-bottom:2rem;">
+        <span class="pill">Free tools · No signup</span>
+        <h1 style="margin:1rem 0 0.8rem;">Protein calculator</h1>
+        <p class="hero__lead" style="margin:0;">
+          How much protein to aim for each day, based on your bodyweight. This is
+          the same target MacroChat uses when it builds your macro split.
+        </p>
+      </div>
+      <MiniCalc mode="protein" client:load />
+    </div>
+  </section>
+
+  <section class="section calc-doc" style="padding-top:0;">
+    <div class="wrap" style="max-width:52rem;">
+      <p class="eyebrow">How it works</p>
+      <h2 style="margin:0.6rem 0 1rem;">1.8 g per kg bodyweight</h2>
+      <p>The default target is <b>1.8 g/kg</b> — a solid active-adult number. The
+        range <b>1.6–2.2 g/kg</b> covers most goals: the lower end for general
+        health, the upper end when dieting hard or building muscle. Protein is
+        <code>4</code> kcal per gram.</p>
+      <p>See the <a href="/calculator">full macro calculator</a> to fit protein into
+        a calorie target with carbs and fat.</p>
+    </div>
+  </section>
+</Layout>

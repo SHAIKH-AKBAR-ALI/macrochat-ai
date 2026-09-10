@@ -3,7 +3,10 @@
 __pycache__/
 node_modules/
 frontend/dist/
+frontend/.astro/
 password/
 .claude/
 .agents/
 skills-lock.json
+mini-project/
+screenshot/

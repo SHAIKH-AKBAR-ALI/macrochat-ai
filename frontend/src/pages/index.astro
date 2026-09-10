@@ -1,12 +1,23 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import QuickCalc from "../components/QuickCalc.tsx";
 ---
 <Layout title="MacroChat AI — Tell it what you ate">
+  <script is:inline>
+    // Logged in -> the landing page isn't your home; the dashboard is.
+    try {
+      var _t = localStorage.getItem("mc_token");
+      if (_t) {
+        var _p = JSON.parse(atob(_t.split(".")[1]));
+        if (!_p.exp || _p.exp * 1000 > Date.now()) location.replace("/dashboard");
+      }
+    } catch (e) {}
+  </script>
   <section class="hero">
     <div class="wrap hero__grid">
       <div>
-        <p class="eyebrow" data-rise="1">AI nutrition tracker</p>
-        <h1 style="margin-top:1rem;" data-rise="2">
+        <span class="pill" data-rise="1">Free tools · No signup</span>
+        <h1 style="margin-top:1.1rem;" data-rise="2">
           Tell it what<br />you ate.<br /><span>It does the math.</span>
         </h1>
         <p class="hero__lead" data-rise="3">
@@ -14,49 +25,30 @@ import Layout from "../layouts/Layout.astro";
           MacroChat identifies the food, resolves the portion, and pulls calories
           and macros from real nutrition databases. The AI never invents a number.
         </p>
+        <ul class="checks" data-rise="3">
+          <li>Calories from USDA and INDB — lab data, not AI guesses</li>
+          <li>Photo or text, no food-search dropdowns</li>
+          <li>You confirm any portion estimated from a photo</li>
+        </ul>
         <div data-rise="4">
           <a class="btn" href="/signup">Start tracking</a>
           <a class="btn btn--ghost" href="/chat" style="margin-left:0.6rem;">Try it without an account</a>
         </div>
       </div>
 
-      <div class="demo-exchange" aria-label="Example exchange" data-rise="3">
-        <div class="msg msg--user" style="align-self:flex-end;">
-          <div class="msg__who">You</div>
-          <div class="msg__body">200g grilled chicken + 2 rotis</div>
-        </div>
-        <div class="facts">
-          <div class="facts__title">Meal facts</div>
-          <div class="facts__row facts__row--hero">
-            <b>Calories</b><span class="num">504 kcal</span>
-          </div>
-          <div class="facts__row">
-            <span>Grilled chicken breast · 200g <span class="tag tag--usda">USDA</span></span>
-            <span class="num">330 kcal</span>
-          </div>
-          <div class="facts__row facts__row--thick">
-            <span>Roti · 2 pc <span class="tag">INDB</span></span>
-            <span class="num">174 kcal</span>
-          </div>
-          <div class="facts__row"><b>Protein</b><span class="num">68.3 g</span></div>
-          <div class="facts__row"><b>Carbs</b><span class="num">36.1 g</span></div>
-          <div class="facts__row"><b>Fat</b><span class="num">9.8 g</span></div>
-          <div class="facts__note">Portions stated in text — logged with high confidence</div>
-        </div>
+      <div class="demo-exchange" aria-label="Quick macro calculator" data-rise="3">
+        <p class="eyebrow" style="margin-bottom:0.8rem;">Quick calculator · free, no signup</p>
+        <QuickCalc client:load />
       </div>
     </div>
   </section>
 
-  <div class="ticker" aria-hidden="true">
-    <div class="ticker__track">
-      Protein first, cravings later <b>■</b>
-      A logged meal beats a perfect meal <b>■</b>
-      Water before coffee <b>■</b>
-      Half the plate vegetables, no math needed <b>■</b>
-      Consistency beats intensity <b>■</b>
-      Walk 10 minutes after eating <b>■</b>
-      You can't out-track sleep — get 7 hours <b>■</b>
-      Small portions, honest grams <b>■</b>
+  <div class="trust">
+    <div class="wrap">
+      <span>Free forever</span>
+      <span>No email to start</span>
+      <span>Under 60 seconds</span>
+      <span>We don't sell supplements or coaching</span>
     </div>
   </div>
 
@@ -65,12 +57,12 @@ import Layout from "../layouts/Layout.astro";
     <div class="wrap">
       <div class="stats reveal">
         <div class="stat">
-          <span class="num" data-count="1000" data-suffix="+">0</span>
-          <span class="lbl">INDB Indian foods</span>
+          <span class="num" data-count="300000" data-suffix="+">0</span>
+          <span class="lbl">USDA food entries</span>
         </div>
         <div class="stat">
-          <span class="num" data-count="300000" data-suffix="+">0</span>
-          <span class="lbl">USDA entries on tap</span>
+          <span class="num" data-count="1000" data-suffix="+">0</span>
+          <span class="lbl">INDB regional recipes</span>
         </div>
         <div class="stat">
           <span class="num" data-count="0">0</span>
@@ -91,8 +83,9 @@ import Layout from "../layouts/Layout.astro";
         <p class="eyebrow">How it works</p>
         <h2>Three steps. No food-search forms.</h2>
       </div>
+      <img class="how-strip reveal" src="/how-it-works.png" alt="Describe your meal, MacroChat looks it up in a real database, you confirm the portion." width="1600" height="533" loading="lazy" />
       <div class="steps">
-        <div class="block reveal scrub">
+        <div class="block reveal">
           <svg class="draw" viewBox="0 0 60 44" width="56" height="42" aria-hidden="true">
             <rect x="3" y="4" width="42" height="28" rx="0" />
             <polyline points="14,32 14,40 24,32" />
@@ -104,7 +97,7 @@ import Layout from "../layouts/Layout.astro";
           <p>Type your meal, attach a photo, or both. The AI names each food and
           spots the prep style — grilled, fried, curry.</p>
         </div>
-        <div class="block reveal scrub" style="transition-delay:0.12s;">
+        <div class="block reveal" style="transition-delay:0.12s;">
           <svg class="draw" viewBox="0 0 60 44" width="56" height="42" aria-hidden="true">
             <ellipse cx="30" cy="9" rx="18" ry="6" />
             <path d="M12 9 V33 C12 36 21 39 30 39 C39 39 48 36 48 33 V9" />
@@ -115,7 +108,7 @@ import Layout from "../layouts/Layout.astro";
           <p>Every calorie comes from the Indian Nutrient Databank or USDA
           FoodData Central — matched to your food, never guessed from the AI's memory.</p>
         </div>
-        <div class="block reveal scrub" style="transition-delay:0.24s;">
+        <div class="block reveal" style="transition-delay:0.24s;">
           <svg class="draw" viewBox="0 0 60 44" width="56" height="42" aria-hidden="true">
             <rect x="6" y="8" width="28" height="28" />
             <polyline points="13,22 20,29 40,7" />
@@ -133,7 +126,7 @@ import Layout from "../layouts/Layout.astro";
   <section class="section" style="padding-top:0;">
     <div class="wrap">
       <div class="shot__grid">
-        <div class="reveal scrub-l">
+        <div class="reveal">
           <p class="eyebrow">The whole app</p>
           <h2 style="margin:0.8rem 0 1rem;">A meal in, the facts out.</h2>
           <p style="color:var(--mute); font-size:1.05rem;">
@@ -142,7 +135,7 @@ import Layout from "../layouts/Layout.astro";
             labelled — INDB or USDA, right on the row.
           </p>
         </div>
-        <div class="shot reveal scrub-r">
+        <div class="shot reveal">
           <div class="shot__bar" aria-hidden="true">
             <i></i><i></i><i></i>
             <span class="shot__url">macrochat.app/chat</span>
@@ -195,8 +188,8 @@ import Layout from "../layouts/Layout.astro";
         </div>
         <div class="cell">
           <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><path d="M20 5 C10 5 6 14 10 22 C13 28 20 35 20 35 C20 35 27 28 30 22 C34 14 30 5 20 5"/><line x1="20" y1="12" x2="20" y2="28"/></svg>
-          <h3>Knows Indian food</h3>
-          <p>1,000+ INDB recipes — roti, dal, sabzi, biryani, dosa — not just packaged goods.</p>
+          <h3>Real meals, not just packages</h3>
+          <p>USDA for everyday foods worldwide, plus 1,000+ INDB recipes for regional dishes — dal, biryani, dosa.</p>
         </div>
         <div class="cell">
           <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><rect x="7" y="9" width="26" height="26"/><polyline points="13,21 18,26 29,13"/></svg>
@@ -210,8 +203,8 @@ import Layout from "../layouts/Layout.astro";
         </div>
         <div class="cell">
           <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><path d="M27 22 A11 11 0 1 1 18 8 A9 9 0 1 0 27 22"/></svg>
-          <h3>Dark mode, still brutal</h3>
-          <p>Same ink-on-paper system, inverted. Amber stays amber. Follows your OS.</p>
+          <h3>Dark mode built in</h3>
+          <p>The whole editorial system, inverted. The teal holds. Follows your OS by default.</p>
         </div>
         <div class="cell">
           <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><circle cx="20" cy="20" r="14"/><polyline points="20,11 20,20 27,24"/></svg>
@@ -247,8 +240,8 @@ import Layout from "../layouts/Layout.astro";
           <div class="compare__cell compare__cell--us">You confirm estimated portions</div>
         </div>
         <div class="compare__row">
-          <div class="compare__cell compare__cell--them">Barcode-first, Indian food missing</div>
-          <div class="compare__cell compare__cell--us">1,000+ Indian recipes built in</div>
+          <div class="compare__cell compare__cell--them">Barcode-first, home cooking missing</div>
+          <div class="compare__cell compare__cell--us">USDA + INDB, cooked dishes included</div>
         </div>
         <div class="compare__row">
           <div class="compare__cell compare__cell--them">Account wall before you can look</div>

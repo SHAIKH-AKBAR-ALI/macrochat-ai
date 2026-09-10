@@ -1,0 +1,132 @@
+---
+import Layout from "../layouts/Layout.astro";
+import FullCalc from "../components/FullCalc.tsx";
+
+// Static reference data. Macros per typical serving. Rows link to /foods/<slug>-macros/
+// (built in R10 — dead links until then, that's expected).
+const COMMON_FOODS = [
+  { name: "Chicken breast, cooked", slug: "chicken-breast", serving: "100 g", kcal: 165, p: 31, c: 0, f: 3.6 },
+  { name: "White rice, cooked", slug: "white-rice", serving: "1 cup (158 g)", kcal: 205, p: 4.3, c: 45, f: 0.4 },
+  { name: "Whole egg", slug: "egg", serving: "1 large (50 g)", kcal: 78, p: 6.3, c: 0.6, f: 5.3 },
+  { name: "Rolled oats, dry", slug: "oats", serving: "1/2 cup (40 g)", kcal: 150, p: 5, c: 27, f: 3 },
+  { name: "Banana", slug: "banana", serving: "1 medium (118 g)", kcal: 105, p: 1.3, c: 27, f: 0.4 },
+  { name: "Almonds", slug: "almonds", serving: "1 oz (28 g)", kcal: 164, p: 6, c: 6, f: 14 },
+  { name: "Greek yogurt, plain nonfat", slug: "greek-yogurt", serving: "170 g", kcal: 100, p: 17, c: 6, f: 0.7 },
+  { name: "Salmon, cooked", slug: "salmon", serving: "100 g", kcal: 208, p: 20, c: 0, f: 13 },
+  { name: "Broccoli, cooked", slug: "broccoli", serving: "1 cup (156 g)", kcal: 55, p: 3.7, c: 11, f: 0.6 },
+  { name: "Sweet potato, baked", slug: "sweet-potato", serving: "1 medium (114 g)", kcal: 103, p: 2.3, c: 24, f: 0.2 },
+  { name: "Whole wheat bread", slug: "whole-wheat-bread", serving: "1 slice (43 g)", kcal: 110, p: 4, c: 20, f: 1.5 },
+  { name: "Peanut butter", slug: "peanut-butter", serving: "2 tbsp (32 g)", kcal: 188, p: 8, c: 6, f: 16 },
+  { name: "Lentils, cooked", slug: "lentils", serving: "1 cup (198 g)", kcal: 230, p: 18, c: 40, f: 0.8 },
+  { name: "Olive oil", slug: "olive-oil", serving: "1 tbsp (14 g)", kcal: 119, p: 0, c: 0, f: 14 },
+  { name: "Roti / chapati", slug: "roti", serving: "1 piece (40 g)", kcal: 104, p: 3, c: 20, f: 2.5 },
+];
+---
+<Layout title="Macro calculator — MacroChat">
+  <section class="section calc-page">
+    <div class="wrap">
+      <div style="max-width:46rem; margin-bottom:2rem;">
+        <span class="pill">Free tools · No signup</span>
+        <h1 style="margin:1rem 0 0.8rem;">Macro calculator</h1>
+        <p class="hero__lead" style="margin:0;">
+          Your daily calories and protein / carb / fat split from Mifflin-St Jeor
+          (or Katch-McArdle if you know your body-fat %). Runs entirely in your
+          browser — the numbers match what MacroChat uses when you track a meal.
+        </p>
+      </div>
+
+      <FullCalc client:load />
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section calc-doc" style="padding-top:0;">
+    <div class="wrap" style="max-width:52rem;">
+      <p class="eyebrow">Transparency</p>
+      <h2 style="margin:0.6rem 0 1.4rem;">How this calculator works</h2>
+
+      <h3>1 · Basal metabolic rate (BMR)</h3>
+      <p>Calories your body burns at complete rest. Default formula is
+        <b>Mifflin-St Jeor</b>:</p>
+      <pre><code>BMR = 10 · weight(kg) + 6.25 · height(cm) − 5 · age + s
+  s = +5   (male)
+  s = −161 (female)</code></pre>
+      <p>Enter a body-fat % under Advanced options and it switches to
+        <b>Katch-McArdle</b>, which is more accurate for lean or very heavy people
+        because it works from lean mass:</p>
+      <pre><code>LBM = weight(kg) · (1 − bodyfat% / 100)
+BMR = 370 + 21.6 · LBM</code></pre>
+
+      <h3>2 · Total daily energy expenditure (TDEE)</h3>
+      <p>BMR multiplied by an activity factor:</p>
+      <table>
+        <thead><tr><th>Activity</th><th>Factor</th></tr></thead>
+        <tbody>
+          <tr><td>Sedentary — desk job, little exercise</td><td>1.20</td></tr>
+          <tr><td>Light — 1–3 workouts/week</td><td>1.375</td></tr>
+          <tr><td>Moderate — 3–5 workouts/week</td><td>1.55</td></tr>
+          <tr><td>Active — 6–7 workouts/week</td><td>1.725</td></tr>
+          <tr><td>Very active — hard training / physical job</td><td>1.90</td></tr>
+        </tbody>
+      </table>
+
+      <h3>3 · Goal adjustment</h3>
+      <table>
+        <thead><tr><th>Goal</th><th>Daily change</th></tr></thead>
+        <tbody>
+          <tr><td>Lose fat</td><td>−500 kcal (≈ 0.45 kg / week)</td></tr>
+          <tr><td>Maintain</td><td>0</td></tr>
+          <tr><td>Gain</td><td>+300 kcal (lean gain)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>4 · Macro split</h3>
+      <p>Protein is set to <b>1.8 g per kg bodyweight</b> (active-adult target),
+        fat to <b>25% of total calories</b>, and carbs take whatever calories are
+        left. Energy per gram: protein <code>4</code>, carbs <code>4</code>,
+        fat <code>9</code>.</p>
+      <p>BMI is <code>weight(kg) / height(m)²</code>; the water target is a rough
+        <code>35 ml per kg</code> bodyweight.</p>
+
+      <h3>References</h3>
+      <ul class="calc-refs">
+        <li>Mifflin MD, St Jeor ST, et al. <i>A new predictive equation for resting
+          energy expenditure in healthy individuals.</i> Am J Clin Nutr. 1990.
+          <a href="https://pubmed.ncbi.nlm.nih.gov/2305711/" rel="nofollow">PubMed 2305711</a></li>
+        <li>Katch VL, McArdle WD. <i>Nutrition, Weight Control, and Exercise.</i> 1977.</li>
+        <li>Frankenfield D, et al. <i>Comparison of predictive equations for resting
+          metabolic rate.</i> J Am Diet Assoc. 2005.
+          <a href="https://pubmed.ncbi.nlm.nih.gov/15883556/" rel="nofollow">PubMed 15883556</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- COMMON FOODS -->
+  <section class="section calc-doc" style="padding-top:0;">
+    <div class="wrap" style="max-width:52rem;">
+      <p class="eyebrow">Reference</p>
+      <h2 style="margin:0.6rem 0 1rem;">Macros in common foods</h2>
+      <p style="color:var(--mute); margin-top:0;">Per typical serving. Tap a food
+        for its full page.</p>
+      <div class="calc-tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Food</th><th>Serving</th><th>kcal</th><th>P</th><th>C</th><th>F</th></tr>
+          </thead>
+          <tbody>
+            {COMMON_FOODS.map((x) => (
+              <tr>
+                <td><a href={`/foods/${x.slug}-macros/`}>{x.name}</a></td>
+                <td>{x.serving}</td>
+                <td>{x.kcal}</td>
+                <td>{x.p} g</td>
+                <td>{x.c} g</td>
+                <td>{x.f} g</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</Layout>

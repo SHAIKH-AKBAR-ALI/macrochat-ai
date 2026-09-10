@@ -65,6 +65,16 @@ def main():
     assert hit["source"] == "INDB", hit
     assert 200 < hit["kcal_100g"] < 400, hit
 
+    # INDB moved xlsx -> SQLite (R5): FTS5 name search returns the expected row
+    fts = nutrition.search_indb("chapati")
+    assert any("Chapati" in h["matched_name"] for h in fts), fts
+
+    # USDA seed local (R10): common foods resolve with NO network (pure sqlite)
+    loc = nutrition.lookup_usda_local("quinoa")
+    assert loc and loc["source"] == "USDA" and 100 < loc["kcal_100g"] < 180, loc
+    assert nutrition.lookup_usda_local("cheddar cheese")["protein_100g"] > 15
+    assert nutrition.lookup_usda_local("zzqxv nonsense") is None
+
     # prep style influences match
     hit = nutrition.lookup("chicken breast", "grilled")
     assert hit is not None, "grilled chicken breast should resolve"

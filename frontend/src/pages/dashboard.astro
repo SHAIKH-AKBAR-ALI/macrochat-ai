@@ -27,14 +27,28 @@ import Layout from "../layouts/Layout.astro";
           <div class="facts__note">Counted from your local midnight — backend math, not AI guesses</div>
         </div>
 
-        <a class="btn" href="/chat" style="justify-self:start;">Log a meal</a>
+        <div class="block" id="week-block" style="display:none;">
+          <div class="facts__title" style="border:0; padding:0; margin-bottom:0.8rem;">This week</div>
+          <div id="week-chart"></div>
+          <ul id="week-insights" class="checks" style="margin-top:1rem;"></ul>
+        </div>
+
+        <div>
+          <p class="eyebrow" style="margin-bottom:0.8rem;">Today's meals</p>
+          <div id="relog" class="chips" style="display:none;"></div>
+          <div id="meal-list"></div>
+        </div>
+
+        <a class="btn" href="/add" style="justify-self:start;">＋ Add meal</a>
+        <a class="mono" href="/history" style="justify-self:start;">See full history &rarr;</a>
       </div>
     </div>
   </div>
 
   <script>
     import { API, token, authHeaders } from "../lib/api";
-    import { countUp, donut, REDUCED } from "../lib/anim";
+    import { countUp, donut, weekChart, REDUCED } from "../lib/anim";
+    import { mealRowEl } from "../lib/meals";
 
     if (!token()) location.href = "/login";
 
@@ -95,8 +109,87 @@ import Layout from "../layouts/Layout.astro";
       document.getElementById("meals-count")!.textContent =
         `${t.meals_logged} meal${t.meals_logged === 1 ? "" : "s"} logged today`;
 
+      await loadMealList();
+      await loadRelog();
+      await loadTrends();
+
       document.getElementById("loading")!.style.display = "none";
       document.getElementById("board")!.style.display = "block";
+    }
+
+    async function loadTrends() {
+      const block = document.getElementById("week-block")!;
+      let tr: any = null;
+      try {
+        const res = await fetch(API + "/trends?days=7", { headers: authHeaders() });
+        if (res.ok) tr = await res.json();
+      } catch { /* best-effort */ }
+      if (!tr || !tr.logged_days) { block.style.display = "none"; return; }
+      const chart = document.getElementById("week-chart")!;
+      chart.innerHTML = "";
+      chart.append(weekChart(tr.series, tr.goals.kcal));
+      const ins = document.getElementById("week-insights")!;
+      ins.innerHTML = "";
+      for (const line of tr.insights) {
+        const li = document.createElement("li");
+        li.textContent = line;
+        ins.append(li);
+      }
+      block.style.display = "block";
+    }
+
+    async function loadRelog() {
+      const box = document.getElementById("relog")!;
+      box.innerHTML = "";
+      let meals: any[] = [];
+      try {
+        const res = await fetch(API + "/meals/recent", { headers: authHeaders() });
+        if (res.ok) meals = (await res.json()).meals || [];
+      } catch { /* best-effort */ }
+      if (!meals.length) { box.style.display = "none"; return; }
+      const lbl = document.createElement("span");
+      lbl.className = "mono";
+      lbl.textContent = "Re-log: ";
+      box.append(lbl);
+      for (const m of meals) {
+        const label = (m.items || []).map((i: any) => i.name).filter(Boolean).join(", ") || "meal";
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "chip";
+        chip.textContent = `${label} · ${Math.round(m.total_calories)} kcal`;
+        chip.addEventListener("click", async () => {
+          chip.disabled = true;
+          try {
+            await fetch(API + "/meals/relog", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", ...authHeaders() },
+              body: JSON.stringify({ meal_id: m.id }),
+            });
+            load(); // refetch meters + list + remaining
+          } catch { chip.disabled = false; }
+        });
+        box.append(chip);
+      }
+      box.style.display = "flex";
+    }
+
+    async function loadMealList() {
+      const ml = document.getElementById("meal-list")!;
+      ml.innerHTML = ""; // rerun-safe (bfcache)
+      let meals: any[] = [];
+      try {
+        const res = await fetch(API + "/meals/today", { headers: authHeaders() });
+        if (res.ok) meals = (await res.json()).meals || [];
+      } catch { /* list is best-effort */ }
+      if (!meals.length) {
+        const p = document.createElement("p");
+        p.className = "mono";
+        p.style.color = "var(--mute)";
+        p.textContent = "No meals logged yet today.";
+        ml.append(p);
+        return;
+      }
+      for (const m of meals) ml.append(mealRowEl(m, load));
     }
     load();
     // Back-button restores the page from bfcache with STALE numbers — refetch.

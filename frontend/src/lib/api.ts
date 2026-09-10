@@ -1,5 +1,7 @@
+// `location` is undefined during SSR/prerender (islands evaluate this module then).
 export const API =
-  import.meta.env.PUBLIC_API_URL || `http://${location.hostname}:8000`;
+  import.meta.env.PUBLIC_API_URL ||
+  `http://${typeof location !== "undefined" ? location.hostname : "localhost"}:8000`;
 
 // Drop an expired JWT before it's ever sent — otherwise a stale token from a prior
 // login tags along into guest-mode requests and trips a misleading "session expired"

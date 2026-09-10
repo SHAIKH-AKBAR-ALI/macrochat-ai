@@ -1,0 +1,37 @@
+---
+import Layout from "../layouts/Layout.astro";
+import RecipeCalc from "../components/RecipeCalc.tsx";
+---
+<Layout title="Recipe macro calculator — MacroChat">
+  <section class="section calc-page">
+    <div class="wrap">
+      <div style="max-width:46rem; margin-bottom:2rem;">
+        <span class="pill">Free tools · No signup</span>
+        <h1 style="margin:1rem 0 0.8rem;">Recipe macro calculator</h1>
+        <p class="hero__lead" style="margin:0;">
+          List the ingredients and grams — get the total calories, protein, carbs
+          and fat. Every number is a real database lookup (USDA and INDB), not an
+          AI estimate.
+        </p>
+      </div>
+      <RecipeCalc client:load />
+    </div>
+  </section>
+
+  <section class="section calc-doc" style="padding-top:0;">
+    <div class="wrap" style="max-width:52rem;">
+      <p class="eyebrow">How it works</p>
+      <h2 style="margin:0.6rem 0 1rem;">Lookup, scale, sum</h2>
+      <p>Each ingredient name is matched to an <b>INDB</b> (Indian dishes and
+        ingredients) or <b>USDA FoodData Central</b> entry — plain staples like
+        rice and dal use a fixed canonical value. The per-100 g macros are scaled
+        to your grams and added up.</p>
+      <p>Plain names match best: "rice", "chicken breast", "olive oil". An
+        ingredient that can't be matched is listed separately and left out of the
+        total. The first request after a while can take ~50 s while the free-tier
+        server wakes.</p>
+      <p>Want it done from a photo or a sentence instead?
+        <a href="/chat">Try the meal chat</a>.</p>
+    </div>
+  </section>
+</Layout>

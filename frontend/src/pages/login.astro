@@ -36,7 +36,7 @@ import Layout from "../layouts/Layout.astro";
           password: fd.get("password"),
         });
         localStorage.setItem("mc_token", res.access_token);
-        location.href = "/chat";
+        location.href = "/dashboard";
       } catch (ex: any) {
         err.textContent = ex.message;
         err.classList.add("show");

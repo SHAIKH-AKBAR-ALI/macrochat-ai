@@ -1,0 +1,57 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { FOODS, bySlug, nutritionJsonLd } from "../../lib/seo";
+
+export function getStaticPaths() {
+  return FOODS.map((f) => ({ params: { slug: `${f.slug}-macros` }, props: { food: f } }));
+}
+
+const { food } = Astro.props;
+const related = FOODS.filter((f) => f.source === food.source && f.slug !== food.slug).slice(0, 6);
+const p4 = Math.round(food.protein * 4);
+const c4 = Math.round(food.carb * 4);
+const f9 = Math.round(food.fat * 9);
+const kdenom = p4 + c4 + f9 || 1;
+const desc = `${food.name}: ${food.kcal} kcal, ${food.protein} g protein, ${food.carb} g carbs, ${food.fat} g fat per 100 g. Source: ${food.source}.`;
+---
+<Layout title={`${food.name} macros (per 100 g) — MacroChat`} description={desc}>
+  <section class="section" style="padding-bottom:0;">
+    <div class="wrap calc-doc" style="max-width:640px;">
+      <p class="mono" style="color:var(--mute);"><a href="/foods/">Foods</a> / {food.name}</p>
+      <h1 style="margin:0.6rem 0 0.4rem;">{food.name} macros</h1>
+      <p class="hero__lead" style="margin:0 0 1.5rem;">
+        Per 100 grams, from {food.source === "USDA" ? "USDA FoodData Central" : "the Indian Nutrient Databank"}.
+        No estimates — this is lab data.
+      </p>
+
+      <div class="facts">
+        <div class="facts__title">{food.name} · 100 g</div>
+        <div class="facts__row facts__row--hero"><b>Calories</b><span class="num">{food.kcal} kcal</span></div>
+        <div class="facts__row"><b>Protein</b><span class="num">{food.protein} g · {Math.round((p4 / kdenom) * 100)}%</span></div>
+        <div class="facts__row"><b>Carbs</b><span class="num">{food.carb} g · {Math.round((c4 / kdenom) * 100)}%</span></div>
+        <div class="facts__row facts__row--thick"><b>Fat</b><span class="num">{food.fat} g · {Math.round((f9 / kdenom) * 100)}%</span></div>
+        <div class="facts__note">Macro % = share of the {food.kcal} kcal (protein/carbs 4 kcal/g, fat 9 kcal/g).</div>
+        <a class="btn qc__full" href="/signup" style="margin-top:0.9rem;">Add this to your tracker →</a>
+      </div>
+
+      <p style="margin-top:1.5rem;">
+        Logging a real portion? The <a href="/recipe-macro-calculator">recipe calculator</a> scales
+        {food.name.toLowerCase()} to your grams and sums a whole meal. Or just tell
+        <a href="/chat">the meal chat</a> what you ate.
+      </p>
+
+      {related.length > 0 && (
+        <>
+          <h2 style="margin:2rem 0 0.6rem;">Related foods</h2>
+          <ul class="calc-refs">
+            {related.map((r) => (
+              <li><a href={`/foods/${r.slug}-macros/`}>{r.name} macros</a> — {r.kcal} kcal / 100 g</li>
+            ))}
+          </ul>
+        </>
+      )}
+      <p style="margin-top:1.5rem;"><a href="/compare/">Compare two foods →</a></p>
+    </div>
+  </section>
+  <script type="application/ld+json" set:html={nutritionJsonLd(food)} />
+</Layout>

@@ -1,0 +1,16 @@
+---
+import Layout from "../layouts/Layout.astro";
+import MealChat from "../components/MealChat.astro";
+import FoodSearch from "../components/FoodSearch.astro";
+---
+<Layout title="Add a meal — MacroChat AI" active="add">
+  <div class="wrap" style="max-width:820px; padding-top:1.5rem;">
+    <a class="mono" href="/dashboard">&larr; Back to dashboard</a>
+  </div>
+  <MealChat />
+  <FoodSearch />
+</Layout>
+<script>
+  import { token } from "../lib/api";
+  if (!token()) location.href = "/login";
+</script>

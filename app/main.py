@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
-from app import db
+from app import db, nutrition
 from app.graph import aggregate, lookup, pipeline
 
 app = FastAPI(title="MacroChat AI — Phase 3")
@@ -154,11 +154,163 @@ def confirm(body: ConfirmBody, user_id: str = Depends(db.current_user_id)):
     return result
 
 
+# --- public: recipe / ingredient macro lookup (no auth, no LLM) ---
+
+class Ingredient(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    grams: float = Field(gt=0, le=10000)
+
+
+class RecipeBody(BaseModel):
+    ingredients: list[Ingredient] = Field(min_length=1, max_length=50)
+
+
+@app.post("/foods/lookup")
+def foods_lookup(body: RecipeBody):
+    """Sum macros for a list of (name, grams) via nutrition.lookup — INDB then USDA,
+    no LLM. Powers the recipe-macro calculator; same DB the AI layer uses."""
+    items = []
+    totals = {"kcal": 0.0, "protein": 0.0, "carbs": 0.0, "fat": 0.0}
+    for ing in body.ingredients:
+        hit = nutrition.lookup(ing.name)
+        if not hit or hit.get("kcal_100g") is None:
+            items.append({"name": ing.name, "grams": ing.grams, "matched": None})
+            continue
+        f = ing.grams / 100.0
+        m = {
+            "kcal": round(hit["kcal_100g"] * f, 1),
+            "protein": round(hit["protein_100g"] * f, 1),
+            "carbs": round(hit["carb_100g"] * f, 1),
+            "fat": round(hit["fat_100g"] * f, 1),
+        }
+        for k in totals:
+            totals[k] += m[k]
+        items.append({"name": ing.name, "grams": ing.grams,
+                      "matched": hit["matched_name"], "source": hit["source"], **m})
+    unmatched = [i["name"] for i in items if i["matched"] is None]
+    return {
+        "items": items,
+        "totals": {k: round(v, 1) for k, v in totals.items()},
+        "unmatched": unmatched,
+        "totals_partial": bool(unmatched),
+    }
+
+
 @app.get("/today")
 def today(user_id: str = Depends(db.current_user_id)):
     return db.today_totals(user_id)
 
 
+@app.get("/meals/today")
+def meals_today(user_id: str = Depends(db.current_user_id)):
+    """Today's meal rows for the dashboard list (newest first, tz-aware)."""
+    return {"meals": db.today_meals(user_id)}
+
+
+# --- manual food search + log (no LLM) ---
+
+@app.get("/foods/search")
+def foods_search(q: str):
+    """Name search for the manual-log picker. INDB FTS (fast); one USDA hit if INDB
+    has nothing. ponytail: USDA stays a live single lookup until R10 bulk-local."""
+    q = q.strip()
+    if len(q) < 2:
+        return {"results": []}
+    hits = nutrition.search_indb(q, limit=8)
+    if not hits:
+        u = nutrition.lookup_usda(q)
+        if u:
+            hits = [u]
+    return {"results": [
+        {"name": h["matched_name"], "source": h["source"],
+         "kcal_100g": h["kcal_100g"], "protein_100g": h["protein_100g"],
+         "carb_100g": h["carb_100g"], "fat_100g": h["fat_100g"]}
+        for h in hits
+    ]}
+
+
+class ManualItem(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    grams: float = Field(gt=0, le=10000)
+    kcal_100g: float = Field(ge=0)
+    protein_100g: float = Field(ge=0)
+    carb_100g: float = Field(ge=0)
+    fat_100g: float = Field(ge=0)
+    source: str | None = None
+
+
+class ManualBody(BaseModel):
+    items: list[ManualItem] = Field(min_length=1, max_length=30)
+
+
+@app.post("/meals/manual")
+def meals_manual(body: ManualBody, user_id: str = Depends(db.current_user_id)):
+    """Log a meal from picked search results — scale per-100g by grams, sum, save."""
+    items = []
+    totals = {"kcal": 0.0, "protein": 0.0, "carbs": 0.0, "fat": 0.0}
+    for it in body.items:
+        f = it.grams / 100.0
+        m = {
+            "kcal": round(it.kcal_100g * f, 1),
+            "protein": round(it.protein_100g * f, 1),
+            "carbs": round(it.carb_100g * f, 1),
+            "fat": round(it.fat_100g * f, 1),
+        }
+        for k in totals:
+            totals[k] += m[k]
+        items.append({"name": it.name, "portion_grams": it.grams,
+                      "prep_style": None, "source": it.source, **m})
+    totals = {k: round(v, 1) for k, v in totals.items()}
+    db.save_meal(user_id, items, totals)
+    return {"saved": True, "items": items, "totals": totals,
+            "today": db.today_totals(user_id)}
+
+
+@app.get("/meals/recent")
+def meals_recent(user_id: str = Depends(db.current_user_id)):
+    return {"meals": db.recent_meals(user_id)}
+
+
+class RelogBody(BaseModel):
+    meal_id: str
+
+
+@app.post("/meals/relog")
+def meals_relog(body: RelogBody, user_id: str = Depends(db.current_user_id)):
+    totals = db.relog_meal(user_id, body.meal_id)
+    return {"saved": True, "totals": totals, "today": db.today_totals(user_id)}
+
+
 @app.get("/history")
 def history(user_id: str = Depends(db.current_user_id)):
     return {"messages": db.chat_history(user_id)}
+
+
+# --- trends + meal edit/delete (R9, no LLM) ---
+
+@app.get("/trends")
+def get_trends(days: int = 7, user_id: str = Depends(db.current_user_id)):
+    return db.trends(user_id, 30 if days >= 30 else 7)
+
+
+@app.get("/meals/history")
+def meals_history(days: int = 30, user_id: str = Depends(db.current_user_id)):
+    return {"meals": db.meals_range(user_id, 30 if days >= 30 else 7)}
+
+
+class MealPatch(BaseModel):
+    # index (as string) -> new grams for that item
+    grams: dict[str, float] = Field(min_length=1)
+
+
+@app.patch("/meals/{meal_id}")
+def patch_meal(meal_id: str, body: MealPatch,
+               user_id: str = Depends(db.current_user_id)):
+    totals = db.update_meal(user_id, meal_id, body.grams)
+    return {"updated": True, "totals": totals, "today": db.today_totals(user_id)}
+
+
+@app.delete("/meals/{meal_id}")
+def remove_meal(meal_id: str, user_id: str = Depends(db.current_user_id)):
+    db.delete_meal(user_id, meal_id)
+    return {"deleted": True, "today": db.today_totals(user_id)}
