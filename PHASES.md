@@ -631,9 +631,26 @@ no XSS (all user/LLM strings go through `textContent`/`createElement`; the three
 `innerHTML` sites use static or numeric-only values), no secrets in git, and the
 LLM cannot forge macro numbers (they come from the DB).
 
+**Severity calibration (revised after the first pass).** The original ratings
+were too hot. Two things damp the *practical* risk today: the app is unlaunched
+(no domain, no traffic, URL effectively unknown), and the Render free tier is a
+single slow instance — it is its own bottleneck, so an attacker hits downtime
+long before a large bill. Guest LLM traffic also runs Gemini 2.5 Flash first, at
+fractions of a cent per call. **Every item below is still a real defect worth
+fixing before launch** — buying a domain and getting the 4,400 SEO pages indexed
+removes the obscurity that is currently doing most of the work.
+
+Revised view:
+- **Most likely to actually bite:** S2 — one 400 MB POST, no loop needed, kills
+  the only instance.
+- **Worst consequence if it ever goes wrong:** S4 — the app-level `user_id`
+  filter is the sole tenant boundary.
+- S1 was fixed first (money path, cheap insurance) but is 🟠, not 🔴.
+- S5–S8 are hygiene.
+
 Work top-down; each item is independent.
 
-- [x] **S1 · 🔴 `/analyze` unauthenticated + unmetered LLM spend** — ✅ FIXED
+- [x] **S1 · 🟠 (orig. 🔴) `/analyze` unauthenticated + unmetered LLM spend** — ✅ FIXED
       2026-09-10. `app/ratelimit.py`: stdlib sliding-window counters (no Redis —
       one Render instance; swap the `_hits` store if we scale out).
       `check_analyze()` runs in `/analyze` **before** `photo.read()` and the
@@ -645,7 +662,7 @@ Work top-down; each item is independent.
       marks the guest allowance spent; `mc_ai_uses` stays UX-only.
       Tests: `test_ratelimit.py` (window expiry, blocked hits not recorded, key
       isolation, XFF spoof resistance, guest cap, global backstop).
-- [ ] **S2 · 🟠 No upload size/type limit** — `main.py:86`
+- [ ] **S2 · 🟠 No upload size/type limit — highest real-world likelihood** — `main.py:86`
       `base64.b64encode(await photo.read())` pulls the whole body into RAM (+33%
       for base64) on a 512 MB Render instance. Unauthenticated OOM DoS.
       Fix: reject `> ~8 MB` and non-`image/*` before reading.
@@ -653,7 +670,7 @@ Work top-down; each item is independent.
       USDA call at 10 s timeout ⇒ one unauthenticated request can pin a worker
       ~500 s and burn the USDA quota. Fix: cap live fallbacks per request (~5),
       drop timeout to ~3 s, rate-limit.
-- [ ] **S4 · 🟠 Service-role key bypasses RLS** — `db.py:15` uses
+- [ ] **S4 · 🟠 Service-role key bypasses RLS — worst blast radius** — `db.py:15` uses
       `supabase_secret_key`, so RLS is off and the *only* tenant boundary is the
       hand-written `.eq("user_id", …)`. All 14 current queries are correctly
       filtered, but there is no defense-in-depth — one future omission is a
