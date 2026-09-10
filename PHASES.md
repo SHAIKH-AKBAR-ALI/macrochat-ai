@@ -648,8 +648,10 @@ Revised view:
 - S1 was fixed first (money path, cheap insurance) but is 🟠, not 🔴.
 - S5–S8 are hygiene.
 
-Work top-down; each item is independent. **S1–S5 done 2026-09-10** (S5 minus
-email verification); S6–S8 open, all hygiene.
+Work top-down; each item is independent. **S1–S5 done + DEPLOYED 2026-09-10**
+(S5 minus email verification), commit `6e25bad`; S6–S8 open, all hygiene.
+Live-verified on `macrochat-api` after the deploy: short password → 422,
+`/analyze` with a PDF → 415, with a 9 MB jpeg → 413.
 
 - [x] **S1 · 🟠 (orig. 🔴) `/analyze` unauthenticated + unmetered LLM spend** — ✅ FIXED
       2026-09-10. `app/ratelimit.py`: stdlib sliding-window counters (no Redis —
@@ -699,6 +701,10 @@ email verification); S6–S8 open, all hygiene.
       **Deploy:** `SUPABASE_PUBLISHABLE_KEY` set on the Render backend
       (`macrochat-api`) 2026-09-10 — without it `_c()` falls back to the service
       client and S4 is inert in prod (deliberate: degrade, never crash).
+      Gotcha worth remembering: a Render env-var change queues its own deploy, so
+      the push right after it sat *behind* that one — the live API served the old
+      build for several minutes while reporting healthy. Probe a deployed
+      behaviour change, not `/health`, before believing a fix is live.
 - [x] **S5 · 🟡 Signup abuse + weak validation** — ✅ FIXED 2026-09-10 (except email
       verification). `SignupBody`: email `pattern` + 254-char cap, password
       `min_length=8, max_length=128` (frontend `minlength` 6 → 8 to match);

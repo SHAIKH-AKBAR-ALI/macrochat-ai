@@ -438,8 +438,10 @@ staple/gate round and the UI redesign in one push.
 - Tests: qualified-dal → STAPLE (+ dal makhani → INDB), unmatched → `needs_confirmation`
   + `totals_partial` in `test_nutrition.py`.
 
-### Security hardening S1–S5 — ✅ DONE + DEPLOYED (2026-09-10)
+### Security hardening S1–S5 — ✅ DONE + DEPLOYED (2026-09-10, `6e25bad`)
 Audit + fixes in `PHASES.md` "S — Security hardening" (S6–S8 still open, hygiene).
+Live-verified after deploy: short password → 422, `/analyze` PDF → 415, 9 MB
+jpeg → 413.
 - `app/ratelimit.py` — stdlib in-memory sliding windows, no Redis (one Render
   instance). `check_analyze` gates `/analyze` before any LLM work; `check_public`
   caps `/signup` 5/h, `/login` 20/h, `/foods/lookup` 60/h, live `/foods/search`
