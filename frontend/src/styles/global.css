@@ -80,7 +80,7 @@ h1, h2, h3, .display {
   font-weight: 500;
   line-height: 1.05;
   letter-spacing: -0.015em;
-  color: var(--ink);
+  color: inherit; /* dark bands (.band--ink/.band--amber) set their own light color */
 }
 
 h1 { font-size: clamp(2.6rem, 6.5vw, 4.7rem); font-weight: 500; }
