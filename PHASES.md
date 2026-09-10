@@ -526,9 +526,15 @@ totals change correctly; delete → row gone, totals drop; RLS blocks other user
   `NUTRIENTS` table, `pctMore`/`gapPhrase`, `pairSlug`/`relatedFor`,
   `faqJsonLd`; `verdict` now uses `gapPhrase`.
 - `compare/[pair].astro` — rebuilt: per-nutrient **bar rows** with a tinted
-  "better for a lean/high-protein goal" cell, protein-density row, verdict,
+  "better for a lean/high-protein goal" cell, protein-density line, verdict,
   3-Q FAQ (+ `FAQPage` JSON-LD), "More X comparisons" related grid, both foods'
   `NutritionInformation` JSON-LD. `.cmp*` CSS added (mobile grid at 560px).
+- **`CompareTool.tsx` Preact island** (`client:load`) — replaces the static
+  table: portion control (Per 100 g / Per serving / custom grams per food) that
+  recomputes every bar + a live "N g X = K kcal" summary. `lib/servings.ts` —
+  household serving grams for the ~89 POPULAR foods (katori/piece for Indian
+  dishes); foods without an entry get 100 g / custom only. SSR renders the
+  100 g state so crawlers + no-JS see real numbers.
 - `foods/[slug].astro` — fiber/sugar/satfat/sodium rows when present, 3-Q FAQ
   (+ FAQPage JSON-LD), "Compare X" grid.
 - Known ceiling: some auto foods are obscure ("Celtuce", "Abiyuch") or lightly

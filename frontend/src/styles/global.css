@@ -1230,6 +1230,37 @@ a.cell--link:hover { border-color: var(--amber); }
 .cmp__row--dense .cmp__side { justify-content: flex-start; }
 .cmp__key { margin: 0.6rem 0 0; font-size: 0.66rem; color: var(--mute); }
 .cmp__key-win { color: var(--amber-ink); }
+
+/* portion / serving control on /compare/ */
+.ptool {
+  border: 1px solid var(--line-2); border-radius: var(--radius);
+  background: var(--paper-2); padding: 0.9rem 1rem; margin-bottom: 0.7rem;
+  display: flex; flex-wrap: wrap; gap: 0.9rem 1.4rem; align-items: center;
+}
+.ptool__modes { display: flex; gap: 0.3rem; }
+.ptool__modes button {
+  font: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+  padding: 0.35rem 0.7rem; border-radius: var(--pill);
+  border: 1px solid var(--line-2); background: var(--card); color: var(--mute);
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+.ptool__modes button:hover { color: var(--ink); }
+.ptool__modes button.is-on {
+  border-color: var(--amber); color: var(--amber-ink);
+  background: color-mix(in srgb, var(--amber) 12%, var(--card));
+}
+.ptool__inputs { display: flex; flex-wrap: wrap; gap: 0.7rem 1.2rem; flex: 1; }
+.ptool__inputs label { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.8rem; font-weight: 600; }
+.ptool__g { font-family: var(--font-mono); font-weight: 500; color: var(--mute); display: flex; align-items: center; gap: 0.3rem; }
+.ptool__g input {
+  width: 4.2rem; padding: 0.35rem 0.45rem; font: inherit;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--line-2); border-radius: 8px;
+  background: var(--card); color: var(--ink);
+}
+.ptool__g input:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 16%, transparent); }
+.ptool__sum { margin: 0 0 0.7rem; font-size: 0.72rem; color: var(--mute); }
+.ptool__sum b { color: var(--ink); }
 @media (max-width: 560px) {
   .cmp__head, .cmp__row { grid-template-columns: 5.5rem 1fr 1fr; }
   .cmp__label { font-size: 0.78rem; }

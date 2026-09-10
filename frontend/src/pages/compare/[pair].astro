@@ -1,9 +1,11 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import CompareTool from "../../components/CompareTool.tsx";
 import {
   comparePairs, verdict, proteinDensity, gapPhrase, relatedFor,
-  nutritionJsonLd, faqJsonLd, NUTRIENTS, type Food, type NutKey,
+  nutritionJsonLd, faqJsonLd, NUTRIENTS, type Food,
 } from "../../lib/seo";
+import { SERVINGS } from "../../lib/servings";
 
 export function getStaticPaths() {
   return comparePairs().map(([a, b]) => ({
@@ -13,20 +15,6 @@ export function getStaticPaths() {
 }
 
 const { a, b } = Astro.props as { a: Food; b: Food };
-
-const val = (f: Food, k: NutKey) => (f[k] as number | null);
-const rows = NUTRIENTS
-  .filter((n) => val(a, n.key) != null && val(b, n.key) != null)
-  .map((n) => {
-    const av = val(a, n.key)!, bv = val(b, n.key)!;
-    const max = Math.max(av, bv, 0.0001);
-    let winner: "a" | "b" | "tie" = "tie";
-    if (Math.abs(av - bv) > max * 0.02) {
-      const aBetter = n.lowerIsLeaner ? av < bv : av > bv;
-      winner = aBetter ? "a" : "b";
-    }
-    return { ...n, av, bv, aPct: (av / max) * 100, bPct: (bv / max) * 100, winner };
-  });
 
 const pdA = proteinDensity(a), pdB = proteinDensity(b);
 const leaner = a.kcal <= b.kcal ? a : b;
@@ -66,34 +54,15 @@ const desc = `${a.name} vs ${b.name} per 100 g: ${a.kcal} vs ${b.kcal} kcal, ` +
         Every value is per 100 grams, straight from {a.source === "INDB" || b.source === "INDB" ? "USDA and INDB" : "USDA FoodData Central"} — no estimates.
       </p>
 
-      <div class="cmp">
-        <div class="cmp__head">
-          <span></span>
-          <span class="cmp__name">{a.name}</span>
-          <span class="cmp__name">{b.name}</span>
-        </div>
-        {rows.map((r) => (
-          <div class="cmp__row">
-            <div class="cmp__label">
-              {r.label}<span class="cmp__unit">{r.unit}</span>
-            </div>
-            <div class={`cmp__side${r.winner === "a" ? " is-win" : ""}`}>
-              <div class="cmp__bar"><i style={`width:${r.aPct}%`}></i></div>
-              <span class="cmp__val">{r.av}</span>
-            </div>
-            <div class={`cmp__side${r.winner === "b" ? " is-win" : ""}`}>
-              <div class="cmp__bar"><i style={`width:${r.bPct}%`}></i></div>
-              <span class="cmp__val">{r.bv}</span>
-            </div>
-          </div>
-        ))}
-        <div class="cmp__row cmp__row--dense">
-          <div class="cmp__label">Protein / 100 kcal<span class="cmp__unit">g</span></div>
-          <div class={`cmp__side${pdA >= pdB ? " is-win" : ""}`}><span class="cmp__val">{pdA.toFixed(1)}</span></div>
-          <div class={`cmp__side${pdB > pdA ? " is-win" : ""}`}><span class="cmp__val">{pdB.toFixed(1)}</span></div>
-        </div>
-      </div>
-      <p class="cmp__key mono">Filled bar = higher value · <span class="cmp__key-win">tinted cell</span> = better for a lean/high-protein goal</p>
+      <CompareTool
+        client:load
+        a={a} b={b} nutrients={NUTRIENTS}
+        servingA={SERVINGS[a.slug]} servingB={SERVINGS[b.slug]}
+      />
+
+      <p class="mono" style="color:var(--mute); margin-top:0.6rem;">
+        Protein per 100 kcal — {a.name} {pdA.toFixed(1)} g · {b.name} {pdB.toFixed(1)} g
+      </p>
 
       <h2 style="margin:1.8rem 0 0.6rem;">Better for your goal</h2>
       <p>{verdict(a, b)}</p>
