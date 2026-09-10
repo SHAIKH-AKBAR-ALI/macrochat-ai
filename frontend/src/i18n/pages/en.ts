@@ -272,6 +272,83 @@ export const en = {
     "recipe.noMatch": "no match",
     "recipe.empty": "Add ingredients and calculate",
   },
+
+  /** Prose on the six calculator pages. Page h1s reuse the tool names in
+   * src/i18n/ui.ts so a calculator is named the same thing everywhere. */
+  calcPages: {
+    pill: "Free tools · No signup",
+    how: "How it works",
+    seeAlso: "See also",
+
+    "macro.lead":
+      "Your daily calories and protein / carb / fat split from Mifflin-St Jeor (or Katch-McArdle if you know your body-fat %). Runs entirely in your browser — the numbers match what MacroChat uses when you track a meal.",
+    "macro.eyebrow": "Transparency",
+    "macro.h2": "How this calculator works",
+    "macro.s1": "1 · Basal metabolic rate (BMR)",
+    "macro.s1a": "Calories your body burns at complete rest. The default formula is Mifflin-St Jeor:",
+    "macro.s1b":
+      "Enter a body-fat % under Advanced options and it switches to Katch-McArdle, which is more accurate for lean or very heavy people because it works from lean mass:",
+    "macro.s2": "2 · Total daily energy expenditure (TDEE)",
+    "macro.s2a": "BMR multiplied by an activity factor:",
+    "macro.thActivity": "Activity",
+    "macro.thFactor": "Factor",
+    "macro.s3": "3 · Goal adjustment",
+    "macro.thGoal": "Goal",
+    "macro.thChange": "Daily change",
+    "macro.goalLose": "Lose fat",
+    "macro.goalLoseVal": "−500 kcal (≈ 0.45 kg / week)",
+    "macro.goalMaintain": "Maintain",
+    "macro.goalGain": "Gain",
+    "macro.goalGainVal": "+300 kcal (lean gain)",
+    "macro.s4": "4 · Macro split",
+    "macro.s4a":
+      "Protein is set to 1.8 g per kg bodyweight (an active-adult target), fat to 25% of total calories, and carbs take whatever calories are left. Energy per gram: protein 4, carbs 4, fat 9.",
+    "macro.s4b":
+      "BMI is weight(kg) / height(m)²; the water target is a rough 35 ml per kg of bodyweight.",
+    "macro.refs": "References",
+    "macro.tblEyebrow": "Reference",
+    "macro.tblH2": "Macros in common foods",
+    "macro.tblLead": "Per typical serving. Tap a food for its full page, or ",
+    "macro.tblLeadLink": "compare two foods side by side",
+    "macro.thFood": "Food",
+    "macro.thServing": "Serving",
+
+    "tdee.lead":
+      "Total Daily Energy Expenditure — the calories you burn in a day, resting plus activity. It's your maintenance number: eat that to stay the same weight, less to lose, more to gain.",
+    "tdee.h2": "BMR × activity factor",
+    "tdee.p1":
+      "We take your BMR (Mifflin-St Jeor, or Katch-McArdle if you enter a body-fat %) and multiply by an activity factor: 1.2 sedentary, 1.375 light, 1.55 moderate, 1.725 active, 1.9 very active.",
+
+    "bmr.lead":
+      "Basal Metabolic Rate — the calories your body burns at complete rest just keeping you alive. It's the floor your daily calorie target is built on.",
+    "bmr.h2": "Mifflin-St Jeor",
+    "bmr.p1":
+      "Enter a body-fat % and it switches to Katch-McArdle (370 + 21.6 · lean mass), which is more accurate for lean or very heavy people.",
+
+    "protein.lead":
+      "How much protein to aim for each day, based on your bodyweight. This is the same target MacroChat uses when it builds your macro split.",
+    "protein.h2": "1.8 g per kg bodyweight",
+    "protein.p1":
+      "The default target is 1.8 g/kg — a solid active-adult number. The range 1.6–2.2 g/kg covers most goals: the lower end for general health, the upper end when dieting hard or building muscle. Protein is 4 kcal per gram.",
+
+    "deficit.lead":
+      "Pick a daily deficit and a goal weight — see your daily calorie target, the weekly rate of loss, and roughly when you'd hit the goal.",
+    "deficit.h2": "Deficit → rate → date",
+    "deficit.p1":
+      "Daily calories = your TDEE minus the deficit you choose. About 7,700 kcal ≈ 1 kg of body fat, so a 500 kcal/day deficit is roughly 0.45 kg/week. Time to goal = weight to lose ÷ weekly rate.",
+    "deficit.p2":
+      "A 300–750 kcal/day deficit is a sustainable range for most people. Very large deficits cost muscle and are hard to hold.",
+
+    "recipe.lead":
+      "List the ingredients and grams — get the total calories, protein, carbs and fat. Every number is a real database lookup (USDA and INDB), not an AI estimate.",
+    "recipe.h2": "Lookup, scale, sum",
+    "recipe.p1":
+      "Each ingredient name is matched to an INDB (Indian dishes and ingredients) or USDA FoodData Central entry — plain staples like rice and dal use a fixed canonical value. The per-100 g macros are scaled to your grams and added up.",
+    "recipe.p2":
+      "Plain names match best: \"rice\", \"chicken breast\", \"olive oil\". An ingredient that can't be matched is listed separately and left out of the total. The first request after a while can take ~50 s while the free-tier server wakes.",
+    "recipe.p3": "Want it done from a photo or a sentence instead? ",
+    "recipe.p3link": "Try the meal chat",
+  },
 } as const;
 
 export type PageStrings = typeof en;

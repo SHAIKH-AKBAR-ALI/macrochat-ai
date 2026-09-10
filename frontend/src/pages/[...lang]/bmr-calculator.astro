@@ -2,7 +2,8 @@
 import Layout from "../../layouts/Layout.astro";
 import MiniCalc from "../../components/MiniCalc.tsx";
 import { localeHref, localePaths, toLocale } from "../../i18n/config";
-import { pageDict } from "../../i18n/pages";
+import { pageDict, pageT } from "../../i18n/pages";
+import { useT } from "../../i18n/ui";
 
 // One file, eight routes: /calculator and /es/calculator, /ja/... etc.
 export const getStaticPaths = localePaths;
@@ -10,18 +11,17 @@ export const getStaticPaths = localePaths;
 const lang = toLocale(Astro.params.lang);
 const lp = (path: string) => localeHref(lang, path);
 const calc = pageDict(lang, "calc");
+const P = pageT(lang, "calcPages");
+const t = useT(lang);
 
 ---
-<Layout title="BMR calculator — MacroChat">
+<Layout title={`${t("calc.bmr")} — MacroChat`} >
   <section class="section calc-page">
     <div class="wrap">
       <div style="max-width:46rem; margin-bottom:2rem;">
-        <span class="pill">Free tools · No signup</span>
-        <h1 style="margin:1rem 0 0.8rem;">BMR calculator</h1>
-        <p class="hero__lead" style="margin:0;">
-          Basal Metabolic Rate — the calories your body burns at complete rest just
-          keeping you alive. It's the floor your daily calorie target is built on.
-        </p>
+        <span class="pill">{P("pill")}</span>
+        <h1 style="margin:1rem 0 0.8rem;">{t("calc.bmr")}</h1>
+        <p class="hero__lead" style="margin:0;">{P("bmr.lead")}</p>
       </div>
       <MiniCalc t={calc} calcHref={lp("/calculator")} mode="bmr" client:load />
     </div>
@@ -29,16 +29,13 @@ const calc = pageDict(lang, "calc");
 
   <section class="section calc-doc" style="padding-top:0;">
     <div class="wrap" style="max-width:52rem;">
-      <p class="eyebrow">How it works</p>
-      <h2 style="margin:0.6rem 0 1rem;">Mifflin-St Jeor</h2>
+      <p class="eyebrow">{P("how")}</p>
+      <h2 style="margin:0.6rem 0 1rem;">{P("bmr.h2")}</h2>
       <pre><code>BMR = 10 · weight(kg) + 6.25 · height(cm) − 5 · age + s
   s = +5 (male)   s = −161 (female)</code></pre>
-      <p>Enter a body-fat % and it switches to <b>Katch-McArdle</b>
-        (<code>370 + 21.6 · lean mass</code>), which is more accurate for lean or
-        very heavy people.</p>
-      <p>Multiply BMR by an activity factor to get your
-        <a href="/tdee-calculator">TDEE</a>, or use the
-        <a href="/calculator">full calculator</a> for a goal-adjusted target.</p>
-    </div>
+      <p>{P("bmr.p1")}</p>
+      <p class="calc-see">{P("seeAlso")}: <a href={lp("/tdee-calculator")}>{t("calc.tdee")}</a>
+        <a href={lp("/calculator")}>{t("calc.macro")}</a></p>
+      </div>
   </section>
 </Layout>

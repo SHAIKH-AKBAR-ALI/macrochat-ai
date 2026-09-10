@@ -274,4 +274,80 @@ export const de: { [S in keyof PageStrings]?: Partial<PageStrings[S]> } = {
     "recipe.noMatch": "kein Treffer",
     "recipe.empty": "Zutaten hinzufügen und berechnen",
   },
+
+  calcPages: {
+    pill: "Kostenlose Tools · Ohne Anmeldung",
+    how: "So funktioniert es",
+    seeAlso: "Siehe auch",
+
+    "macro.lead":
+      "Deine Tageskalorien und die Verteilung auf Protein, Kohlenhydrate und Fett nach Mifflin-St Jeor (oder Katch-McArdle, wenn du deinen Körperfettanteil kennst). Läuft komplett im Browser — die Zahlen entsprechen denen, die MacroChat beim Tracken einer Mahlzeit nutzt.",
+    "macro.eyebrow": "Transparenz",
+    "macro.h2": "So rechnet dieser Rechner",
+    "macro.s1": "1 · Grundumsatz",
+    "macro.s1a":
+      "Die Kalorien, die dein Körper in völliger Ruhe verbrennt. Standardformel ist Mifflin-St Jeor:",
+    "macro.s1b":
+      "Gibst du unter den erweiterten Optionen einen Körperfettanteil an, wechselt die Rechnung zu Katch-McArdle. Die Formel geht von der Magermasse aus und ist bei sehr schlanken oder sehr schweren Menschen genauer:",
+    "macro.s2": "2 · Gesamtumsatz (TDEE)",
+    "macro.s2a": "Der Grundumsatz multipliziert mit einem Aktivitätsfaktor:",
+    "macro.thActivity": "Aktivität",
+    "macro.thFactor": "Faktor",
+    "macro.s3": "3 · Anpassung ans Ziel",
+    "macro.thGoal": "Ziel",
+    "macro.thChange": "Tägliche Anpassung",
+    "macro.goalLose": "Fett verlieren",
+    "macro.goalLoseVal": "−500 kcal (≈ 0,45 kg pro Woche)",
+    "macro.goalMaintain": "Halten",
+    "macro.goalGain": "Zunehmen",
+    "macro.goalGainVal": "+300 kcal (schlanker Aufbau)",
+    "macro.s4": "4 · Makroverteilung",
+    "macro.s4a":
+      "Protein liegt bei 1,8 g pro kg Körpergewicht (Zielwert für aktive Erwachsene), Fett bei 25 % der Gesamtkalorien, und die Kohlenhydrate bekommen den Rest. Energie pro Gramm: Protein 4, Kohlenhydrate 4, Fett 9.",
+    "macro.s4b":
+      "Der BMI ist Gewicht(kg) / Größe(m)²; das Wasserziel ist eine grobe Schätzung von 35 ml pro kg Körpergewicht.",
+    "macro.refs": "Quellen",
+    "macro.tblEyebrow": "Referenz",
+    "macro.tblH2": "Makros gängiger Lebensmittel",
+    "macro.tblLead": "Pro typischer Portion. Tippe ein Lebensmittel für die ganze Seite an, oder ",
+    "macro.tblLeadLink": "vergleiche zwei Lebensmittel nebeneinander",
+    "macro.thFood": "Lebensmittel",
+    "macro.thServing": "Portion",
+
+    "tdee.lead":
+      "Gesamtumsatz — die Kalorien, die du an einem Tag verbrauchst, Ruhe plus Aktivität. Das ist dein Erhaltungswert: iss so viel, um das Gewicht zu halten, weniger zum Abnehmen, mehr zum Zunehmen.",
+    "tdee.h2": "Grundumsatz × Aktivitätsfaktor",
+    "tdee.p1":
+      "Wir nehmen deinen Grundumsatz (Mifflin-St Jeor, oder Katch-McArdle bei angegebenem Körperfettanteil) und multiplizieren mit einem Aktivitätsfaktor: 1,2 sitzend, 1,375 leicht, 1,55 mäßig, 1,725 aktiv, 1,9 sehr aktiv.",
+
+    "bmr.lead":
+      "Grundumsatz — die Kalorien, die dein Körper in völliger Ruhe allein zum Überleben verbrennt. Er ist das Fundament deines Tagesziels.",
+    "bmr.h2": "Mifflin-St Jeor",
+    "bmr.p1":
+      "Gibst du einen Körperfettanteil an, wechselt die Rechnung zu Katch-McArdle (370 + 21,6 · Magermasse) — genauer bei sehr schlanken oder sehr schweren Menschen.",
+
+    "protein.lead":
+      "Wie viel Protein du pro Tag anpeilen solltest, ausgehend von deinem Körpergewicht. Denselben Zielwert nutzt MacroChat für deine Makroverteilung.",
+    "protein.h2": "1,8 g pro kg Körpergewicht",
+    "protein.p1":
+      "Der Standardwert ist 1,8 g/kg — solide für aktive Erwachsene. Die Spanne 1,6–2,2 g/kg deckt die meisten Ziele ab: das untere Ende für allgemeine Gesundheit, das obere beim harten Diäten oder Muskelaufbau. Protein liefert 4 kcal pro Gramm.",
+
+    "deficit.lead":
+      "Wähle ein tägliches Defizit und ein Zielgewicht — du siehst dein Kalorienziel, das wöchentliche Tempo und ungefähr, wann du am Ziel wärst.",
+    "deficit.h2": "Defizit → Tempo → Datum",
+    "deficit.p1":
+      "Tageskalorien = dein TDEE minus dem gewählten Defizit. Etwa 7.700 kcal ≈ 1 kg Körperfett, ein Defizit von 500 kcal/Tag entspricht also rund 0,45 kg pro Woche. Zeit bis zum Ziel = zu verlierendes Gewicht ÷ Wochentempo.",
+    "deficit.p2":
+      "Ein Defizit von 300–750 kcal/Tag ist für die meisten gut durchzuhalten. Sehr große Defizite kosten Muskeln und lassen sich kaum halten.",
+
+    "recipe.lead":
+      "Trage Zutaten und Gramm ein — und erhalte die Gesamtwerte für Kalorien, Protein, Kohlenhydrate und Fett. Jede Zahl ist eine echte Datenbankabfrage (USDA und INDB), keine KI-Schätzung.",
+    "recipe.h2": "Nachschlagen, umrechnen, summieren",
+    "recipe.p1":
+      "Jeder Zutatenname wird einem Eintrag aus INDB (indische Gerichte und Zutaten) oder USDA FoodData Central zugeordnet; Grundnahrungsmittel wie Reis und Dal nutzen einen festen Standardwert. Die Makros je 100 g werden auf deine Gramm umgerechnet und addiert.",
+    "recipe.p2":
+      "Einfache Namen treffen am besten: „Reis“, „Hähnchenbrust“, „Olivenöl“. Eine Zutat ohne Treffer wird separat gelistet und bleibt aus der Summe. Die erste Anfrage nach längerer Pause kann ~50 s dauern, während der Gratis-Server aufwacht.",
+    "recipe.p3": "Lieber aus einem Foto oder einem Satz? ",
+    "recipe.p3link": "Probier den Mahlzeiten-Chat",
+  },
 };

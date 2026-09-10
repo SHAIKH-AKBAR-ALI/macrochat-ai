@@ -2,7 +2,8 @@
 import Layout from "../../layouts/Layout.astro";
 import RecipeCalc from "../../components/RecipeCalc.tsx";
 import { localeHref, localePaths, toLocale } from "../../i18n/config";
-import { pageDict } from "../../i18n/pages";
+import { pageDict, pageT } from "../../i18n/pages";
+import { useT } from "../../i18n/ui";
 
 // One file, eight routes: /calculator and /es/calculator, /ja/... etc.
 export const getStaticPaths = localePaths;
@@ -10,19 +11,17 @@ export const getStaticPaths = localePaths;
 const lang = toLocale(Astro.params.lang);
 const lp = (path: string) => localeHref(lang, path);
 const calc = pageDict(lang, "calc");
+const P = pageT(lang, "calcPages");
+const t = useT(lang);
 
 ---
-<Layout title="Recipe macro calculator — MacroChat">
+<Layout title={`${t("calc.recipe")} — MacroChat`}>
   <section class="section calc-page">
     <div class="wrap">
       <div style="max-width:46rem; margin-bottom:2rem;">
-        <span class="pill">Free tools · No signup</span>
-        <h1 style="margin:1rem 0 0.8rem;">Recipe macro calculator</h1>
-        <p class="hero__lead" style="margin:0;">
-          List the ingredients and grams — get the total calories, protein, carbs
-          and fat. Every number is a real database lookup (USDA and INDB), not an
-          AI estimate.
-        </p>
+        <span class="pill">{P("pill")}</span>
+        <h1 style="margin:1rem 0 0.8rem;">{t("calc.recipe")}</h1>
+        <p class="hero__lead" style="margin:0;">{P("recipe.lead")}</p>
       </div>
       <RecipeCalc t={calc} client:load />
     </div>
@@ -30,18 +29,11 @@ const calc = pageDict(lang, "calc");
 
   <section class="section calc-doc" style="padding-top:0;">
     <div class="wrap" style="max-width:52rem;">
-      <p class="eyebrow">How it works</p>
-      <h2 style="margin:0.6rem 0 1rem;">Lookup, scale, sum</h2>
-      <p>Each ingredient name is matched to an <b>INDB</b> (Indian dishes and
-        ingredients) or <b>USDA FoodData Central</b> entry — plain staples like
-        rice and dal use a fixed canonical value. The per-100 g macros are scaled
-        to your grams and added up.</p>
-      <p>Plain names match best: "rice", "chicken breast", "olive oil". An
-        ingredient that can't be matched is listed separately and left out of the
-        total. The first request after a while can take ~50 s while the free-tier
-        server wakes.</p>
-      <p>Want it done from a photo or a sentence instead?
-        <a href="/chat">Try the meal chat</a>.</p>
+      <p class="eyebrow">{P("how")}</p>
+      <h2 style="margin:0.6rem 0 1rem;">{P("recipe.h2")}</h2>
+      <p>{P("recipe.p1")}</p>
+      <p>{P("recipe.p2")}</p>
+      <p>{P("recipe.p3")}<a href="/chat">{P("recipe.p3link")}</a>.</p>
     </div>
   </section>
 </Layout>

@@ -2,7 +2,8 @@
 import Layout from "../../layouts/Layout.astro";
 import FullCalc from "../../components/FullCalc.tsx";
 import { localeHref, localePaths, toLocale } from "../../i18n/config";
-import { pageDict } from "../../i18n/pages";
+import { pageDict, pageT } from "../../i18n/pages";
+import { useT } from "../../i18n/ui";
 
 // One file, eight routes: /calculator and /es/calculator, /ja/... etc.
 export const getStaticPaths = localePaths;
@@ -10,6 +11,8 @@ export const getStaticPaths = localePaths;
 const lang = toLocale(Astro.params.lang);
 const lp = (path: string) => localeHref(lang, path);
 const calc = pageDict(lang, "calc");
+const P = pageT(lang, "calcPages");
+const t = useT(lang);
 
 
 // Static reference data. Macros per typical serving. Rows link to /foods/<slug>-macros/
@@ -32,17 +35,13 @@ const COMMON_FOODS = [
   { name: "Roti / chapati", slug: "roti", serving: "1 piece (40 g)", kcal: 104, p: 3, c: 20, f: 2.5 },
 ];
 ---
-<Layout title="Macro calculator — MacroChat">
+<Layout title={`${t("calc.macro")} — MacroChat`}>
   <section class="section calc-page">
     <div class="wrap">
       <div style="max-width:46rem; margin-bottom:2rem;">
-        <span class="pill">Free tools · No signup</span>
-        <h1 style="margin:1rem 0 0.8rem;">Macro calculator</h1>
-        <p class="hero__lead" style="margin:0;">
-          Your daily calories and protein / carb / fat split from Mifflin-St Jeor
-          (or Katch-McArdle if you know your body-fat %). Runs entirely in your
-          browser — the numbers match what MacroChat uses when you track a meal.
-        </p>
+        <span class="pill">{P("pill")}</span>
+        <h1 style="margin:1rem 0 0.8rem;">{t("calc.macro")}</h1>
+        <p class="hero__lead" style="margin:0;">{P("macro.lead")}</p>
       </div>
 
       <FullCalc t={calc} client:load />
@@ -52,53 +51,46 @@ const COMMON_FOODS = [
   <!-- HOW IT WORKS -->
   <section class="section calc-doc" style="padding-top:0;">
     <div class="wrap" style="max-width:52rem;">
-      <p class="eyebrow">Transparency</p>
-      <h2 style="margin:0.6rem 0 1.4rem;">How this calculator works</h2>
+      <p class="eyebrow">{P("macro.eyebrow")}</p>
+      <h2 style="margin:0.6rem 0 1.4rem;">{P("macro.h2")}</h2>
 
-      <h3>1 · Basal metabolic rate (BMR)</h3>
-      <p>Calories your body burns at complete rest. Default formula is
-        <b>Mifflin-St Jeor</b>:</p>
+      <h3>{P("macro.s1")}</h3>
+      <p>{P("macro.s1a")}</p>
       <pre><code>BMR = 10 · weight(kg) + 6.25 · height(cm) − 5 · age + s
   s = +5   (male)
   s = −161 (female)</code></pre>
-      <p>Enter a body-fat % under Advanced options and it switches to
-        <b>Katch-McArdle</b>, which is more accurate for lean or very heavy people
-        because it works from lean mass:</p>
+      <p>{P("macro.s1b")}</p>
       <pre><code>LBM = weight(kg) · (1 − bodyfat% / 100)
 BMR = 370 + 21.6 · LBM</code></pre>
 
-      <h3>2 · Total daily energy expenditure (TDEE)</h3>
-      <p>BMR multiplied by an activity factor:</p>
+      <h3>{P("macro.s2")}</h3>
+      <p>{P("macro.s2a")}</p>
       <table>
-        <thead><tr><th>Activity</th><th>Factor</th></tr></thead>
+        <thead><tr><th>{P("macro.thActivity")}</th><th>{P("macro.thFactor")}</th></tr></thead>
         <tbody>
-          <tr><td>Sedentary — desk job, little exercise</td><td>1.20</td></tr>
-          <tr><td>Light — 1–3 workouts/week</td><td>1.375</td></tr>
-          <tr><td>Moderate — 3–5 workouts/week</td><td>1.55</td></tr>
-          <tr><td>Active — 6–7 workouts/week</td><td>1.725</td></tr>
-          <tr><td>Very active — hard training / physical job</td><td>1.90</td></tr>
+          <tr><td>{calc["act.sedentaryLong"]}</td><td>1.20</td></tr>
+          <tr><td>{calc["act.lightLong"]}</td><td>1.375</td></tr>
+          <tr><td>{calc["act.moderateLong"]}</td><td>1.55</td></tr>
+          <tr><td>{calc["act.activeLong"]}</td><td>1.725</td></tr>
+          <tr><td>{calc["act.veryActiveLong"]}</td><td>1.90</td></tr>
         </tbody>
       </table>
 
-      <h3>3 · Goal adjustment</h3>
+      <h3>{P("macro.s3")}</h3>
       <table>
-        <thead><tr><th>Goal</th><th>Daily change</th></tr></thead>
+        <thead><tr><th>{P("macro.thGoal")}</th><th>{P("macro.thChange")}</th></tr></thead>
         <tbody>
-          <tr><td>Lose fat</td><td>−500 kcal (≈ 0.45 kg / week)</td></tr>
-          <tr><td>Maintain</td><td>0</td></tr>
-          <tr><td>Gain</td><td>+300 kcal (lean gain)</td></tr>
+          <tr><td>{P("macro.goalLose")}</td><td>{P("macro.goalLoseVal")}</td></tr>
+          <tr><td>{P("macro.goalMaintain")}</td><td>0</td></tr>
+          <tr><td>{P("macro.goalGain")}</td><td>{P("macro.goalGainVal")}</td></tr>
         </tbody>
       </table>
 
-      <h3>4 · Macro split</h3>
-      <p>Protein is set to <b>1.8 g per kg bodyweight</b> (active-adult target),
-        fat to <b>25% of total calories</b>, and carbs take whatever calories are
-        left. Energy per gram: protein <code>4</code>, carbs <code>4</code>,
-        fat <code>9</code>.</p>
-      <p>BMI is <code>weight(kg) / height(m)²</code>; the water target is a rough
-        <code>35 ml per kg</code> bodyweight.</p>
+      <h3>{P("macro.s4")}</h3>
+      <p>{P("macro.s4a")}</p>
+      <p>{P("macro.s4b")}</p>
 
-      <h3>References</h3>
+      <h3>{P("macro.refs")}</h3>
       <ul class="calc-refs">
         <li>Mifflin MD, St Jeor ST, et al. <i>A new predictive equation for resting
           energy expenditure in healthy individuals.</i> Am J Clin Nutr. 1990.
@@ -114,19 +106,18 @@ BMR = 370 + 21.6 · LBM</code></pre>
   <!-- COMMON FOODS -->
   <section class="section calc-doc" style="padding-top:0;">
     <div class="wrap" style="max-width:52rem;">
-      <p class="eyebrow">Reference</p>
-      <h2 style="margin:0.6rem 0 1rem;">Macros in common foods</h2>
-      <p style="color:var(--mute); margin-top:0;">Per typical serving. Tap a food
-        for its full page, or <a href="/compare/">compare two foods side by side</a>.</p>
+      <p class="eyebrow">{P("macro.tblEyebrow")}</p>
+      <h2 style="margin:0.6rem 0 1rem;">{P("macro.tblH2")}</h2>
+      <p style="color:var(--mute); margin-top:0;">{P("macro.tblLead")}<a href={lp("/compare/")}>{P("macro.tblLeadLink")}</a>.</p>
       <div class="calc-tbl-wrap">
         <table>
           <thead>
-            <tr><th>Food</th><th>Serving</th><th>kcal</th><th>P</th><th>C</th><th>F</th></tr>
+            <tr><th>{P("macro.thFood")}</th><th>{P("macro.thServing")}</th><th>kcal</th><th>{calc["diet.initialP"]}</th><th>{calc["diet.initialC"]}</th><th>{calc["diet.initialF"]}</th></tr>
           </thead>
           <tbody>
             {COMMON_FOODS.map((x) => (
               <tr>
-                <td><a href={`/foods/${x.slug}-macros/`}>{x.name}</a></td>
+                <td><a href={lp(`/foods/${x.slug}-macros/`)}>{x.name}</a></td>
                 <td>{x.serving}</td>
                 <td>{x.kcal}</td>
                 <td>{x.p} g</td>

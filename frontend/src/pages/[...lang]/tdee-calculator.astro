@@ -2,7 +2,8 @@
 import Layout from "../../layouts/Layout.astro";
 import MiniCalc from "../../components/MiniCalc.tsx";
 import { localeHref, localePaths, toLocale } from "../../i18n/config";
-import { pageDict } from "../../i18n/pages";
+import { pageDict, pageT } from "../../i18n/pages";
+import { useT } from "../../i18n/ui";
 
 // One file, eight routes: /calculator and /es/calculator, /ja/... etc.
 export const getStaticPaths = localePaths;
@@ -10,19 +11,17 @@ export const getStaticPaths = localePaths;
 const lang = toLocale(Astro.params.lang);
 const lp = (path: string) => localeHref(lang, path);
 const calc = pageDict(lang, "calc");
+const P = pageT(lang, "calcPages");
+const t = useT(lang);
 
 ---
-<Layout title="TDEE calculator — MacroChat">
+<Layout title={`${t("calc.tdee")} — MacroChat`} >
   <section class="section calc-page">
     <div class="wrap">
       <div style="max-width:46rem; margin-bottom:2rem;">
-        <span class="pill">Free tools · No signup</span>
-        <h1 style="margin:1rem 0 0.8rem;">TDEE calculator</h1>
-        <p class="hero__lead" style="margin:0;">
-          Total Daily Energy Expenditure — the calories you burn in a day, resting
-          plus activity. It's your maintenance number: eat that to stay the same
-          weight, less to lose, more to gain.
-        </p>
+        <span class="pill">{P("pill")}</span>
+        <h1 style="margin:1rem 0 0.8rem;">{t("calc.tdee")}</h1>
+        <p class="hero__lead" style="margin:0;">{P("tdee.lead")}</p>
       </div>
       <MiniCalc t={calc} calcHref={lp("/calculator")} mode="tdee" client:load />
     </div>
@@ -30,15 +29,12 @@ const calc = pageDict(lang, "calc");
 
   <section class="section calc-doc" style="padding-top:0;">
     <div class="wrap" style="max-width:52rem;">
-      <p class="eyebrow">How it works</p>
-      <h2 style="margin:0.6rem 0 1rem;">BMR × activity factor</h2>
-      <p>We take your <b>BMR</b> (Mifflin-St Jeor, or Katch-McArdle if you enter a
-        body-fat %) and multiply by an activity factor: 1.2 sedentary, 1.375 light,
-        1.55 moderate, 1.725 active, 1.9 very active.</p>
-      <p>For a goal-adjusted target and a macro split, use the
-        <a href="/calculator">full macro calculator</a>. See also the
-        <a href="/bmr-calculator">BMR</a> and
-        <a href="/calorie-deficit-calculator">calorie-deficit</a> calculators.</p>
-    </div>
+      <p class="eyebrow">{P("how")}</p>
+      <h2 style="margin:0.6rem 0 1rem;">{P("tdee.h2")}</h2>
+      <p>{P("tdee.p1")}</p>
+      <p class="calc-see">{P("seeAlso")}: <a href={lp("/bmr-calculator")}>{t("calc.bmr")}</a>
+        <a href={lp("/calorie-deficit-calculator")}>{t("calc.deficitShort")}</a>
+        <a href={lp("/calculator")}>{t("calc.macro")}</a></p>
+      </div>
   </section>
 </Layout>

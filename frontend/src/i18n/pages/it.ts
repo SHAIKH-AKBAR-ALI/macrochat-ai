@@ -274,4 +274,80 @@ export const it: { [S in keyof PageStrings]?: Partial<PageStrings[S]> } = {
     "recipe.noMatch": "nessuna corrispondenza",
     "recipe.empty": "Aggiungi gli ingredienti e calcola",
   },
+
+  calcPages: {
+    pill: "Strumenti gratuiti · Senza registrazione",
+    how: "Come funziona",
+    seeAlso: "Vedi anche",
+
+    "macro.lead":
+      "Le tue calorie giornaliere e la ripartizione tra proteine, carboidrati e grassi secondo Mifflin-St Jeor (o Katch-McArdle se conosci la tua percentuale di massa grassa). Gira interamente nel browser e i numeri coincidono con quelli che MacroChat usa quando registri un pasto.",
+    "macro.eyebrow": "Trasparenza",
+    "macro.h2": "Come funziona questo calcolatore",
+    "macro.s1": "1 · Metabolismo basale",
+    "macro.s1a":
+      "Le calorie che il corpo consuma a riposo completo. La formula predefinita è Mifflin-St Jeor:",
+    "macro.s1b":
+      "Inserisci la percentuale di massa grassa nelle opzioni avanzate e il calcolo passa a Katch-McArdle, più preciso per chi è molto magro o molto pesante perché parte dalla massa magra:",
+    "macro.s2": "2 · Dispendio energetico giornaliero (TDEE)",
+    "macro.s2a": "Il metabolismo basale moltiplicato per un fattore di attività:",
+    "macro.thActivity": "Attività",
+    "macro.thFactor": "Fattore",
+    "macro.s3": "3 · Aggiustamento in base all’obiettivo",
+    "macro.thGoal": "Obiettivo",
+    "macro.thChange": "Variazione giornaliera",
+    "macro.goalLose": "Perdere grasso",
+    "macro.goalLoseVal": "−500 kcal (≈ 0,45 kg a settimana)",
+    "macro.goalMaintain": "Mantenere",
+    "macro.goalGain": "Aumentare",
+    "macro.goalGainVal": "+300 kcal (crescita pulita)",
+    "macro.s4": "4 · Ripartizione delle macro",
+    "macro.s4a":
+      "Le proteine sono fissate a 1,8 g per kg di peso (obiettivo per adulti attivi), i grassi al 25% delle calorie totali e i carboidrati prendono le calorie che restano. Energia per grammo: proteine 4, carboidrati 4, grassi 9.",
+    "macro.s4b":
+      "L’IMC è peso(kg) / altezza(m)²; l’obiettivo di acqua è una stima di 35 ml per kg di peso.",
+    "macro.refs": "Riferimenti",
+    "macro.tblEyebrow": "Riferimento",
+    "macro.tblH2": "Macro degli alimenti comuni",
+    "macro.tblLead": "Per porzione tipica. Tocca un alimento per la pagina completa, oppure ",
+    "macro.tblLeadLink": "confronta due alimenti fianco a fianco",
+    "macro.thFood": "Alimento",
+    "macro.thServing": "Porzione",
+
+    "tdee.lead":
+      "Dispendio energetico giornaliero totale — le calorie che consumi in un giorno, riposo più attività. È il tuo livello di mantenimento: mangia così per restare uguale, meno per dimagrire, di più per aumentare.",
+    "tdee.h2": "Metabolismo basale × fattore di attività",
+    "tdee.p1":
+      "Prendiamo il tuo metabolismo basale (Mifflin-St Jeor, o Katch-McArdle se inserisci la massa grassa) e lo moltiplichiamo per un fattore di attività: 1,2 sedentaria, 1,375 leggera, 1,55 moderata, 1,725 attiva, 1,9 molto attiva.",
+
+    "bmr.lead":
+      "Il metabolismo basale è l’energia che il corpo consuma a riposo completo solo per tenerti in vita. È la base su cui si costruisce il tuo obiettivo calorico giornaliero.",
+    "bmr.h2": "Mifflin-St Jeor",
+    "bmr.p1":
+      "Inserisci la percentuale di massa grassa e il calcolo passa a Katch-McArdle (370 + 21,6 · massa magra), più preciso per chi è molto magro o molto pesante.",
+
+    "protein.lead":
+      "Quante proteine puntare ogni giorno, in base al tuo peso. È lo stesso obiettivo che MacroChat usa quando costruisce la tua ripartizione delle macro.",
+    "protein.h2": "1,8 g per kg di peso corporeo",
+    "protein.p1":
+      "L’obiettivo predefinito è 1,8 g/kg, un valore solido per un adulto attivo. L’intervallo 1,6–2,2 g/kg copre quasi tutti gli obiettivi: la parte bassa per la salute generale, quella alta in dieta stretta o in fase di crescita muscolare. Le proteine forniscono 4 kcal per grammo.",
+
+    "deficit.lead":
+      "Scegli un deficit giornaliero e un peso obiettivo: vedrai il tuo obiettivo calorico, il ritmo settimanale di perdita e più o meno quando arriveresti alla meta.",
+    "deficit.h2": "Deficit → ritmo → data",
+    "deficit.p1":
+      "Calorie giornaliere = il tuo TDEE meno il deficit che scegli. Circa 7.700 kcal ≈ 1 kg di grasso corporeo, quindi un deficit di 500 kcal al giorno corrisponde a circa 0,45 kg a settimana. Tempo all’obiettivo = peso da perdere ÷ ritmo settimanale.",
+    "deficit.p2":
+      "Un deficit di 300–750 kcal al giorno è sostenibile per la maggior parte delle persone. Deficit molto grandi costano massa muscolare e sono difficili da mantenere.",
+
+    "recipe.lead":
+      "Elenca gli ingredienti e i grammi e ottieni il totale di calorie, proteine, carboidrati e grassi. Ogni numero è una ricerca in un database vero (USDA e INDB), non una stima dell’IA.",
+    "recipe.h2": "Cerca, riscala, somma",
+    "recipe.p1":
+      "Ogni nome di ingrediente viene abbinato a una voce INDB (piatti e ingredienti indiani) o USDA FoodData Central; alimenti base come riso e dal usano un valore di riferimento fisso. Le macro per 100 g vengono riscalate sui tuoi grammi e sommate.",
+    "recipe.p2":
+      "I nomi semplici funzionano meglio: «riso», «petto di pollo», «olio d’oliva». Un ingrediente senza corrispondenza viene elencato a parte e resta fuori dal totale. La prima richiesta dopo un po’ può richiedere ~50 s mentre il server gratuito si sveglia.",
+    "recipe.p3": "Preferisci partire da una foto o da una frase? ",
+    "recipe.p3link": "Prova la chat dei pasti",
+  },
 };

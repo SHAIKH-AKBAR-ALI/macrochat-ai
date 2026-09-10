@@ -274,4 +274,80 @@ export const pt: { [S in keyof PageStrings]?: Partial<PageStrings[S]> } = {
     "recipe.noMatch": "sem correspondência",
     "recipe.empty": "Adicione ingredientes e calcule",
   },
+
+  calcPages: {
+    pill: "Ferramentas grátis · Sem cadastro",
+    how: "Como funciona",
+    seeAlso: "Veja também",
+
+    "macro.lead":
+      "Suas calorias diárias e a divisão de proteína / carboidrato / gordura pelo Mifflin-St Jeor (ou Katch-McArdle, se você souber seu % de gordura corporal). Roda inteiramente no navegador e os números batem com os que o MacroChat usa ao registrar uma refeição.",
+    "macro.eyebrow": "Transparência",
+    "macro.h2": "Como esta calculadora funciona",
+    "macro.s1": "1 · Taxa metabólica basal (TMB)",
+    "macro.s1a":
+      "As calorias que o corpo queima em repouso absoluto. A fórmula padrão é Mifflin-St Jeor:",
+    "macro.s1b":
+      "Informe o % de gordura corporal nas opções avançadas e o cálculo muda para Katch-McArdle, mais preciso para pessoas muito magras ou muito pesadas porque parte da massa magra:",
+    "macro.s2": "2 · Gasto energético diário total (TDEE)",
+    "macro.s2a": "A TMB multiplicada por um fator de atividade:",
+    "macro.thActivity": "Atividade",
+    "macro.thFactor": "Fator",
+    "macro.s3": "3 · Ajuste pelo objetivo",
+    "macro.thGoal": "Objetivo",
+    "macro.thChange": "Mudança diária",
+    "macro.goalLose": "Perder gordura",
+    "macro.goalLoseVal": "−500 kcal (≈ 0,45 kg por semana)",
+    "macro.goalMaintain": "Manter",
+    "macro.goalGain": "Ganhar",
+    "macro.goalGainVal": "+300 kcal (ganho limpo)",
+    "macro.s4": "4 · Divisão de macros",
+    "macro.s4a":
+      "A proteína fica em 1,8 g por kg de peso (meta de adulto ativo), a gordura em 25% das calorias totais e os carboidratos ficam com as calorias restantes. Energia por grama: proteína 4, carboidrato 4, gordura 9.",
+    "macro.s4b":
+      "O IMC é peso(kg) / altura(m)²; a meta de água é uma estimativa de 35 ml por kg de peso.",
+    "macro.refs": "Referências",
+    "macro.tblEyebrow": "Referência",
+    "macro.tblH2": "Macros de alimentos comuns",
+    "macro.tblLead": "Por porção típica. Toque num alimento para ver a página completa, ou ",
+    "macro.tblLeadLink": "compare dois alimentos lado a lado",
+    "macro.thFood": "Alimento",
+    "macro.thServing": "Porção",
+
+    "tdee.lead":
+      "Gasto energético diário total — as calorias que você queima num dia, em repouso mais atividade. É o seu número de manutenção: coma isso para manter o peso, menos para perder, mais para ganhar.",
+    "tdee.h2": "TMB × fator de atividade",
+    "tdee.p1":
+      "Pegamos a sua TMB (Mifflin-St Jeor, ou Katch-McArdle se você informar o % de gordura corporal) e multiplicamos por um fator de atividade: 1,2 sedentário, 1,375 leve, 1,55 moderado, 1,725 ativo, 1,9 muito ativo.",
+
+    "bmr.lead":
+      "Taxa metabólica basal — as calorias que o corpo queima em repouso absoluto só para manter você vivo. É a base sobre a qual a meta diária é construída.",
+    "bmr.h2": "Mifflin-St Jeor",
+    "bmr.p1":
+      "Informe o % de gordura corporal e o cálculo muda para Katch-McArdle (370 + 21,6 · massa magra), mais preciso para pessoas muito magras ou muito pesadas.",
+
+    "protein.lead":
+      "Quanta proteína buscar por dia, com base no seu peso corporal. É a mesma meta que o MacroChat usa ao montar a sua divisão de macros.",
+    "protein.h2": "1,8 g por kg de peso corporal",
+    "protein.p1":
+      "A meta padrão é 1,8 g/kg — um número sólido para adulto ativo. A faixa de 1,6 a 2,2 g/kg cobre quase todos os objetivos: a parte baixa para saúde geral, a alta em dieta rigorosa ou ganho de músculo. Proteína tem 4 kcal por grama.",
+
+    "deficit.lead":
+      "Escolha um déficit diário e um peso-alvo — veja sua meta de calorias, o ritmo semanal de perda e mais ou menos quando você chegaria lá.",
+    "deficit.h2": "Déficit → ritmo → data",
+    "deficit.p1":
+      "Calorias diárias = seu TDEE menos o déficit escolhido. Cerca de 7.700 kcal ≈ 1 kg de gordura corporal, então um déficit de 500 kcal/dia dá mais ou menos 0,45 kg por semana. Tempo até a meta = peso a perder ÷ ritmo semanal.",
+    "deficit.p2":
+      "Um déficit de 300 a 750 kcal/dia é sustentável para a maioria. Déficits muito grandes custam músculo e são difíceis de manter.",
+
+    "recipe.lead":
+      "Liste os ingredientes e as gramas — receba o total de calorias, proteína, carboidratos e gordura. Cada número é uma consulta a uma base de dados real (USDA e INDB), não uma estimativa da IA.",
+    "recipe.h2": "Buscar, escalar, somar",
+    "recipe.p1":
+      "Cada nome de ingrediente é ligado a um registro do INDB (pratos e ingredientes indianos) ou do USDA FoodData Central; básicos como arroz e dal usam um valor de referência fixo. Os macros por 100 g são ajustados às suas gramas e somados.",
+    "recipe.p2":
+      "Nomes simples funcionam melhor: “arroz”, “peito de frango”, “azeite”. Um ingrediente sem correspondência aparece à parte e fica fora do total. A primeira consulta depois de um tempo pode levar ~50 s enquanto o servidor gratuito acorda.",
+    "recipe.p3": "Prefere fazer por foto ou por uma frase? ",
+    "recipe.p3link": "Experimente o chat de refeições",
+  },
 };
