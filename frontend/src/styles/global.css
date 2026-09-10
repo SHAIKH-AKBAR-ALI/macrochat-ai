@@ -855,6 +855,22 @@ main { flex: 1; }
   .compare__cell { padding: 0.9rem 1rem; font-size: 0.88rem; }
 }
 
+/* phone tuning for the redesigned data components */
+@media (max-width: 560px) {
+  .facts__row--hero .num { font-size: 1.5rem; }
+  .facts__row { padding-inline: 1rem; }
+  .facts__title { padding-inline: 1rem; }
+  .facts__note { padding-inline: 1rem; }
+  .calc-doc table { font-size: 0.9rem; }
+  .calc-doc th, .calc-doc td { padding: 0.5rem 0.55rem; }
+}
+/* fatter slider hit area / thumb on touch devices */
+@media (pointer: coarse) {
+  .split__row input[type="range"] { height: 32px; }
+  .split__row input[type="range"]::-webkit-slider-thumb { width: 26px; height: 26px; margin-top: -10px; }
+  .split__row input[type="range"]::-moz-range-thumb { width: 26px; height: 26px; }
+}
+
 /* --- motion --- */
 
 @media (prefers-reduced-motion: no-preference) {
