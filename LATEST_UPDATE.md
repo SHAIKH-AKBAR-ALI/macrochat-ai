@@ -1,8 +1,8 @@
 # MacroChat AI — Latest Update Plan (Full Rework)
 
-**Status:** DRAFT — exploring. Competitor research done, more to do.
-**Date:** 2026-09-10
-**Base:** commit 8aef953 (live on Render)
+**Status:** SHIPPED — rework R1–R10 + R10.2 built, deployed and live on Render.
+**Date:** 2026-09-10 (this doc kept as the plan-of-record + competitor notes)
+**Base:** commit 8aef953; rework rides on top, auto-deploys on push to `main`.
 
 ---
 
@@ -245,13 +245,30 @@ edit/delete, `/history` page, History nav link. R10 Part A: `lookup_usda_local`
 (~75-food FDC seed in `data/indb.sqlite` `usda_foods`+FTS, `scripts/build_usda_db.py`),
 tried before live FDC API. R10 Part B: `/foods/<slug>-macros/` (99) +
 `/compare/<a>-vs-<b>/` (120) + hubs, `@astrojs/sitemap`, JSON-LD; data from
-`scripts/export_seo_data.py` → `seo-foods.json`. **240 pages build.**
-All test files green.
+`scripts/export_seo_data.py` → `seo-foods.json`.
 
-## Next (after R10)
-Regroup with user — see `PHASES.md` "After R10" + `ROADMAP.txt`. Also still open:
-deploy the whole rework (nothing since 8aef953 is live), buy a domain + hosting
-split, kill the ~50s cold start before pushing the SEO pages.
+**Post-R10, all DEPLOYED 2026-09-10** (see `PHASES.md` for detail):
+- **Deploy** — everything since 8aef953 pushed + auto-deployed to Render; live
+  verified (`/foods/search`, `/trends` 401, SEO pages, calculators).
+- **Design pass** — Fraunces serif display face; custom sliders / meters / week
+  chart; `--paper-2`/`--ink-2` tokens; heading-on-dark-band colour fix.
+- **Landing rework** — free calculators are the hero + a dedicated tools grid;
+  the AI tracker moved below into `#tracker`. Mobile tuning.
+- **R10.2** — full USDA SR Legacy CSV import → 2,662 foods × 8 nutrients;
+  `/foods/` 499 + `/compare/` 3,916 pages with bar viz + FAQ + FAQPage/
+  NutritionInformation JSON-LD + related grids; `CompareTool.tsx` island
+  (portion / per-serving / custom-grams live recompute); sitemap 4,434 URLs.
+
+## Next
+Regroup — see `PHASES.md` "After R10" + `ROADMAP.txt`. Still open:
+- domain purchase + hosting split (frontend → CF Pages/Vercel), kill the ~50 s
+  backend cold start (keepalive cron mitigates; GH cron drifts + auto-disables
+  after 60 days)
+- silent JWT refresh, PWA, household units, meal templates — all in `ROADMAP.txt`
+- doc tidy: `README.md` refresh; `DESIGN.md` is a stray Vercel design-system
+  dump, unrelated — delete when convenient
+- widen `POPULAR` in `lib/seo.ts` if more `/compare/` volume is wanted (each
+  +10 foods ≈ +1k pages)
 
 | Version | Phases | Contents | Login |
 | :--- | :--- | :--- | :---: |

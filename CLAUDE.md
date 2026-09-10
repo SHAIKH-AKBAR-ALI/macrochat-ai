@@ -11,13 +11,14 @@ source of truth for calorie/macro numbers — those always come from a real data
 (INDB for Indian foods, USDA for everything else). The LLM should also never be trusted
 to do arithmetic for daily totals — that's backend/SQL, not a chat response.
 
-## >>> FULL REWORK — R1–R10 CODE-COMPLETE, NOT YET DEPLOYED (2026-09-10) <<<
-The app was fully reworked. Read `LATEST_UPDATE.md` (plan + locked decisions +
-competitor research) and `PHASES.md` (10-phase breakdown R1–R10, every phase has a
-✅ done-note) before touching rework code. **All of R1–R10 is built and locally
-verified but nothing since commit 8aef953 is deployed** — next real step is a
-deploy pass (see LATEST_UPDATE "Next"). Original phases 1–3 + the bug-fix rounds
-below are DONE and LIVE (commit 8aef953) —
+## >>> FULL REWORK — R1–R10 SHIPPED & LIVE (2026-09-10) <<<
+The app was fully reworked and **deployed** to Render (auto-deploy on push to
+`main`). Read `LATEST_UPDATE.md` (plan + locked decisions + competitor research)
+and `PHASES.md` (10-phase breakdown R1–R10 + R10.2, every phase has a ✅
+done-note) before touching rework code. Live URLs unchanged
+(`macrochat-d6oi.onrender.com` frontend, `macrochat-api.onrender.com` backend).
+Original phases 1–3 + the bug-fix rounds below are the pre-rework history
+(commit 8aef953) —
 that history stays for reference but the product direction now follows the rework docs.
 
 Rework in one line: **public free calculators / food pages as the funnel (no signup,
@@ -50,12 +51,28 @@ satfat, `data/usda_src/` gitignored; `/foods/<slug>-macros/` ×499 +
 `/compare/<a>-vs-<b>/` ×3,916 w/ bar viz + FAQ + FAQPage/NutritionInformation
 JSON-LD + related grids; sitemap 4,434 URLs; **4,436-page ~10 s build**) —
 all 2026-09-10.
-**Rework R1–R10 COMPLETE.** Nothing since commit 8aef953 is deployed yet.
+**Rework R1–R10 + R10.2 COMPLETE and DEPLOYED** (2026-09-10). Post-R10 rounds,
+all live:
+- **Design pass** — Fraunces variable serif as the display face (h1/h2/facts hero
+  number/logo); custom-styled range sliders + meters + week chart (killed the
+  native `accent-color` look); `--paper-2`/`--ink-2` tokens, tuned shadows;
+  `global.css` + `Layout.astro` font link + `anim.ts weekChart`. Fixed: headings
+  went invisible on dark bands — `h1/h2/h3 { color: inherit }`.
+- **Landing rework** — hero now leads with the free calculators; new "free tools"
+  card grid section; the AI pipeline moved below the fold into `#tracker` as the
+  signed-in payoff. Mobile tuning for the new components.
+- **R10.2** — full USDA SR Legacy CSV import (`data/usda_src/` gitignored),
+  2,662 `usda_foods` rows × 8 nutrients; `/foods/` 499 + `/compare/` 3,916 pages
+  with bar viz, FAQ, FAQPage+NutritionInformation JSON-LD, related grids;
+  `CompareTool.tsx` island (portion / per-serving / custom-grams live recompute)
+  + `lib/servings.ts`; sitemap 4,434 URLs; ~4,400-page ~10 s build.
+
 New backend endpoints since 8aef953: `/foods/lookup` `/foods/search` `/meals/today`
 `/meals/manual` `/meals/recent` `/meals/relog` `/trends` `/meals/history`
 `PATCH|DELETE /meals/{id}`. Frontend meal-input UI now `components/MealChat.astro`.
-Food data build: `scripts/build_indb_db.py`, `scripts/build_usda_db.py`,
-`scripts/export_seo_data.py` → committed `data/indb.sqlite` + `frontend/src/data/seo-foods.json`.
+Food data build: `scripts/build_indb_db.py`, `scripts/build_usda_db.py` (parses the
+SR Legacy CSV bulk export), `scripts/export_seo_data.py` → committed
+`data/indb.sqlite` (~550 KB) + `frontend/src/data/seo-foods.json`.
 The AI pipeline (`app/graph.py`, `app/nutrition.py`) is finished — do not rebuild it.
 Images/animation: Claude writes a prompt, user generates in ChatGPT.
 
