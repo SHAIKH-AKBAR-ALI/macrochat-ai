@@ -496,9 +496,44 @@ totals change correctly; delete → row gone, totals drop; RLS blocks other user
   - Lighthouse SEO not run programmatically (like R1 a11y) — pages carry unique
     title + meta description, JSON-LD, semantic headings, internal links, sitemap.
 
-**To refresh food data:** `python scripts/build_usda_db.py` (or `--from-cache`)
-then `python scripts/export_seo_data.py`, rebuild frontend. `data/indb.sqlite` +
+**To refresh food data:** `python scripts/build_usda_db.py` then
+`python scripts/export_seo_data.py`, rebuild frontend. `data/indb.sqlite` +
 `seo-foods.json` are committed build artifacts.
+
+### R10.2 — full USDA SR Legacy import + richer compare pages — ✅ DONE (2026-09-10)
+
+**Status:** shipped. `npm run build` green — **4,436 pages** (19 base + 499
+`/foods/…-macros/` + 3,916 `/compare/…-vs-…/` + 2 hub), ~10 s build,
+`sitemap-0.xml` = 4,434 URLs. `test_nutrition.py` + `test_identity.py` +
+`macros.test.ts` green.
+- **Data:** `scripts/build_usda_db.py` rewritten to parse the USDA **SR Legacy
+  CSV bulk export** (`food.csv` / `food_nutrient.csv` / `nutrient.csv` in
+  `data/usda_src/`, ~37 MB, **gitignored** — download link in the script
+  docstring) instead of per-food API calls. Now 8 nutrients per food: kcal,
+  protein, carb, fat + **fiber, sugar, sodium, saturated fat**. ~75 `CURATED`
+  slugs pinned by regex to the right SR row; the rest auto-slugged from the
+  primary phrase (compound slug on collision, max 2 variants/base), junk
+  filtered (`BAD` regex + score). **2,662 rows** in `usda_foods`;
+  `data/indb.sqlite` 139 KB → 552 KB (committed). `data/usda_seed.json` deleted.
+- `app/nutrition.py` unchanged — `lookup_usda_local` still `SELECT`s the 4 macro
+  cols; the extra columns are ignored there.
+- `scripts/export_seo_data.py` — pulls curated + a strict-clean-name filtered
+  subset of auto rows (`CLEAN`/`BRAND`/`NOISE` regex, cap `USDA_LIMIT=400`,
+  `MAX_PER_BASE=2`) + 24 INDB dishes → **499-food** `seo-foods.json` with the
+  new nutrient fields (INDB micro fields null).
+- `frontend/src/lib/seo.ts` — `Food` gains fiber/sugar/sodium/satfat;
+  `POPULAR` expanded to ~89 (incl. 15 Indian dishes) → C(89,2)=3,916 pairs;
+  `NUTRIENTS` table, `pctMore`/`gapPhrase`, `pairSlug`/`relatedFor`,
+  `faqJsonLd`; `verdict` now uses `gapPhrase`.
+- `compare/[pair].astro` — rebuilt: per-nutrient **bar rows** with a tinted
+  "better for a lean/high-protein goal" cell, protein-density row, verdict,
+  3-Q FAQ (+ `FAQPage` JSON-LD), "More X comparisons" related grid, both foods'
+  `NutritionInformation` JSON-LD. `.cmp*` CSS added (mobile grid at 560px).
+- `foods/[slug].astro` — fiber/sugar/satfat/sodium rows when present, 3-Q FAQ
+  (+ FAQPage JSON-LD), "Compare X" grid.
+- Known ceiling: some auto foods are obscure ("Celtuce", "Abiyuch") or lightly
+  processed — acceptable long-tail, the curated ~75 carry the compare set.
+  Branded/restaurant rows mostly filtered but a few slip the `CLEAN` regex.
 
 **Goal:** programmatic long-tail pages. All static, build-time, no LLM.
 

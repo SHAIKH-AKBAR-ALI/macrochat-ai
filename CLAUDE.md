@@ -44,10 +44,12 @@ redirect) · **R8 ✅** (`GET /foods/search` INDB-FTS+USDA, `POST /meals/manual`
 2026-09-10, `frontend/` + backend, undeployed. Preact pinned `@astrojs/preact@4.1.3`.
 · **R9 ✅** (`GET /trends`, `PATCH`/`DELETE /meals/{id}` RLS-safe, `/meals/history`,
 dashboard week chart + insights, `mealRowEl` inline edit/delete, `/history` page) ·
-**R10 ✅** (`lookup_usda_local` — ~75-food FDC seed in `data/indb.sqlite`
-`usda_foods`+FTS, tried before live API; `/foods/<slug>-macros/` ×99 +
-`/compare/<a>-vs-<b>/` ×120 SEO pages + sitemap + JSON-LD; **240-page build**) —
-all 2026-09-10, undeployed.
+**R10 ✅ + R10.2 ✅** (`lookup_usda_local` before live API; USDA **SR Legacy CSV
+bulk import** → 2,662 `usda_foods` rows w/ 8 nutrients incl. fiber/sugar/sodium/
+satfat, `data/usda_src/` gitignored; `/foods/<slug>-macros/` ×499 +
+`/compare/<a>-vs-<b>/` ×3,916 w/ bar viz + FAQ + FAQPage/NutritionInformation
+JSON-LD + related grids; sitemap 4,434 URLs; **4,436-page ~10 s build**) —
+all 2026-09-10.
 **Rework R1–R10 COMPLETE.** Nothing since commit 8aef953 is deployed yet.
 New backend endpoints since 8aef953: `/foods/lookup` `/foods/search` `/meals/today`
 `/meals/manual` `/meals/recent` `/meals/relog` `/trends` `/meals/history`

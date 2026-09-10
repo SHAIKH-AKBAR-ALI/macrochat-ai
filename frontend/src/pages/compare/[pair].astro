@@ -1,6 +1,9 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { comparePairs, verdict, proteinDensity } from "../../lib/seo";
+import {
+  comparePairs, verdict, proteinDensity, gapPhrase, relatedFor,
+  nutritionJsonLd, faqJsonLd, NUTRIENTS, type Food, type NutKey,
+} from "../../lib/seo";
 
 export function getStaticPaths() {
   return comparePairs().map(([a, b]) => ({
@@ -9,36 +12,110 @@ export function getStaticPaths() {
   }));
 }
 
-const { a, b } = Astro.props;
-const rows = [
-  ["Calories", `${a.kcal} kcal`, `${b.kcal} kcal`],
-  ["Protein", `${a.protein} g`, `${b.protein} g`],
-  ["Carbs", `${a.carb} g`, `${b.carb} g`],
-  ["Fat", `${a.fat} g`, `${b.fat} g`],
-  ["Protein / 100 kcal", `${proteinDensity(a).toFixed(1)} g`, `${proteinDensity(b).toFixed(1)} g`],
+const { a, b } = Astro.props as { a: Food; b: Food };
+
+const val = (f: Food, k: NutKey) => (f[k] as number | null);
+const rows = NUTRIENTS
+  .filter((n) => val(a, n.key) != null && val(b, n.key) != null)
+  .map((n) => {
+    const av = val(a, n.key)!, bv = val(b, n.key)!;
+    const max = Math.max(av, bv, 0.0001);
+    let winner: "a" | "b" | "tie" = "tie";
+    if (Math.abs(av - bv) > max * 0.02) {
+      const aBetter = n.lowerIsLeaner ? av < bv : av > bv;
+      winner = aBetter ? "a" : "b";
+    }
+    return { ...n, av, bv, aPct: (av / max) * 100, bPct: (bv / max) * 100, winner };
+  });
+
+const pdA = proteinDensity(a), pdB = proteinDensity(b);
+const leaner = a.kcal <= b.kcal ? a : b;
+const protein = pdA >= pdB ? a : b;
+const related = relatedFor(a.slug, 6);
+
+const faqs = [
+  {
+    q: `Which has more protein, ${a.name} or ${b.name}?`,
+    a: `Per 100 g, ${a.protein > b.protein ? a.name : b.name} has more protein — ` +
+       `${Math.max(a.protein, b.protein)} g vs ${Math.min(a.protein, b.protein)} g ` +
+       `(${gapPhrase(a.protein, b.protein)}).`,
+  },
+  {
+    q: `Which is better for weight loss?`,
+    a: `${leaner.name} is lower in calories per 100 g (${leaner.kcal} vs ` +
+       `${(leaner === a ? b : a).kcal} kcal), so it's the easier fit in a deficit. ` +
+       `${protein.name} gives more protein per calorie, which helps with fullness.`,
+  },
+  {
+    q: `Where do these numbers come from?`,
+    a: `USDA FoodData Central and the Indian Nutrient Databank — lab-measured values ` +
+       `per 100 g, not estimates. MacroChat uses the same data to log a meal.`,
+  },
 ];
-const desc = `${a.name} vs ${b.name} per 100 g: ${a.kcal} vs ${b.kcal} kcal, ${a.protein} vs ${b.protein} g protein. Which fits your goal.`;
+
+const desc = `${a.name} vs ${b.name} per 100 g: ${a.kcal} vs ${b.kcal} kcal, ` +
+  `${a.protein} vs ${b.protein} g protein, ${a.carb} vs ${b.carb} g carbs. ` +
+  `Which fits your goal.`;
 ---
-<Layout title={`${a.name} vs ${b.name} — macros compared`} description={desc}>
+<Layout title={`${a.name} vs ${b.name} — macros compared per 100 g`} description={desc}>
   <section class="section">
-    <div class="wrap calc-doc" style="max-width:640px;">
+    <div class="wrap calc-doc" style="max-width:680px;">
       <p class="mono" style="color:var(--mute);"><a href="/compare/">Compare</a> / {a.name} vs {b.name}</p>
       <h1 style="margin:0.6rem 0 0.4rem;">{a.name} vs {b.name}</h1>
-      <p class="hero__lead" style="margin:0 0 1.5rem;">Per 100 g, side by side. Database values, not estimates.</p>
+      <p class="hero__lead" style="margin:0 0 1.8rem;">
+        Every value is per 100 grams, straight from {a.source === "INDB" || b.source === "INDB" ? "USDA and INDB" : "USDA FoodData Central"} — no estimates.
+      </p>
 
-      <div class="calc-tbl-wrap">
-        <table>
-          <thead><tr><th></th><th>{a.name}</th><th>{b.name}</th></tr></thead>
-          <tbody>
-            {rows.map(([label, av, bv]) => (
-              <tr><td>{label}</td><td>{av}</td><td>{bv}</td></tr>
-            ))}
-          </tbody>
-        </table>
+      <div class="cmp">
+        <div class="cmp__head">
+          <span></span>
+          <span class="cmp__name">{a.name}</span>
+          <span class="cmp__name">{b.name}</span>
+        </div>
+        {rows.map((r) => (
+          <div class="cmp__row">
+            <div class="cmp__label">
+              {r.label}<span class="cmp__unit">{r.unit}</span>
+            </div>
+            <div class={`cmp__side${r.winner === "a" ? " is-win" : ""}`}>
+              <div class="cmp__bar"><i style={`width:${r.aPct}%`}></i></div>
+              <span class="cmp__val">{r.av}</span>
+            </div>
+            <div class={`cmp__side${r.winner === "b" ? " is-win" : ""}`}>
+              <div class="cmp__bar"><i style={`width:${r.bPct}%`}></i></div>
+              <span class="cmp__val">{r.bv}</span>
+            </div>
+          </div>
+        ))}
+        <div class="cmp__row cmp__row--dense">
+          <div class="cmp__label">Protein / 100 kcal<span class="cmp__unit">g</span></div>
+          <div class={`cmp__side${pdA >= pdB ? " is-win" : ""}`}><span class="cmp__val">{pdA.toFixed(1)}</span></div>
+          <div class={`cmp__side${pdB > pdA ? " is-win" : ""}`}><span class="cmp__val">{pdB.toFixed(1)}</span></div>
+        </div>
       </div>
+      <p class="cmp__key mono">Filled bar = higher value · <span class="cmp__key-win">tinted cell</span> = better for a lean/high-protein goal</p>
 
-      <h2 style="margin:1.6rem 0 0.5rem;">Better for your goal</h2>
+      <h2 style="margin:1.8rem 0 0.6rem;">Better for your goal</h2>
       <p>{verdict(a, b)}</p>
+
+      <h2 style="margin:1.8rem 0 0.6rem;">Quick answers</h2>
+      {faqs.map((f) => (
+        <details class="faq">
+          <summary>{f.q}</summary>
+          <p>{f.a}</p>
+        </details>
+      ))}
+
+      {related.length > 0 && (
+        <>
+          <h2 style="margin:1.8rem 0 0.6rem;">More {a.name} comparisons</h2>
+          <ul class="foods-az">
+            {related.map((r) => (
+              <li><a href={r.href}>{a.name} vs {r.name}</a></li>
+            ))}
+          </ul>
+        </>
+      )}
 
       <p style="margin-top:1.5rem;">
         <a href={`/foods/${a.slug}-macros/`}>{a.name} macros</a> ·
@@ -48,4 +125,7 @@ const desc = `${a.name} vs ${b.name} per 100 g: ${a.kcal} vs ${b.kcal} kcal, ${a
       <a class="btn qc__full" href="/signup" style="margin-top:0.6rem;">Track either in MacroChat →</a>
     </div>
   </section>
+  <script type="application/ld+json" set:html={nutritionJsonLd(a)} />
+  <script type="application/ld+json" set:html={nutritionJsonLd(b)} />
+  <script type="application/ld+json" set:html={faqJsonLd(faqs.map((f) => ({ q: f.q, a: f.a })))} />
 </Layout>

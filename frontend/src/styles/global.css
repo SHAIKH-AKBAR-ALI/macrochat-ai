@@ -1182,6 +1182,61 @@ a.cell--link:hover { border-color: var(--amber); }
   font-family: "IBM Plex Mono", ui-monospace, monospace; }
 @media (max-width: 560px) { .foods-az { columns: 1; } }
 
+/* --- compare table with bars (R10.2) --- */
+.cmp {
+  border: var(--border); border-radius: var(--radius); overflow: hidden;
+  background: var(--card); box-shadow: var(--shadow);
+}
+.cmp__head, .cmp__row {
+  display: grid; grid-template-columns: 8.5rem 1fr 1fr; align-items: center;
+}
+.cmp__head {
+  border-bottom: 2px solid var(--ink);
+  font-family: var(--font-mono); font-size: 0.66rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--mute);
+}
+.cmp__head span { padding: 0.75rem 0.9rem; }
+.cmp__name { color: var(--ink); }
+.cmp__row { border-bottom: 1px solid var(--line); }
+.cmp__row:last-child { border-bottom: none; }
+.cmp__label {
+  padding: 0.7rem 0.9rem; font-size: 0.85rem; font-weight: 600;
+  display: flex; flex-direction: column; gap: 0.1rem;
+}
+.cmp__unit {
+  font-family: var(--font-mono); font-size: 0.62rem; font-weight: 500;
+  color: var(--mute); text-transform: uppercase; letter-spacing: 0.08em;
+}
+.cmp__side {
+  padding: 0.7rem 0.9rem; display: flex; align-items: center; gap: 0.6rem;
+  border-left: 1px solid var(--line);
+}
+.cmp__side.is-win { background: color-mix(in srgb, var(--amber) 9%, var(--card)); }
+.cmp__bar {
+  flex: 1; height: 8px; border-radius: var(--pill);
+  background: var(--paper-2); box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden; min-width: 24px;
+}
+.cmp__bar i {
+  display: block; height: 100%; border-radius: var(--pill);
+  background: linear-gradient(var(--amber-hi), var(--amber));
+}
+.cmp__side.is-win .cmp__bar i { background: linear-gradient(var(--amber-hi), var(--amber)); }
+.cmp__side:not(.is-win) .cmp__bar i { background: var(--line-2); }
+.cmp__val {
+  font-family: var(--font-mono); font-weight: 600; font-size: 0.85rem;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.cmp__row--dense .cmp__side { justify-content: flex-start; }
+.cmp__key { margin: 0.6rem 0 0; font-size: 0.66rem; color: var(--mute); }
+.cmp__key-win { color: var(--amber-ink); }
+@media (max-width: 560px) {
+  .cmp__head, .cmp__row { grid-template-columns: 5.5rem 1fr 1fr; }
+  .cmp__label { font-size: 0.78rem; }
+  .cmp__side { padding: 0.6rem 0.55rem; gap: 0.4rem; }
+  .cmp__val { font-size: 0.78rem; }
+}
+
 /* --- manual food search (R8) --- */
 .foodsearch { padding-block: 0; }
 .foodsearch__box { position: relative; }
