@@ -61,6 +61,9 @@ all live:
 - **Landing rework** — hero now leads with the free calculators; new "free tools"
   card grid section; the AI pipeline moved below the fold into `#tracker` as the
   signed-in payoff. Mobile tuning for the new components.
+- **Free-tools surfacing** — nav dropdown "Calculators" → **"Free tools"** with a
+  Calculators section + a Food data section (`/compare/`, `/foods/`); landing
+  grid gets its own Compare card; `/calculator` cross-links to `/compare/`.
 - **R10.2** — full USDA SR Legacy CSV import (`data/usda_src/` gitignored),
   2,662 `usda_foods` rows × 8 nutrients; `/foods/` 499 + `/compare/` 3,916 pages
   with bar viz, FAQ, FAQPage+NutritionInformation JSON-LD, related grids;

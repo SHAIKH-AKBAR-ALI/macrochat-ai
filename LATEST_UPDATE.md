@@ -254,6 +254,10 @@ tried before live FDC API. R10 Part B: `/foods/<slug>-macros/` (99) +
   chart; `--paper-2`/`--ink-2` tokens; heading-on-dark-band colour fix.
 - **Landing rework** — free calculators are the hero + a dedicated tools grid;
   the AI tracker moved below into `#tracker`. Mobile tuning.
+- **Free-tools surfacing** — nav dropdown renamed "Free tools" with a Food data
+  section (`/compare/`, `/foods/`); Compare gets its own landing card;
+  `/calculator` cross-links to it. The 3,916-page compare pillar was previously
+  footer-only.
 - **R10.2** — full USDA SR Legacy CSV import → 2,662 foods × 8 nutrients;
   `/foods/` 499 + `/compare/` 3,916 pages with bar viz + FAQ + FAQPage/
   NutritionInformation JSON-LD + related grids; `CompareTool.tsx` island

@@ -571,6 +571,56 @@ resolve; `test_nutrition.py` green.
 
 ---
 
+## Post-R10 rounds — ✅ ALL SHIPPED & DEPLOYED (2026-09-10)
+
+Not phases; ad-hoc rounds after R10. Listed newest last.
+
+**1 · Deploy pass** — everything since `8aef953` committed and pushed; Render
+auto-deploys both services on push to `main`. `.gitignore` gained
+`frontend/.astro/`, `mini-project/`, `screenshot/` (and later `data/usda_src/`);
+the generated `.astro` cache was untracked. Live-verified `/foods/search`,
+`/trends` → 401, `/foods/` index, `/calculator`.
+
+**2 · Design polish** — the UI read as templated (one typeface, native form
+controls). Fixes, all in `global.css` + `Layout.astro` font link + `anim.ts`:
+- **Fraunces** variable serif added as `--font-display` (h1/h2, facts hero
+  number, logo) against Plus Jakarta Sans body + IBM Plex Mono data — real
+  typographic contrast. Tabular figures wherever numbers align.
+- New tokens `--paper-2` (recessed surface), `--ink-2`, `--line-2`,
+  `--amber-hi`, `--shadow-teal`, `--section-y`; re-tuned shadows.
+- **Custom range sliders** (webkit + moz) replacing `accent-color`; fill driven
+  by a `--fill` CSS var set in `MacroSplit.tsx` so it's right pre-hydration.
+- **Meters** recessed track + gradient fill + goal notch; **week chart** rebuilt
+  with a ±8% goal band, rounded bars, today emphasised, hover `<title>` value.
+- **Facts panel**: mono eyebrow title over a heavy rule, serif hero number, row
+  tick-marks.
+- ⚠️ Regression caught in review: the pass set `color: var(--ink)` on
+  `h1/h2/h3`, which beat the light colour inherited from `.band--ink` /
+  `.band--amber` → headings went invisible on dark bands. Fixed to
+  `color: inherit` — **never set a hard colour on the heading rule.**
+- Mobile tuning: smaller serif hero number ≤560px, fatter slider hit area on
+  `pointer: coarse`, tighter facts/table padding.
+
+**3 · Landing rework** — the page still sold the AI tracker with a calculator in
+the corner, contradicting the rework thesis. Resequenced `index.astro`:
+hero headline + CTAs now lead with the free calculators (primary →
+`/calculator`, secondary scrolls to `#tracker`); new "Every tool, no sign-up
+wall" card grid right after the trust strip; the AI pipeline, 3 steps,
+product-shot and feature grid all moved below into `#tracker` as the signed-in
+payoff; stats swapped one tile to "6 free calculators"; FAQ reordered (cost /
+formulas / guest limit first); mega CTA split into *Open the calculator* /
+*Sign up to track*. New `.cell--link` / `.cta-mega__btns` CSS + anchor
+`scroll-margin`.
+
+**4 · Surface `/compare/` + `/foods/`** — the 3,916-page compare pillar was only
+reachable from the footer. Nav dropdown renamed **"Calculators" → "Free tools"**
+with two labelled sections (Calculators · Food data → *Compare two foods*,
+*Food macros A–Z*); the landing grid's shared wide card split into two proper
+cards; hero/section copy corrected ("99+ foods" → "~500 foods plus
+comparisons"); `/calculator`'s common-foods table cross-links to `/compare/`.
+
+---
+
 ## After R10
 
 Regroup with user. Candidates: guides/editorial, restaurant pages, PWA,
