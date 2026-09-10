@@ -781,6 +781,68 @@ noted in S1 and S4:
 
 ---
 
+## I — Internationalisation (branch `i18n`, in progress 2026-09-10)
+
+Goal: rank on non-English keywords ("calculadora de macros", "マクロ計算ツール",
+"Kaloriendefizit-Rechner"). **7 languages added** — Español, 日本語, Français,
+Deutsch, Português, 한국어, Italiano — with English staying at the root so no
+existing URL changes.
+
+**Scope decision (user's call):** the whole site, all 4,436 pages × 8 locales
+≈ **35,432 pages**, and all 499 food names translated. Build 15 s → ~140 s.
+
+**Architecture.** Astro `i18n` config, `prefixDefaultLocale: false` (English at
+`/`, others under `/es/`, `/ja/`…). Every SEO page moved under
+`src/pages/[...lang]/` — a **rest param that can be undefined**, so ONE file
+serves `/calculator` *and* `/es/calculator`; there is no per-locale copy of a
+page to keep in sync. The two dynamic routes cross their existing path list with
+the locales. Signed-in app pages (login, signup, dashboard, chat, add, history,
+404, 500) stay English-only at the root and pass `localized={false}` — no
+hreflang, no switcher: they are behind auth and have no SEO value.
+
+**Strings.** `src/i18n/config.ts` (locales, `localeHref`, `stripLocale`),
+`src/i18n/ui.ts` (nav/footer chrome), `src/i18n/pages/<locale>.ts` (page copy,
+one module per locale) with `pageT()` falling back to English **per key**, so an
+untranslated key renders readable English instead of a blank. Islands can't take
+a function across the server/client boundary, so they get `pageDict()` — the
+same section as a plain object — as a `t` prop.
+
+**hreflang.** `Layout.astro` renders the full 8-locale `<link rel="alternate">`
+set + `x-default` + a canonical, built from `stripLocale(Astro.url.pathname)`;
+`@astrojs/sitemap`'s `i18n` option repeats the alternates in the sitemap.
+
+- [x] **I1 · routing + hreflang + chrome** — ✅ `7c7b8dd`. Config, `[...lang]/`
+      move, hreflang/canonical, language switcher in the nav, nav+footer in all
+      8. 4,436 → 35,432 pages, 15 s → 126 s build.
+- [x] **I2 · landing page** — ✅ `baf1602`. ~95 keys × 8. FAQ answers that carry a
+      link are split into pre/link/post keys instead of embedding markup in a
+      translated string.
+- [x] **I3 · calculators** — ✅ `c2b8b31` (islands) + `2ad5982` (page copy).
+      The five Preact islands take a `t` dictionary prop (~60 labels), incl.
+      MiniCalc's result rows and MacroSplit's diet-preset names, which stay keyed
+      by their stable ids. Page prose (~35 keys) covers all six calculators;
+      mid-sentence links became a plain paragraph + a "See also" link line, which
+      cut three keys per sentence down to one. Formula `<pre>` blocks and paper
+      citations deliberately stay English.
+- [x] **I4 · `/foods/` + `/compare/`** — ✅ `8c9ed38`. ~110 keys × 8 across 4,417
+      generated pages. These sentences are built from database rows, so the
+      strings are templates with `{placeholders}` filled by `fmt()` — that keeps
+      names/numbers out of the translations and lets each language choose its own
+      word order. `verdict()` and `gapPhrase()` in `lib/seo.ts` used to
+      concatenate English fragments; they now take the compare dictionary.
+      `CompareTool` takes the same dict, and its nutrient labels are translated
+      in the page so `NUTRIENTS` keeps its data keys.
+- [ ] **I5 · 499 food names × 7** — the long grind (3,493 strings). Missing names
+      fall back to English per key, so this can land in batches without breaking
+      a page.
+- [ ] **I6 · about / privacy / terms / contact / 404 / 500.**
+
+**Not deployed yet — deliberately.** A half-translated site would put 31k
+English duplicate pages under locale prefixes, which is an SEO liability. The
+branch merges to `main` when I5–I6 are done.
+
+---
+
 ## After R10
 
 Regroup with user. Candidates: guides/editorial, restaurant pages, PWA,

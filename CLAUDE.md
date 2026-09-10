@@ -483,6 +483,25 @@ jpeg → 413.
   round-trip per request (verify the JWT locally instead); rate-limit counters are
   per-process (Redis if we ever run 2+ instances).
 
+### Internationalisation — 🚧 IN PROGRESS on branch `i18n` (2026-09-10)
+7 languages (es, ja, fr, de, pt, ko, it) + English. Full breakdown in `PHASES.md`
+section "I". **Do not merge to `main` until I5–I6 are done** — a half-translated
+site publishes 31k English duplicate pages under locale prefixes.
+- Astro i18n, `prefixDefaultLocale: false` — English URLs unchanged. Every SEO
+  page lives in `src/pages/[...lang]/`: the rest param can be `undefined`, so one
+  file serves `/calculator` and `/es/calculator`. App pages (login, dashboard,
+  chat, add, history, 404, 500) stay English at the root with `localized={false}`.
+- `src/i18n/config.ts` (locales + `localeHref`/`stripLocale`), `ui.ts` (nav and
+  footer), `pages/<locale>.ts` (page copy). `pageT()` falls back to English per
+  key; `pageDict()` hands a plain object to Preact islands (a function can't
+  cross the server/client boundary); `fmt()` fills `{placeholders}` in strings
+  built from database rows.
+- `Layout.astro` emits the 8-locale hreflang set + `x-default` + canonical;
+  sitemap repeats them.
+- Done: I1 routing/hreflang/chrome, I2 landing, I3 calculators + islands,
+  I4 `/foods/` + `/compare/`. Left: I5 the 499 food names, I6 legal/about pages.
+- Build is now 35,432 pages in ~140 s (was 4,436 in ~15 s).
+
 ### Phase 4+ — Later / not yet scoped
 Full 10-phase future plan lives in `ROADMAP.txt` (2026-07-05): session polish (token
 refresh, cold-start UX), meal edit/delete/re-log, history & trends, quick-log
