@@ -27,6 +27,24 @@ export function authHeaders(): Record<string, string> {
   return t ? { Authorization: `Bearer ${t}` } : {};
 }
 
+// FastAPI sends a plain string `detail` for our own HTTPExceptions, but a LIST of
+// {loc, msg} objects for a 422 body-validation failure. Throwing that list gave the
+// user "[object Object]" and hid which field was actually wrong — name the field.
+function errorMessage(data: any, status: number): string {
+  const d = data?.detail;
+  if (typeof d === "string") return d;
+  if (Array.isArray(d) && d.length) {
+    return d
+      .map((e) => {
+        const field = Array.isArray(e?.loc) ? e.loc[e.loc.length - 1] : null;
+        return field ? `${field}: ${e.msg}` : e?.msg;
+      })
+      .filter(Boolean)
+      .join(" · ");
+  }
+  return `Request failed (${status})`;
+}
+
 export async function jsonPost(path: string, body: unknown) {
   const res = await fetch(API + path, {
     method: "POST",
@@ -34,6 +52,6 @@ export async function jsonPost(path: string, body: unknown) {
     body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.detail || `Request failed (${res.status})`);
+  if (!res.ok) throw new Error(errorMessage(data, res.status));
   return data;
 }
