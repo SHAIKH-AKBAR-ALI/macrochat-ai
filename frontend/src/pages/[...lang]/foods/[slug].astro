@@ -1,0 +1,118 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import { FOODS, bySlug, relatedFor, nutritionJsonLd, faqJsonLd, type Food } from "../../../lib/seo";
+import { localeHref, localePaths, toLocale } from "../../../i18n/config";
+import { fmt, pageT } from "../../../i18n/pages";
+import { tf } from "../../../i18n/foods";
+import { useT } from "../../../i18n/ui";
+
+export function getStaticPaths() {
+  // 8 locales x every food — one file builds the lot.
+  return localePaths().flatMap(({ params: { lang } }) =>
+    FOODS.map((f) => ({ params: { lang, slug: `${f.slug}-macros` }, props: { food: f } }))
+  );
+}
+
+const lang = toLocale(Astro.params.lang);
+const food = tf(lang, (Astro.props as { food: Food }).food);
+const lp = (path: string) => localeHref(lang, path);
+const F = pageT(lang, "foods");
+const C = pageT(lang, "calc");
+const t = useT(lang);
+const sourceName = food.source === "USDA" ? F("srcUSDA") : F("srcINDB");
+const related = FOODS.filter((f) => f.source === food.source && f.slug !== food.slug)
+  .slice(0, 6).map((f) => tf(lang, f));
+const compares = relatedFor(food.slug, 6, lang);
+
+const p4 = Math.round(food.protein * 4);
+const c4 = Math.round(food.carb * 4);
+const f9 = Math.round(food.fat * 9);
+const kd = p4 + c4 + f9 || 1;
+
+const micro = [
+  food.fiber != null ? [F("fiber"), `${food.fiber} g`] : null,
+  food.sugar != null ? [F("sugars"), `${food.sugar} g`] : null,
+  food.satfat != null ? [F("satfat"), `${food.satfat} g`] : null,
+  food.sodium != null ? [F("sodium"), `${food.sodium} mg`] : null,
+].filter(Boolean) as [string, string][];
+
+const faqs = [
+  {
+    q: fmt(F("faqQ1"), { name: food.name }),
+    a: fmt(F("faqA1"), {
+      name: food.name, kcal: food.kcal, protein: food.protein,
+      carb: food.carb, fat: food.fat,
+    }),
+  },
+  {
+    q: fmt(F("faqQ2"), { name: food.name }),
+    a: fmt(F("faqA2"), {
+      pct: ((food.protein * 4) / (food.kcal || 1) * 100).toFixed(0),
+      density: (food.protein / (food.kcal || 1) * 100).toFixed(1),
+    }),
+  },
+  { q: F("faqQ3"), a: fmt(F("faqA3"), { source: sourceName }) },
+];
+
+const desc = fmt(F("desc"), {
+  name: food.name, kcal: food.kcal, protein: food.protein,
+  carb: food.carb, fat: food.fat, source: food.source,
+});
+---
+<Layout title={fmt(F("title"), { name: food.name })} description={desc}>
+  <section class="section" style="padding-bottom:0;">
+    <div class="wrap calc-doc" style="max-width:640px;">
+      <p class="mono" style="color:var(--mute);"><a href={lp("/foods/")}>{F("crumb")}</a> / {food.name}</p>
+      <h1 style="margin:0.6rem 0 0.4rem;">{fmt(F("h1"), { name: food.name })}</h1>
+      <p class="hero__lead" style="margin:0 0 1.5rem;">
+        {fmt(F("lead"), { source: sourceName })}
+      </p>
+
+      <div class="facts">
+        <div class="facts__title">{fmt(F("factsTitle"), { name: food.name })}</div>
+        <div class="facts__row facts__row--hero"><b>{C("calories")}</b><span class="num">{food.kcal} kcal</span></div>
+        <div class="facts__row"><b>{C("protein")}</b><span class="num">{food.protein} g · {Math.round((p4 / kd) * 100)}%</span></div>
+        <div class="facts__row"><b>{C("carbs")}</b><span class="num">{food.carb} g · {Math.round((c4 / kd) * 100)}%</span></div>
+        <div class={`facts__row${micro.length ? "" : " facts__row--thick"}`}><b>{C("fat")}</b><span class="num">{food.fat} g · {Math.round((f9 / kd) * 100)}%</span></div>
+        {micro.map(([label, v], i) => (
+          <div class={`facts__row${i === micro.length - 1 ? " facts__row--thick" : ""}`}>
+            <span>{label}</span><span class="num">{v}</span>
+          </div>
+        ))}
+        <div class="facts__note">{fmt(F("note"), { kcal: food.kcal })}</div>
+        <a class="btn qc__full" href="/signup" style="margin-top:0.9rem;">{F("cta")}</a>
+      </div>
+
+      <p style="margin-top:1.5rem;">{fmt(F("portion"), { name: food.name })}</p>
+      <p class="calc-see"><a href={lp("/recipe-macro-calculator")}>{t("calc.recipe")}</a>
+        <a href="/chat">{F("mealChat")}</a></p>
+
+      <h2 style="margin:2rem 0 0.6rem;">{F("commonQuestions")}</h2>
+      {faqs.map((f) => (
+        <details class="faq"><summary>{f.q}</summary><p>{f.a}</p></details>
+      ))}
+
+      {compares.length > 0 && (
+        <>
+          <h2 style="margin:2rem 0 0.6rem;">{fmt(F("compareH2"), { name: food.name })}</h2>
+          <ul class="foods-az">
+            {compares.map((c) => (<li><a href={lp(c.href)}>{fmt(F("vs"), { a: food.name, b: c.name })}</a></li>))}
+          </ul>
+        </>
+      )}
+
+      {related.length > 0 && (
+        <>
+          <h2 style="margin:2rem 0 0.6rem;">{F("relatedH2")}</h2>
+          <ul class="calc-refs">
+            {related.map((r) => (
+              <li><a href={lp(`/foods/${r.slug}-macros/`)}>{fmt(F("relatedItem"), { name: r.name })}</a> — {fmt(F("relatedKcal"), { kcal: r.kcal })}</li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  </section>
+  <script type="application/ld+json" set:html={nutritionJsonLd(food)} />
+  <script type="application/ld+json" set:html={faqJsonLd(faqs.map((f) => ({ q: f.q, a: f.a })))} />
+</Layout>

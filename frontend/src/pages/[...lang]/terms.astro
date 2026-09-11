@@ -1,0 +1,48 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { DEFAULT_LOCALE, localeHref, localePaths, toLocale } from "../../i18n/config";
+import { pageT } from "../../i18n/pages";
+
+// One file, eight routes: /calculator and /es/calculator, /ja/... etc.
+export const getStaticPaths = localePaths;
+
+const lang = toLocale(Astro.params.lang);
+const L = pageT(lang, "legal");
+---
+<Layout title={L("terms.title")}>
+  <section class="band">
+    <div class="wrap" style="max-width:760px;">
+      <p class="eyebrow">{L("terms.eyebrow")}</p>
+      <h1 style="font-size:clamp(2rem,5vw,3.2rem); margin:1.2rem 0 1.5rem;">{L("terms.h1")}</h1>
+      <p class="mono" style="color:var(--mute); margin-bottom:2rem;">{L("terms.updated")}</p>
+      {lang !== DEFAULT_LOCALE && (
+        <p class="mono" style="color:var(--mute); margin:-1.2rem 0 2rem;">{L("govern")}</p>
+      )}
+
+      <div class="block" style="margin-bottom:1.2rem;">
+        <h3 style="margin-bottom:0.6rem;">{L("terms.s1h")}</h3>
+        <p>{L("terms.s1p")}</p>
+      </div>
+
+      <div class="block" style="margin-bottom:1.2rem;">
+        <h3 style="margin-bottom:0.6rem;">{L("terms.s2h")}</h3>
+        <p>{L("terms.s2p")}</p>
+      </div>
+
+      <div class="block" style="margin-bottom:1.2rem;">
+        <h3 style="margin-bottom:0.6rem;">{L("terms.s3h")}</h3>
+        <p>{L("terms.s3p")}</p>
+      </div>
+
+      <div class="block" style="margin-bottom:1.2rem;">
+        <h3 style="margin-bottom:0.6rem;">{L("terms.s4h")}</h3>
+        <p>{L("terms.s4p")}</p>
+      </div>
+
+      <div class="block">
+        <h3 style="margin-bottom:0.6rem;">{L("terms.s5h")}</h3>
+        <p>{L("terms.s5pPre")}<a href={localeHref(lang, "/contact")}>{L("terms.s5pLink")}</a>{L("terms.s5pPost")}</p>
+      </div>
+    </div>
+  </section>
+</Layout>

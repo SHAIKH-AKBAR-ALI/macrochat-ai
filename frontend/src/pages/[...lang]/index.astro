@@ -1,0 +1,378 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import QuickCalc from "../../components/QuickCalc.tsx";
+import { localeHref, localePaths, toLocale } from "../../i18n/config";
+import { pageDict, pageT } from "../../i18n/pages";
+import { useT } from "../../i18n/ui";
+
+// One file, eight routes: /calculator and /es/calculator, /ja/... etc.
+export const getStaticPaths = localePaths;
+
+const lang = toLocale(Astro.params.lang);
+const L = pageT(lang, "landing");
+const t = useT(lang);
+const lp = (path: string) => localeHref(lang, path);
+const calc = pageDict(lang, "calc");
+
+// Names come from the shared nav dictionary so a tool is called the same thing
+// in the nav, the footer and here.
+const tools = [
+  { href: lp("/calculator"), name: t("calc.macro"), note: L("tool.macro") },
+  { href: lp("/tdee-calculator"), name: t("calc.tdee"), note: L("tool.tdee") },
+  { href: lp("/bmr-calculator"), name: t("calc.bmr"), note: L("tool.bmr") },
+  { href: lp("/protein-calculator"), name: t("calc.protein"), note: L("tool.protein") },
+  { href: lp("/calorie-deficit-calculator"), name: t("calc.deficitShort"), note: L("tool.deficit") },
+  { href: lp("/recipe-macro-calculator"), name: t("calc.recipeShort"), note: L("tool.recipe") },
+  { href: lp("/compare/"), name: t("food.compare"), note: L("tool.compare") },
+  { href: lp("/foods/"), name: t("food.az"), note: L("tool.az") },
+];
+---
+<Layout title={L("meta.title")} description={L("meta.description")}>
+  <script is:inline>
+    // Logged in -> the landing page isn't your home; the dashboard is.
+    try {
+      var _t = localStorage.getItem("mc_token");
+      if (_t) {
+        var _p = JSON.parse(atob(_t.split(".")[1]));
+        if (!_p.exp || _p.exp * 1000 > Date.now()) location.replace("/dashboard");
+      }
+    } catch (e) {}
+  </script>
+
+  <section class="hero">
+    <div class="wrap hero__grid">
+      <div>
+        <span class="pill" data-rise="1">{L("hero.pill")}</span>
+        <h1 style="margin-top:1.1rem;" data-rise="2">
+          {L("hero.h1a")}<br /><span>{L("hero.h1b")}</span>
+        </h1>
+        <p class="hero__lead" data-rise="3">{L("hero.lead")}</p>
+        <ul class="checks" data-rise="3">
+          <li>{L("hero.check1")}</li>
+          <li>{L("hero.check2")}</li>
+          <li>{L("hero.check3")}</li>
+        </ul>
+        <div data-rise="4">
+          <a class="btn" href={lp("/calculator")}>{L("hero.ctaCalc")}</a>
+          <a class="btn btn--ghost" href="#tracker" style="margin-left:0.6rem;">{L("hero.ctaTracking")}</a>
+        </div>
+      </div>
+
+      <div class="demo-exchange" aria-label={L("hero.quickLabel")} data-rise="3">
+        <p class="eyebrow" style="margin-bottom:0.8rem;">{L("hero.quickEyebrow")}</p>
+        <QuickCalc t={calc} calcHref={lp("/calculator")} client:load />
+      </div>
+    </div>
+  </section>
+
+  <div class="trust">
+    <div class="wrap">
+      <span>{L("trust.1")}</span>
+      <span>{L("trust.2")}</span>
+      <span>{L("trust.3")}</span>
+      <span>{L("trust.4")}</span>
+    </div>
+  </div>
+
+  <!-- FREE TOOLS -->
+  <section class="section" id="tools">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <p class="eyebrow">{L("tools.eyebrow")}</p>
+        <h2>{L("tools.h2")}</h2>
+        <p>{L("tools.lead")}</p>
+      </div>
+      <div class="gridfeat reveal">
+        {tools.map((t) => (
+          <a class="cell cell--link" href={t.href}>
+            <h3>{t.name}</h3>
+            <p>{t.note}</p>
+            <span class="cell__go">{L("tools.open")}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="band band--amber">
+    <div class="wrap">
+      <div class="stats reveal">
+        <div class="stat">
+          <span class="num" data-count="300000" data-suffix="+">0</span>
+          <span class="lbl">{L("stats.usda")}</span>
+        </div>
+        <div class="stat">
+          <span class="num" data-count="1000" data-suffix="+">0</span>
+          <span class="lbl">{L("stats.indb")}</span>
+        </div>
+        <div class="stat">
+          <span class="num" data-count="0">0</span>
+          <span class="lbl">{L("stats.guessed")}</span>
+        </div>
+        <div class="stat">
+          <span class="num" data-count="6">0</span>
+          <span class="lbl">{L("stats.calcs")}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- THE TRACKER (scroll payoff) -->
+  <section class="section" id="tracker">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <p class="eyebrow">{L("tracker.eyebrow")}</p>
+        <h2>{L("tracker.h2")}</h2>
+        <p>{L("tracker.lead")}</p>
+      </div>
+      <img class="how-strip reveal" src="/how-it-works.png" alt={L("tracker.imgAlt")} width="1600" height="533" loading="lazy" />
+      <div class="steps">
+        <div class="block reveal">
+          <svg class="draw" viewBox="0 0 60 44" width="56" height="42" aria-hidden="true">
+            <rect x="3" y="4" width="42" height="28" rx="0" />
+            <polyline points="14,32 14,40 24,32" />
+            <line x1="12" y1="14" x2="36" y2="14" />
+            <line x1="12" y1="22" x2="30" y2="22" />
+          </svg>
+          <p class="eyebrow" style="margin-top:0.8rem;">{L("step1.label")}</p>
+          <h3 style="margin:0.8rem 0 0.5rem;">{L("step1.title")}</h3>
+          <p>{L("step1.body")}</p>
+        </div>
+        <div class="block reveal" style="transition-delay:0.12s;">
+          <svg class="draw" viewBox="0 0 60 44" width="56" height="42" aria-hidden="true">
+            <ellipse cx="30" cy="9" rx="18" ry="6" />
+            <path d="M12 9 V33 C12 36 21 39 30 39 C39 39 48 36 48 33 V9" />
+            <path d="M12 21 C12 24 21 27 30 27 C39 27 48 24 48 21" />
+          </svg>
+          <p class="eyebrow" style="margin-top:0.8rem;">{L("step2.label")}</p>
+          <h3 style="margin:0.8rem 0 0.5rem;">{L("step2.title")}</h3>
+          <p>{L("step2.body")}</p>
+        </div>
+        <div class="block reveal" style="transition-delay:0.24s;">
+          <svg class="draw" viewBox="0 0 60 44" width="56" height="42" aria-hidden="true">
+            <rect x="6" y="8" width="28" height="28" />
+            <polyline points="13,22 20,29 40,7" />
+          </svg>
+          <p class="eyebrow" style="margin-top:0.8rem;">{L("step3.label")}</p>
+          <h3 style="margin:0.8rem 0 0.5rem;">{L("step3.title")}</h3>
+          <p>{L("step3.body")}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCT SHOT -->
+  <section class="section" style="padding-top:0;">
+    <div class="wrap">
+      <div class="shot__grid">
+        <div class="reveal">
+          <p class="eyebrow">{L("shot.eyebrow")}</p>
+          <h2 style="margin:0.8rem 0 1rem;">{L("shot.h2")}</h2>
+          <p style="color:var(--ink-2); font-size:1.05rem;">{L("shot.lead")}</p>
+          <a class="btn btn--ghost" href="/signup" style="margin-top:1.2rem;">{L("shot.cta")}</a>
+        </div>
+        <div class="shot reveal">
+          <div class="shot__bar" aria-hidden="true">
+            <i></i><i></i><i></i>
+            <span class="shot__url">macrochat.app/chat</span>
+          </div>
+          <div class="shot__body">
+            <div class="msg msg--user" style="align-self:flex-end; max-width:100%;">
+              <div class="msg__who">{L("shot.you")}</div>
+              <div class="msg__body">{L("shot.msg")}</div>
+            </div>
+            <div class="facts" style="margin:0;">
+              <div class="facts__title">{L("shot.factsTitle")}</div>
+              <div class="facts__row facts__row--hero"><b>{L("shot.calories")}</b><span class="num">412 kcal</span></div>
+              <div class="facts__row facts__donut">
+                <div class="donut">
+                  <svg class="donut__svg" viewBox="0 0 42 42" aria-label={L("shot.donutLabel")}>
+                    <circle cx="21" cy="21" r="15.5" fill="none" stroke="var(--amber)" stroke-width="9" pathLength="100" stroke-dasharray="22 78" stroke-dashoffset="0" transform="rotate(-90 21 21)" />
+                    <circle cx="21" cy="21" r="15.5" fill="none" stroke="var(--burnt)" stroke-width="9" pathLength="100" stroke-dasharray="58 42" stroke-dashoffset="-22" transform="rotate(-90 21 21)" />
+                    <circle cx="21" cy="21" r="15.5" fill="none" stroke="var(--mute)" stroke-width="9" pathLength="100" stroke-dasharray="20 80" stroke-dashoffset="-80" transform="rotate(-90 21 21)" />
+                  </svg>
+                  <div class="donut__legend">
+                    <span><i style="background:var(--amber)"></i>{L("shot.protein")} 22%</span>
+                    <span><i style="background:var(--burnt)"></i>{L("shot.carbs")} 58%</span>
+                    <span><i style="background:var(--mute)"></i>{L("shot.fat")} 20%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="facts__row facts__row--thick"><span>{L("shot.item")} <span class="tag">INDB</span></span><span class="num">412 kcal</span></div>
+              <div class="facts__row"><b>{L("shot.protein")}</b><span class="num">9.1 g</span></div>
+              <div class="facts__row"><b>{L("shot.carbs")}</b><span class="num">59.8 g</span></div>
+              <div class="facts__row"><b>{L("shot.fat")}</b><span class="num">9.2 g</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURE GRID -->
+  <section class="section" style="padding-top:0;">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <p class="eyebrow">{L("feat.eyebrow")}</p>
+        <h2>{L("feat.h2")}</h2>
+      </div>
+      <div class="gridfeat reveal">
+        <div class="cell">
+          <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><rect x="4" y="9" width="32" height="24"/><circle cx="20" cy="21" r="6"/><line x1="14" y1="9" x2="17" y2="5"/><line x1="26" y1="9" x2="23" y2="5"/></svg>
+          <h3>{L("feat1.title")}</h3>
+          <p>{L("feat1.body")}</p>
+        </div>
+        <div class="cell">
+          <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><path d="M20 5 C10 5 6 14 10 22 C13 28 20 35 20 35 C20 35 27 28 30 22 C34 14 30 5 20 5"/><line x1="20" y1="12" x2="20" y2="28"/></svg>
+          <h3>{L("feat2.title")}</h3>
+          <p>{L("feat2.body")}</p>
+        </div>
+        <div class="cell">
+          <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><rect x="7" y="9" width="26" height="26"/><polyline points="13,21 18,26 29,13"/></svg>
+          <h3>{L("feat3.title")}</h3>
+          <p>{L("feat3.body")}</p>
+        </div>
+        <div class="cell">
+          <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><circle cx="20" cy="14" r="7"/><path d="M7 34 C7 26 13 23 20 23 C27 23 33 26 33 34"/></svg>
+          <h3>{L("feat4.title")}</h3>
+          <p>{L("feat4.body")}</p>
+        </div>
+        <div class="cell">
+          <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><path d="M6 30 L14 20 L22 26 L34 10"/><circle cx="34" cy="10" r="2"/></svg>
+          <h3>{L("feat5.title")}</h3>
+          <p>{L("feat5.body")}</p>
+        </div>
+        <div class="cell">
+          <svg viewBox="0 0 40 40" aria-hidden="true" class="draw"><circle cx="20" cy="20" r="14"/><polyline points="20,11 20,20 27,24"/></svg>
+          <h3>{L("feat6.title")}</h3>
+          <p>{L("feat6.body")}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARISON -->
+  <section class="band band--ink">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <p class="eyebrow" style="border-color:var(--paper);">{L("vs.eyebrow")}</p>
+        <h2>{L("vs.h2")}</h2>
+      </div>
+      <div class="compare reveal">
+        <div class="compare__row">
+          <div class="compare__cell compare__cell--them compare__head">{L("vs.them")}</div>
+          <div class="compare__cell compare__cell--us compare__head">{L("vs.us")}</div>
+        </div>
+        <div class="compare__row">
+          <div class="compare__cell compare__cell--them">{L("vs.them1")}</div>
+          <div class="compare__cell compare__cell--us">{L("vs.us1")}</div>
+        </div>
+        <div class="compare__row">
+          <div class="compare__cell compare__cell--them">{L("vs.them2")}</div>
+          <div class="compare__cell compare__cell--us">{L("vs.us2")}</div>
+        </div>
+        <div class="compare__row">
+          <div class="compare__cell compare__cell--them">{L("vs.them3")}</div>
+          <div class="compare__cell compare__cell--us">{L("vs.us3")}</div>
+        </div>
+        <div class="compare__row">
+          <div class="compare__cell compare__cell--them">{L("vs.them4")}</div>
+          <div class="compare__cell compare__cell--us">{L("vs.us4")}</div>
+        </div>
+        <div class="compare__row">
+          <div class="compare__cell compare__cell--them">{L("vs.them5")}</div>
+          <div class="compare__cell compare__cell--us">{L("vs.us5")}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RECEIPTS -->
+  <section class="section">
+    <div class="wrap">
+      <div class="section__head reveal">
+        <p class="eyebrow">{L("receipts.eyebrow")}</p>
+        <h2>{L("receipts.h2")}</h2>
+      </div>
+      <div class="quotes reveal">
+        <div class="quote">
+          <div class="quote__mark">“</div>
+          <p>{L("receipts.q1")}</p>
+          <div class="quote__by">{L("receipts.by1")}</div>
+        </div>
+        <div class="quote">
+          <div class="quote__mark">“</div>
+          <p>{L("receipts.q2")}</p>
+          <div class="quote__by">{L("receipts.by2")}</div>
+        </div>
+        <div class="quote">
+          <div class="quote__mark">“</div>
+          <p>{L("receipts.q3")}</p>
+          <div class="quote__by">{L("receipts.by3")}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="wrap reveal" style="max-width:820px;">
+      <p class="eyebrow">{L("faq.eyebrow")}</p>
+      <h2 style="margin:1rem 0 1.5rem;">{L("faq.h2")}</h2>
+
+      <details class="faq">
+        <summary>{L("faq.q1")}</summary>
+        <p>{L("faq.a1")}</p>
+      </details>
+      <details class="faq">
+        <summary>{L("faq.q2")}</summary>
+        <p>{L("faq.a2")}</p>
+      </details>
+      <details class="faq">
+        <summary>{L("faq.q3")}</summary>
+        <p>{L("faq.a3")}<a href={lp("/calculator")}>{L("faq.a3link")}</a>.</p>
+      </details>
+      <details class="faq">
+        <summary>{L("faq.q4")}</summary>
+        <p>{L("faq.a4pre")}<a href="/chat">{L("faq.a4link")}</a>{L("faq.a4post")}</p>
+      </details>
+      <details class="faq">
+        <summary>{L("faq.q5")}</summary>
+        <p>{L("faq.a5")}</p>
+      </details>
+      <details class="faq">
+        <summary>{L("faq.q6")}</summary>
+        <p>{L("faq.a6")}</p>
+      </details>
+      <details class="faq">
+        <summary>{L("faq.q7")}</summary>
+        <p>{L("faq.a7")}</p>
+      </details>
+      <details class="faq">
+        <summary>{L("faq.q8")}</summary>
+        <p>{L("faq.a8")}</p>
+      </details>
+      <details class="faq">
+        <summary>{L("faq.q9")}</summary>
+        <p>{L("faq.a9")}<a href={lp("/privacy")}>{L("faq.a9link")}</a>.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- MEGA CTA -->
+  <section class="band band--amber">
+    <div class="wrap cta-mega reveal">
+      <svg class="arrow draw draw--now" viewBox="0 0 70 50" aria-hidden="true">
+        <path d="M6 10 C30 4 44 18 40 40" />
+        <polyline points="32,34 40,42 48,34" />
+      </svg>
+      <h2>{L("cta.h2")}</h2>
+      <div class="cta-mega__btns">
+        <a class="btn btn--ghost" href={lp("/calculator")} style="font-size:1rem; padding:1.1rem 2.2rem;">{L("cta.btn1")}</a>
+        <a class="btn btn--ghost" href="/signup" style="font-size:1rem; padding:1.1rem 2.2rem;">{L("cta.btn2")}</a>
+      </div>
+      <p class="sub">{L("cta.sub")}</p>
+    </div>
+  </section>
+</Layout>

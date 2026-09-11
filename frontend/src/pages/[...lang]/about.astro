@@ -1,0 +1,34 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { localePaths, toLocale } from "../../i18n/config";
+import { pageT } from "../../i18n/pages";
+
+// One file, eight routes: /calculator and /es/calculator, /ja/... etc.
+export const getStaticPaths = localePaths;
+
+const lang = toLocale(Astro.params.lang);
+const L = pageT(lang, "legal");
+---
+<Layout title={L("about.title")}>
+  <section class="band">
+    <div class="wrap" style="max-width:760px;">
+      <p class="eyebrow">{L("about.eyebrow")}</p>
+      <h1 style="font-size:clamp(2.2rem,6vw,4rem); margin:1.2rem 0 1.5rem;">{L("about.h1a")}<br /><span style="background:var(--amber); padding:0 0.4rem;">{L("about.h1b")}</span></h1>
+
+      <div class="block" style="margin-bottom:1.5rem;">
+        <h3 style="margin-bottom:0.6rem;">{L("about.s1h")}</h3>
+        <p>{L("about.s1p")}</p>
+      </div>
+
+      <div class="block" style="margin-bottom:1.5rem;">
+        <h3 style="margin-bottom:0.6rem;">{L("about.s2h")}</h3>
+        <p>{L("about.s2p")}</p>
+      </div>
+
+      <div class="block">
+        <h3 style="margin-bottom:0.6rem;">{L("about.s3h")}</h3>
+        <p>{L("about.s3p")}</p>
+      </div>
+    </div>
+  </section>
+</Layout>

@@ -1,0 +1,125 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import CompareTool from "../../../components/CompareTool.tsx";
+import {
+  comparePairs, verdict, proteinDensity, gapPhrase, relatedFor,
+  nutritionJsonLd, faqJsonLd, NUTRIENTS, type Food,
+} from "../../../lib/seo";
+import { SERVINGS } from "../../../lib/servings";
+import { localeHref, localePaths, toLocale } from "../../../i18n/config";
+import { fmt, pageDict, pageT } from "../../../i18n/pages";
+import { tf } from "../../../i18n/foods";
+import { useT } from "../../../i18n/ui";
+
+export function getStaticPaths() {
+  // 8 locales x every pair — one file builds the lot.
+  return localePaths().flatMap(({ params: { lang } }) =>
+    comparePairs().map(([a, b]) => ({ params: { lang, pair: `${a.slug}-vs-${b.slug}` }, props: { a, b } }))
+  );
+}
+
+const lang = toLocale(Astro.params.lang);
+const { a: enA, b: enB } = Astro.props as { a: Food; b: Food };
+const a = tf(lang, enA), b = tf(lang, enB);
+const lp = (path: string) => localeHref(lang, path);
+const C = pageT(lang, "compare");
+const CD = pageDict(lang, "compare");   // the same section as a plain object, for the island
+const CALC = pageDict(lang, "calc");
+const F = pageT(lang, "foods");
+const t = useT(lang);
+// nutrient row labels, translated; keys and units stay as the data has them
+const nutrients = NUTRIENTS.map((n) => ({
+  ...n,
+  label: {
+    kcal: CALC.calories, protein: CALC.protein, carb: CALC.carbs, fat: CALC.fat,
+    fiber: F("fiber"), sugar: F("sugars"), satfat: F("satfat"), sodium: F("sodium"),
+  }[n.key] ?? n.label,
+}));
+
+const pdA = proteinDensity(a), pdB = proteinDensity(b);
+const leaner = a.kcal <= b.kcal ? a : b;
+const protein = pdA >= pdB ? a : b;
+const related = relatedFor(a.slug, 6, lang);
+
+const faqs = [
+  {
+    q: fmt(C("faqQ1"), { a: a.name, b: b.name }),
+    a: fmt(C("faqA1"), {
+      winner: a.protein > b.protein ? a.name : b.name,
+      hi: Math.max(a.protein, b.protein),
+      lo: Math.min(a.protein, b.protein),
+      gap: gapPhrase(a.protein, b.protein, CD),
+    }),
+  },
+  {
+    q: C("faqQ2"),
+    a: fmt(C("faqA2"), {
+      leaner: leaner.name,
+      leanerKcal: leaner.kcal,
+      otherKcal: (leaner === a ? b : a).kcal,
+      protein: protein.name,
+    }),
+  },
+  { q: C("faqQ3"), a: C("faqA3") },
+];
+
+const desc = fmt(C("desc"), {
+  a: a.name, b: b.name, kcalA: a.kcal, kcalB: b.kcal,
+  proteinA: a.protein, proteinB: b.protein, carbA: a.carb, carbB: b.carb,
+});
+---
+<Layout title={fmt(C("title"), { a: a.name, b: b.name })} description={desc}>
+  <section class="section">
+    <div class="wrap calc-doc" style="max-width:680px;">
+      <p class="mono" style="color:var(--mute);"><a href={lp("/compare/")}>{C("crumb")}</a> / {fmt(F("vs"), { a: a.name, b: b.name })}</p>
+      <h1 style="margin:0.6rem 0 0.4rem;">{fmt(F("vs"), { a: a.name, b: b.name })}</h1>
+      <p class="hero__lead" style="margin:0 0 1.8rem;">
+        {fmt(C("lead"), {
+          source: a.source === "INDB" || b.source === "INDB" ? C("srcBoth") : F("srcUSDA"),
+        })}
+      </p>
+
+      <CompareTool
+        client:load
+        a={a} b={b} nutrients={nutrients} t={CD}
+        servingA={SERVINGS[a.slug]} servingB={SERVINGS[b.slug]}
+      />
+
+      <p class="mono" style="color:var(--mute); margin-top:0.6rem;">
+        {fmt(C("proteinPer100"), { a: a.name, pdA: pdA.toFixed(1), b: b.name, pdB: pdB.toFixed(1) })}
+      </p>
+
+      <h2 style="margin:1.8rem 0 0.6rem;">{C("verdictH2")}</h2>
+      <p>{verdict(a, b, CD)}</p>
+
+      <h2 style="margin:1.8rem 0 0.6rem;">{C("quickAnswers")}</h2>
+      {faqs.map((f) => (
+        <details class="faq">
+          <summary>{f.q}</summary>
+          <p>{f.a}</p>
+        </details>
+      ))}
+
+      {related.length > 0 && (
+        <>
+          <h2 style="margin:1.8rem 0 0.6rem;">{fmt(C("moreH2"), { name: a.name })}</h2>
+          <ul class="foods-az">
+            {related.map((r) => (
+              <li><a href={lp(r.href)}>{fmt(F("vs"), { a: a.name, b: r.name })}</a></li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      <p style="margin-top:1.5rem;">
+        <a href={lp(`/foods/${a.slug}-macros/`)}>{fmt(C("macrosLink"), { name: a.name })}</a> ·
+        <a href={lp(`/foods/${b.slug}-macros/`)}>{fmt(C("macrosLink"), { name: b.name })}</a> ·
+        <a href={lp("/calculator")}>{t("calc.macro")}</a>
+      </p>
+      <a class="btn qc__full" href="/signup" style="margin-top:0.6rem;">{C("cta")}</a>
+    </div>
+  </section>
+  <script type="application/ld+json" set:html={nutritionJsonLd(a)} />
+  <script type="application/ld+json" set:html={nutritionJsonLd(b)} />
+  <script type="application/ld+json" set:html={faqJsonLd(faqs.map((f) => ({ q: f.q, a: f.a })))} />
+</Layout>

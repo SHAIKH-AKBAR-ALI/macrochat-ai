@@ -483,6 +483,43 @@ jpeg → 413.
   round-trip per request (verify the JWT locally instead); rate-limit counters are
   per-process (Redis if we ever run 2+ instances).
 
+### Internationalisation — ✅ I1–I6 DONE on branch `i18n` (2026-09-11), NOT MERGED
+7 languages (es, ja, fr, de, pt, ko, it) + English. Full breakdown in `PHASES.md`
+section "I". Every phase is done and the build is green (35,432 pages, ~148 s);
+what's left is merging to `main` and letting Render deploy.
+- Astro i18n, `prefixDefaultLocale: false` — English URLs unchanged. Every SEO
+  page lives in `src/pages/[...lang]/`: the rest param can be `undefined`, so one
+  file serves `/calculator` and `/es/calculator`. App pages (login, dashboard,
+  chat, add, history, 404, 500) stay English at the root with `localized={false}`.
+- `src/i18n/config.ts` (locales + `localeHref`/`stripLocale`), `ui.ts` (nav and
+  footer), `pages/<locale>.ts` (page copy). `pageT()` falls back to English per
+  key; `pageDict()` hands a plain object to Preact islands (a function can't
+  cross the server/client boundary); `fmt()` fills `{placeholders}` in strings
+  built from database rows.
+- `Layout.astro` emits the 8-locale hreflang set + `x-default` + canonical;
+  sitemap repeats them.
+- `src/i18n/foods/<locale>.json` is a flat slug → name map for the 499 food
+  names; `i18n/foods.ts` exposes `foodName()` and `tf()` (a food with its
+  `.name` swapped), so one call at the top of a page localises the h1, title,
+  link labels and related grids that all read `.name`. Missing slug → English
+  name, per key. Slugs and URLs stay English on purpose — one path set, one
+  sitemap, hreflang ties the locales together. `/foods/` groups by first letter
+  of the TRANSLATED name, `localeCompare(…, lang)`.
+- about / privacy / terms / contact read one `legal` section (48 keys × 8).
+  Translated privacy + terms carry a governing-language line ("the English
+  version governs"); the English pages don't render it. `404.astro` /
+  `500.astro` stay English at the root — `localized={false}`, one
+  `dist/404.html`, no locale routing to hang them off.
+- **Encoding trap:** a heredoc through the Bash tool double-encodes non-ASCII
+  (`mayoría` → `mayorÃ­a`), and a Python `write_text` that fails mid-encode
+  leaves the target 0 bytes (it truncated a committed `ja.ts`). Write locale
+  blocks with the Write tool, append by script, then sweep for `Ã`/U+FFFD.
+- Done: I1 routing/hreflang/chrome, I2 landing, I3 calculators + islands,
+  I4 `/foods/` + `/compare/`, I5 the 499 food names × 7 (`f11f905`),
+  I6 about/privacy/terms/contact. **Next: merge `i18n` → `main`, deploy, then
+  set the static-site security headers in the Render dashboard.**
+- Build is now 35,432 pages in ~170 s (was 4,436 in ~15 s).
+
 ### Phase 4+ — Later / not yet scoped
 Full 10-phase future plan lives in `ROADMAP.txt` (2026-07-05): session polish (token
 refresh, cold-start UX), meal edit/delete/re-log, history & trends, quick-log

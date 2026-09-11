@@ -781,6 +781,114 @@ noted in S1 and S4:
 
 ---
 
+## I — Internationalisation (branch `i18n`, in progress 2026-09-10)
+
+Goal: rank on non-English keywords ("calculadora de macros", "マクロ計算ツール",
+"Kaloriendefizit-Rechner"). **7 languages added** — Español, 日本語, Français,
+Deutsch, Português, 한국어, Italiano — with English staying at the root so no
+existing URL changes.
+
+**Scope decision (user's call):** the whole site, all 4,436 pages × 8 locales
+≈ **35,432 pages**, and all 499 food names translated. Build 15 s → ~140 s.
+
+**Architecture.** Astro `i18n` config, `prefixDefaultLocale: false` (English at
+`/`, others under `/es/`, `/ja/`…). Every SEO page moved under
+`src/pages/[...lang]/` — a **rest param that can be undefined**, so ONE file
+serves `/calculator` *and* `/es/calculator`; there is no per-locale copy of a
+page to keep in sync. The two dynamic routes cross their existing path list with
+the locales. Signed-in app pages (login, signup, dashboard, chat, add, history,
+404, 500) stay English-only at the root and pass `localized={false}` — no
+hreflang, no switcher: they are behind auth and have no SEO value.
+
+**Strings.** `src/i18n/config.ts` (locales, `localeHref`, `stripLocale`),
+`src/i18n/ui.ts` (nav/footer chrome), `src/i18n/pages/<locale>.ts` (page copy,
+one module per locale) with `pageT()` falling back to English **per key**, so an
+untranslated key renders readable English instead of a blank. Islands can't take
+a function across the server/client boundary, so they get `pageDict()` — the
+same section as a plain object — as a `t` prop.
+
+**hreflang.** `Layout.astro` renders the full 8-locale `<link rel="alternate">`
+set + `x-default` + a canonical, built from `stripLocale(Astro.url.pathname)`;
+`@astrojs/sitemap`'s `i18n` option repeats the alternates in the sitemap.
+
+- [x] **I1 · routing + hreflang + chrome** — ✅ `7c7b8dd`. Config, `[...lang]/`
+      move, hreflang/canonical, language switcher in the nav, nav+footer in all
+      8. 4,436 → 35,432 pages, 15 s → 126 s build.
+- [x] **I2 · landing page** — ✅ `baf1602`. ~95 keys × 8. FAQ answers that carry a
+      link are split into pre/link/post keys instead of embedding markup in a
+      translated string.
+- [x] **I3 · calculators** — ✅ `c2b8b31` (islands) + `2ad5982` (page copy).
+      The five Preact islands take a `t` dictionary prop (~60 labels), incl.
+      MiniCalc's result rows and MacroSplit's diet-preset names, which stay keyed
+      by their stable ids. Page prose (~35 keys) covers all six calculators;
+      mid-sentence links became a plain paragraph + a "See also" link line, which
+      cut three keys per sentence down to one. Formula `<pre>` blocks and paper
+      citations deliberately stay English.
+- [x] **I4 · `/foods/` + `/compare/`** — ✅ `8c9ed38`. ~110 keys × 8 across 4,417
+      generated pages. These sentences are built from database rows, so the
+      strings are templates with `{placeholders}` filled by `fmt()` — that keeps
+      names/numbers out of the translations and lets each language choose its own
+      word order. `verdict()` and `gapPhrase()` in `lib/seo.ts` used to
+      concatenate English fragments; they now take the compare dictionary.
+      `CompareTool` takes the same dict, and its nutrient labels are translated
+      in the page so `NUTRIENTS` keeps its data keys.
+- [x] **I5 · 499 food names × 7** — ✅ the long grind (3,493 strings), all seven
+      locales complete. `src/i18n/foods/<locale>.json` is a flat slug → name map
+      and `i18n/foods.ts` exposes `foodName()` + `tf()` (a food with its `.name`
+      swapped), so one call at the top of a page localises every h1, title, link
+      label and related-grid entry downstream. A missing slug falls back to the
+      English name per key, which is what let the files land one locale at a
+      time. Slugs and URLs stay English on purpose — one path set, one sitemap,
+      hreflang ties the locales together. `/foods/` groups by first letter of the
+      TRANSLATED name and sorts with `localeCompare(…, lang)`. Build green:
+      35,432 pages in 169 s.
+- [x] **I6 · about / privacy / terms / contact** — ✅ one `legal` section, 48 keys
+      × 8 in `i18n/pages/<locale>.ts`, and the four pages now read it through
+      `pageT(lang, "legal")`. Mid-sentence links (privacy → contact, terms §5)
+      use the pre/link/post key split from I2 and point at `localeHref(lang, …)`
+      so a Spanish reader lands on `/es/contact`. The translated privacy and
+      terms pages carry a governing-language line ("the English version
+      governs") that the English pages don't render — machine-quality legal text
+      in seven languages is a liability without it.
+      `404.astro` / `500.astro` stay English at the root: they're
+      `localized={false}` app pages, Render serves one `dist/404.html`, and
+      there's no locale routing to hang them off.
+      **Encoding trap worth remembering:** a heredoc through the Bash tool
+      double-encodes non-ASCII (`mayoría` → `mayorÃ­a`) and a Python
+      `write_text` that fails mid-encode leaves the target file 0 bytes — it
+      truncated a committed `ja.ts` before erroring. Locale blocks are written
+      with the Write tool to a scratch file and appended by script; every locale
+      file is swept for `Ã`/U+FFFD after writing.
+
+**I1–I6 all done (2026-09-11).** Build green at 35,432 pages in ~148 s. The
+branch is ready to merge to `main` and deploy — the reason it was held back (a
+half-translated site publishing 31k English duplicate pages under locale
+prefixes) no longer applies.
+
+---
+
+## Parked — next up after i18n (2026-09-11)
+
+User's own list, in the order agreed. Nothing here is started.
+
+- 🔵 **Login** — sign-in is failing for the user; exact symptom not captured yet.
+  Suspect list: the ~1h Supabase token with no refresh (known open item), or a
+  cold-start `Failed to fetch`. Get the real error before touching code.
+- 🔵 **Google sign-in** — "like other websites". Lazy path is Supabase's built-in
+  Google provider (enable in the Supabase dashboard + a Google Cloud OAuth
+  client). Catch: the frontend talks to FastAPI through `lib/api.ts` and does
+  NOT load supabase-js, so this needs either that client or a redirect-callback
+  route. Scope it before building.
+- 🔵 **Mobile UI** — a section overlaps on mobile, plus a general mobile rework.
+  Needs a screenshot (`screenshot/claude/`) and the viewport width. Remember Edge
+  headless clamps to ~500 px, so anything narrower is a capture artifact.
+- 🔵 **Food agent check** — user wants to check something in the AI pipeline
+  (`app/graph.py`, `app/nutrition.py`). Deliberately deferred to LAST, after the
+  three above. Ask what to check: a specific meal that came out wrong, or a
+  general review.
+
+---
+
 ## After R10
 
 Regroup with user. Candidates: guides/editorial, restaurant pages, PWA,

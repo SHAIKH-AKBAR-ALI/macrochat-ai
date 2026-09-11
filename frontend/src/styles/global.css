@@ -1315,3 +1315,6 @@ a.cell--link:hover { border-color: var(--amber); }
 .foodsearch__actions { display: flex; align-items: center; gap: 1rem; margin-top: 1rem; }
 .foodsearch__actions .mono { color: var(--mute); }
 #fs-done .facts__note--logged { margin-top: 0.6rem; border-radius: var(--radius-sm); padding: 0.6rem 0.9rem; }
+
+/* "See also" line under a calculator's how-it-works section */
+.calc-see a + a::before { content: " · "; color: var(--mute); }

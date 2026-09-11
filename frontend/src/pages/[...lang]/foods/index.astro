@@ -1,0 +1,45 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import { FOODS } from "../../../lib/seo";
+import { localeHref, localePaths, toLocale } from "../../../i18n/config";
+import { fmt, pageT } from "../../../i18n/pages";
+import { tf } from "../../../i18n/foods";
+
+// One file, eight routes: /calculator and /es/calculator, /ja/... etc.
+export const getStaticPaths = localePaths;
+
+const lang = toLocale(Astro.params.lang);
+const lp = (path: string) => localeHref(lang, path);
+const F = pageT(lang, "foods");
+
+
+const groups = new Map<string, typeof FOODS>();
+const localised = FOODS.map((f) => tf(lang, f)).sort((a, b) => a.name.localeCompare(b.name, lang));
+for (const f of localised) {
+  const k = f.name[0].toUpperCase();
+  if (!groups.has(k)) groups.set(k, []);
+  groups.get(k)!.push(f);
+}
+---
+<Layout title={F("indexTitle")} description={F("indexDesc")}>
+  <section class="section">
+    <div class="wrap" style="max-width:820px;">
+      <p class="eyebrow">{F("indexEyebrow")}</p>
+      <h1 style="margin:0.6rem 0 0.8rem;">{F("indexH1")}</h1>
+      <p class="hero__lead" style="margin:0 0 2rem;">
+        {fmt(F("indexLead"), { count: FOODS.length })}
+      </p>
+      {[...groups.entries()].map(([letter, list]) => (
+        <div style="margin-bottom:1.6rem;">
+          <h2 style="font-size:1.1rem; margin:0 0 0.5rem; color:var(--amber-ink);">{letter}</h2>
+          <ul class="foods-az">
+            {list.map((f) => (
+              <li><a href={lp(`/foods/${f.slug}-macros/`)}>{f.name}</a> <span>{f.kcal} kcal</span></li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      <p><a href={lp("/compare/")}>{F("indexToCompare")}</a></p>
+    </div>
+  </section>
+</Layout>

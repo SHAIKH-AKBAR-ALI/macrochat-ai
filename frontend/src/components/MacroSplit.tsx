@@ -9,7 +9,7 @@ import {
 
 const KEY = "mc_split";
 const KEYS: SplitKey[] = ["protein", "carbs", "fat"];
-const LABEL: Record<SplitKey, string> = { protein: "Protein", carbs: "Carbs", fat: "Fat" };
+
 const KCAL_PER_G: Record<SplitKey, number> = { protein: 4, carbs: 4, fat: 9 };
 
 interface Stored {
@@ -34,7 +34,25 @@ function load(): Stored {
   return DEFAULT;
 }
 
-export default function MacroSplit({ kcal }: { kcal: number }) {
+const LABEL = (t: Record<string, string>): Record<SplitKey, string> => ({
+  protein: t.protein,
+  carbs: t.carbs,
+  fat: t.fat,
+});
+
+// preset id -> key in the calc dictionary
+const PRESET_KEY: Record<string, string> = {
+  balanced: "diet.balanced",
+  "low-carb": "diet.lowCarb",
+  keto: "diet.keto",
+  "high-protein": "diet.highProtein",
+  "plant-based": "diet.plantBased",
+};
+
+export default function MacroSplit({ kcal, t }: {
+  kcal: number;
+  t: Record<string, string>;
+}) {
   const [st, setSt] = useState<Stored>(DEFAULT);
 
   useEffect(() => setSt(load()), []);
@@ -67,7 +85,7 @@ export default function MacroSplit({ kcal }: { kcal: number }) {
   return (
     <div class="split">
       <fieldset class="split__presets">
-        <legend>Diet style</legend>
+        <legend>{t["split.dietStyle"]}</legend>
         {DIET_PRESETS.map((d) => (
           <label class={`split__card${st.preset === d.id ? " is-on" : ""}`}>
             <input
@@ -77,7 +95,7 @@ export default function MacroSplit({ kcal }: { kcal: number }) {
               checked={st.preset === d.id}
               onChange={() => pickPreset(d.id)}
             />
-            <b>{d.name}</b>
+            <b>{t[PRESET_KEY[d.id]] ?? d.name}</b>
             <span>{d.label}</span>
           </label>
         ))}
@@ -91,12 +109,12 @@ export default function MacroSplit({ kcal }: { kcal: number }) {
                 type="button"
                 class={`split__lock${st.locked[k] ? " is-locked" : ""}`}
                 aria-pressed={st.locked[k]}
-                aria-label={`${st.locked[k] ? "Unlock" : "Lock"} ${LABEL[k]}`}
+                aria-label={`${st.locked[k] ? t["split.unlock"] : t["split.lock"]} ${LABEL(t)[k]}`}
                 onClick={() => toggleLock(k)}
               >
                 {st.locked[k] ? "🔒" : "🔓"}
               </button>
-              <label for={`sl-${k}`}>{LABEL[k]}</label>
+              <label for={`sl-${k}`}>{LABEL(t)[k]}</label>
               <span class="split__pct">{st.split[k]}%</span>
             </div>
             <input
@@ -115,24 +133,20 @@ export default function MacroSplit({ kcal }: { kcal: number }) {
       </div>
 
       <div class="facts" aria-live="polite">
-        <div class="facts__title">Daily target summary</div>
+        <div class="facts__title">{t["split.summary"]}</div>
         <div class="facts__row facts__row--hero">
-          <b>Calories</b>
+          <b>{t.calories}</b>
           <span class="num">{kcal ? `${kcal} kcal` : "—"}</span>
         </div>
         {KEYS.map((k) => (
           <div class={`facts__row${k === "fat" ? "" : ""}`}>
-            <span>{LABEL[k]}</span>
+            <span>{LABEL(t)[k]}</span>
             <span class="num">
               {grams[k]} g · {st.split[k]}% · {Math.round((kcal * st.split[k]) / 100)} kcal
             </span>
           </div>
         ))}
-        <div class="facts__note">
-          Lock a macro to pin it while you drag the others — the split always
-          totals 100%. Grams use {KCAL_PER_G.protein}/{KCAL_PER_G.carbs}/
-          {KCAL_PER_G.fat} kcal per gram.
-        </div>
+        <div class="facts__note">{t["split.note"]}</div>
       </div>
     </div>
   );

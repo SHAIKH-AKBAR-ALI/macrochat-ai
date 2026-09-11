@@ -1,5 +1,11 @@
 // Build-time helpers for the /foods/ + /compare/ SEO pages.
 import foodsData from "../data/seo-foods.json";
+import { fmt } from "../i18n/pages";
+import { tf } from "../i18n/foods";
+import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
+
+/** A locale section as a flat object — see pageDict(). */
+type Dict = Record<string, string>;
 
 export interface Food {
   slug: string;
@@ -56,7 +62,7 @@ export function pairSlug(x: string, y: string): string | null {
 }
 
 /** Up to `n` other POPULAR foods to compare `slug` against (for the related grid). */
-export function relatedFor(slug: string, n = 6): { name: string; href: string }[] {
+export function relatedFor(slug: string, n = 6, lang: Locale = DEFAULT_LOCALE): { name: string; href: string }[] {
   const self = POPULAR.indexOf(slug);
   if (self < 0) return [];
   const others = POPULAR.filter((_, i) => i !== self);
@@ -66,7 +72,7 @@ export function relatedFor(slug: string, n = 6): { name: string; href: string }[
   for (let k = 0; k < others.length && out.length < n; k += step) {
     const s = pairSlug(slug, others[k]);
     const f = bySlug(others[k]);
-    if (s && f) out.push({ name: f.name, href: `/compare/${s}/` });
+    if (s && f) out.push({ name: tf(lang, f).name, href: `/compare/${s}/` });
   }
   return out;
 }
@@ -95,36 +101,39 @@ export function pctMore(a: number, b: number): number {
   return Math.round(((hi - lo) / lo) * 100);
 }
 
-/** "3.1x" when the gap is big, else "42% more". */
-export function gapPhrase(a: number, b: number): string {
+/** "3.1x" when the gap is big, else "42% more" — in the caller's language.
+ * `t` is the compare dictionary (pageDict(lang, "compare")). */
+export function gapPhrase(a: number, b: number, t: Dict, plain = false): string {
   const lo = Math.min(a, b), hi = Math.max(a, b);
-  if (lo <= 0) return hi > 0 ? "all of it" : "the same";
+  if (lo <= 0) return hi > 0 ? t["gap.allOfIt"] : t["gap.same"];
   const ratio = hi / lo;
-  return ratio >= 2 ? `${ratio.toFixed(1)}x` : `${Math.round((ratio - 1) * 100)}% more`;
+  return ratio >= 2
+    ? fmt(t["gap.times"], { n: ratio.toFixed(1) })
+    : fmt(t[plain ? "gap.pctPlain" : "gap.pctMore"], { n: Math.round((ratio - 1) * 100) });
 }
 
-export function verdict(a: Food, b: Food): string {
+export function verdict(a: Food, b: Food, t: Dict): string {
   const lean = a.kcal <= b.kcal ? a : b;
   const other = lean === a ? b : a;
   const protein = proteinDensity(a) >= proteinDensity(b) ? a : b;
   const parts: string[] = [];
   if (Math.abs(a.kcal - b.kcal) > 5) {
-    const g = gapPhrase(a.kcal, b.kcal).replace(/ more$/, "");
-    parts.push(
-      `Per 100 g, ${lean.name} has ${g} fewer calories ` +
-      `(${lean.kcal} vs ${other.kcal} kcal) — the easier fit in a calorie deficit.`
-    );
+    // plain: this sentence supplies its own "fewer", so no "more" in the phrase
+    const gap = gapPhrase(a.kcal, b.kcal, t, true);
+    parts.push(fmt(t["verdict.leaner"], {
+      leaner: lean.name, gap, leanerKcal: lean.kcal, otherKcal: other.kcal,
+    }));
   } else {
-    parts.push(`Per 100 g the two are close on calories (${a.kcal} vs ${b.kcal} kcal).`);
+    parts.push(fmt(t["verdict.closeKcal"], { kcalA: a.kcal, kcalB: b.kcal }));
   }
   if (Math.abs(proteinDensity(a) - proteinDensity(b)) > 1) {
-    parts.push(
-      `${protein.name} is more protein-dense — ${proteinDensity(protein).toFixed(1)} g ` +
-      `protein per 100 kcal vs ${proteinDensity(protein === a ? b : a).toFixed(1)} g — so it's ` +
-      `the better pick for muscle gain or staying full on a cut.`
-    );
+    parts.push(fmt(t["verdict.protein"], {
+      protein: protein.name,
+      pdHigh: proteinDensity(protein).toFixed(1),
+      pdLow: proteinDensity(protein === a ? b : a).toFixed(1),
+    }));
   } else {
-    parts.push(`They carry protein at a similar rate per calorie.`);
+    parts.push(t["verdict.closeProtein"]);
   }
   return parts.join(" ");
 }

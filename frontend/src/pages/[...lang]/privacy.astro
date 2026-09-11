@@ -1,0 +1,43 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { DEFAULT_LOCALE, localeHref, localePaths, toLocale } from "../../i18n/config";
+import { pageT } from "../../i18n/pages";
+
+// One file, eight routes: /calculator and /es/calculator, /ja/... etc.
+export const getStaticPaths = localePaths;
+
+const lang = toLocale(Astro.params.lang);
+const L = pageT(lang, "legal");
+---
+<Layout title={L("privacy.title")}>
+  <section class="band">
+    <div class="wrap" style="max-width:760px;">
+      <p class="eyebrow">{L("privacy.eyebrow")}</p>
+      <h1 style="font-size:clamp(2rem,5vw,3.2rem); margin:1.2rem 0 1.5rem;">{L("privacy.h1")}</h1>
+      <p class="mono" style="color:var(--mute); margin-bottom:2rem;">{L("privacy.updated")}</p>
+      {lang !== DEFAULT_LOCALE && (
+        <p class="mono" style="color:var(--mute); margin:-1.2rem 0 2rem;">{L("govern")}</p>
+      )}
+
+      <div class="block" style="margin-bottom:1.2rem;">
+        <h3 style="margin-bottom:0.6rem;">{L("privacy.s1h")}</h3>
+        <p>{L("privacy.s1p")}</p>
+      </div>
+
+      <div class="block" style="margin-bottom:1.2rem;">
+        <h3 style="margin-bottom:0.6rem;">{L("privacy.s2h")}</h3>
+        <p>{L("privacy.s2p")}</p>
+      </div>
+
+      <div class="block" style="margin-bottom:1.2rem;">
+        <h3 style="margin-bottom:0.6rem;">{L("privacy.s3h")}</h3>
+        <p>{L("privacy.s3p")}</p>
+      </div>
+
+      <div class="block">
+        <h3 style="margin-bottom:0.6rem;">{L("privacy.s4h")}</h3>
+        <p>{L("privacy.s4pPre")}<a href={localeHref(lang, "/contact")}>{L("privacy.s4pLink")}</a>{L("privacy.s4pPost")}</p>
+      </div>
+    </div>
+  </section>
+</Layout>

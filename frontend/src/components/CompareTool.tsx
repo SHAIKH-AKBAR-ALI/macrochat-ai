@@ -1,4 +1,5 @@
 import { useState } from "preact/hooks";
+import { fmt } from "../i18n/pages";
 
 type NutKey = "kcal" | "protein" | "carb" | "fat" | "fiber" | "sugar" | "sodium" | "satfat";
 interface Food {
@@ -15,10 +16,11 @@ const num = (s: string) => {
 };
 
 export default function CompareTool({
-  a, b, nutrients, servingA, servingB,
+  a, b, nutrients, servingA, servingB, t,
 }: {
   a: Food; b: Food; nutrients: Nut[];
   servingA?: Serving; servingB?: Serving;
+  t: Record<string, string>;
 }) {
   const [gA, setGA] = useState(100);
   const [gB, setGB] = useState(100);
@@ -57,15 +59,15 @@ export default function CompareTool({
   return (
     <div>
       <div class="ptool">
-        <div class="ptool__modes" role="group" aria-label="Portion size">
-          <button type="button" class={mode === "100" ? "is-on" : ""} onClick={set100}>Per 100 g</button>
+        <div class="ptool__modes" role="group" aria-label={t["tool.portionSize"]}>
+          <button type="button" class={mode === "100" ? "is-on" : ""} onClick={set100}>{t["tool.per100"]}</button>
           {bothServings && (
             <button type="button" class={mode === "serving" ? "is-on" : ""} onClick={setServing}>
-              Per serving
+              {t["tool.perServing"]}
             </button>
           )}
           <button type="button" class={mode === "custom" ? "is-on" : ""} onClick={() => setMode("custom")}>
-            Custom
+            {t["tool.custom"]}
           </button>
         </div>
         <div class="ptool__inputs">
@@ -87,7 +89,7 @@ export default function CompareTool({
       </div>
 
       <p class="ptool__sum mono">
-        {gA} g {a.name} = <b>{kcalA} kcal</b> · {gB} g {b.name} = <b>{kcalB} kcal</b>
+        {fmt(t["tool.sum"], { gA, a: a.name, kcalA, gB, b: b.name, kcalB })}
       </p>
 
       <div class="cmp">
@@ -111,7 +113,7 @@ export default function CompareTool({
         ))}
       </div>
       <p class="cmp__key mono">
-        Filled bar = higher value · <span class="cmp__key-win">tinted cell</span> = better for a lean / high-protein goal
+        {t["tool.key"]}<span class="cmp__key-win">{t["tool.keyWin"]}</span>{t["tool.keyEnd"]}
       </p>
     </div>
   );

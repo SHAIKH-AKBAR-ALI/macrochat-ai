@@ -1,0 +1,39 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import RecipeCalc from "../../components/RecipeCalc.tsx";
+import { localeHref, localePaths, toLocale } from "../../i18n/config";
+import { pageDict, pageT } from "../../i18n/pages";
+import { useT } from "../../i18n/ui";
+
+// One file, eight routes: /calculator and /es/calculator, /ja/... etc.
+export const getStaticPaths = localePaths;
+
+const lang = toLocale(Astro.params.lang);
+const lp = (path: string) => localeHref(lang, path);
+const calc = pageDict(lang, "calc");
+const P = pageT(lang, "calcPages");
+const t = useT(lang);
+
+---
+<Layout title={`${t("calc.recipe")} — MacroChat`}>
+  <section class="section calc-page">
+    <div class="wrap">
+      <div style="max-width:46rem; margin-bottom:2rem;">
+        <span class="pill">{P("pill")}</span>
+        <h1 style="margin:1rem 0 0.8rem;">{t("calc.recipe")}</h1>
+        <p class="hero__lead" style="margin:0;">{P("recipe.lead")}</p>
+      </div>
+      <RecipeCalc t={calc} client:load />
+    </div>
+  </section>
+
+  <section class="section calc-doc" style="padding-top:0;">
+    <div class="wrap" style="max-width:52rem;">
+      <p class="eyebrow">{P("how")}</p>
+      <h2 style="margin:0.6rem 0 1rem;">{P("recipe.h2")}</h2>
+      <p>{P("recipe.p1")}</p>
+      <p>{P("recipe.p2")}</p>
+      <p>{P("recipe.p3")}<a href="/chat">{P("recipe.p3link")}</a>.</p>
+    </div>
+  </section>
+</Layout>
