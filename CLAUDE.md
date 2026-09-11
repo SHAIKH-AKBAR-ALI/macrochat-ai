@@ -483,10 +483,10 @@ jpeg → 413.
   round-trip per request (verify the JWT locally instead); rate-limit counters are
   per-process (Redis if we ever run 2+ instances).
 
-### Internationalisation — 🚧 IN PROGRESS on branch `i18n` (I1–I5 done 2026-09-11)
+### Internationalisation — ✅ I1–I6 DONE on branch `i18n` (2026-09-11), NOT MERGED
 7 languages (es, ja, fr, de, pt, ko, it) + English. Full breakdown in `PHASES.md`
-section "I". **Do not merge to `main` until I6 is done** — a half-translated
-site publishes 31k English duplicate pages under locale prefixes.
+section "I". Every phase is done and the build is green (35,432 pages, ~148 s);
+what's left is merging to `main` and letting Render deploy.
 - Astro i18n, `prefixDefaultLocale: false` — English URLs unchanged. Every SEO
   page lives in `src/pages/[...lang]/`: the rest param can be `undefined`, so one
   file serves `/calculator` and `/es/calculator`. App pages (login, dashboard,
@@ -505,10 +505,19 @@ site publishes 31k English duplicate pages under locale prefixes.
   name, per key. Slugs and URLs stay English on purpose — one path set, one
   sitemap, hreflang ties the locales together. `/foods/` groups by first letter
   of the TRANSLATED name, `localeCompare(…, lang)`.
+- about / privacy / terms / contact read one `legal` section (48 keys × 8).
+  Translated privacy + terms carry a governing-language line ("the English
+  version governs"); the English pages don't render it. `404.astro` /
+  `500.astro` stay English at the root — `localized={false}`, one
+  `dist/404.html`, no locale routing to hang them off.
+- **Encoding trap:** a heredoc through the Bash tool double-encodes non-ASCII
+  (`mayoría` → `mayorÃ­a`), and a Python `write_text` that fails mid-encode
+  leaves the target 0 bytes (it truncated a committed `ja.ts`). Write locale
+  blocks with the Write tool, append by script, then sweep for `Ã`/U+FFFD.
 - Done: I1 routing/hreflang/chrome, I2 landing, I3 calculators + islands,
-  I4 `/foods/` + `/compare/`, **I5 the 499 food names × 7** (`f11f905`).
-  Left: I6 about/privacy/terms/contact/404/500 body copy (their chrome is
-  already translated — the pages build under `[...lang]/` since I1).
+  I4 `/foods/` + `/compare/`, I5 the 499 food names × 7 (`f11f905`),
+  I6 about/privacy/terms/contact. **Next: merge `i18n` → `main`, deploy, then
+  set the static-site security headers in the Render dashboard.**
 - Build is now 35,432 pages in ~170 s (was 4,436 in ~15 s).
 
 ### Phase 4+ — Later / not yet scoped

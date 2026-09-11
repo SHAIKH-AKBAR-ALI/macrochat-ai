@@ -452,6 +452,73 @@ export const en = {
     "tool.keyWin": "tinted cell",
     "tool.keyEnd": " = better for a lean / high-protein goal",
   },
+  legal: {
+    "about.title": "About — MacroChat AI",
+    "about.eyebrow": "About us",
+    "about.h1a": "Honest numbers,",
+    "about.h1b": "zero guesswork.",
+    "about.s1h": "Why MacroChat exists",
+    "about.s1p":
+      "Most calorie apps make you search dropdowns and weigh everything. Most AI trackers just let the model invent numbers. MacroChat does neither: you talk to it like a person — \"200g grilled chicken, 2 rotis\" or a photo — and every calorie it reports comes from a real nutrition database, never from the AI's imagination.",
+    "about.s2h": "How we keep it honest",
+    "about.s2p":
+      "The AI's only job is identifying food and reasoning about portions. Macros come from USDA FoodData Central and the Indian Nutrient Databank (INDB). Daily totals are computed in the backend, not by a language model. When we estimate a portion from a photo, we say so — and ask you to confirm before it counts.",
+    "about.s3h": "Indian plates covered too",
+    "about.s3p":
+      "USDA covers the everyday worldwide list, and 1,000+ Indian recipes and ingredients from INDB cover roti, dal, sabzi and biryani. One tracker for both halves of your diet.",
+
+    "privacy.title": "Privacy Policy — MacroChat AI",
+    "privacy.eyebrow": "Privacy policy",
+    "privacy.h1": "Your data, plainly.",
+    "privacy.updated": "Last updated: July 2026",
+    "privacy.s1h": "What we collect",
+    "privacy.s1p":
+      "Account details (email, height, weight, age, sex, activity level, goal, time zone) to compute your daily targets; the meals and messages you log; and photos you upload, which are processed for food identification.",
+    "privacy.s2h": "How it's used",
+    "privacy.s2p":
+      "Meal text and photos are sent to AI providers (OpenAI; Google Gemini for guest sessions) solely to identify foods and portions. Nutrition numbers come from public databases (USDA, INDB). Your data is used to run the service — never sold, never used for advertising.",
+    "privacy.s3h": "Where it lives",
+    "privacy.s3p":
+      "Your account and meal history are stored in Supabase (Postgres) with row-level security — only your authenticated account can read your rows. Guest analyses are not saved at all.",
+    "privacy.s4h": "Your choices",
+    "privacy.s4pPre": "You can use MacroChat as a guest with nothing stored. To delete your account and all associated data, ",
+    "privacy.s4pLink": "contact us",
+    "privacy.s4pPost": " — deletion is permanent.",
+
+    "terms.title": "Terms & Conditions — MacroChat AI",
+    "terms.eyebrow": "Terms & conditions",
+    "terms.h1": "The fine print, short.",
+    "terms.updated": "Last updated: July 2026",
+    "terms.s1h": "1. Not medical advice",
+    "terms.s1p":
+      "MacroChat is a nutrition tracking tool, not a medical service. Calorie and macro figures are estimates — portion sizes especially. Consult a qualified professional before making health decisions, particularly if you have a medical condition.",
+    "terms.s2h": "2. Accuracy",
+    "terms.s2p":
+      "We pull numbers from real databases (USDA, INDB) and clearly flag estimated portions, but we do not guarantee accuracy of any value. Confirmed gram amounts you enter are your responsibility.",
+    "terms.s3h": "3. Your account",
+    "terms.s3p":
+      "Keep your credentials safe; you're responsible for activity under your account. Don't abuse the service (automated scraping, attempting to access other users' data, or overloading the API).",
+    "terms.s4h": "4. Service availability",
+    "terms.s4p":
+      "This is a personal project provided as-is, with no uptime guarantee. We may change or discontinue features at any time.",
+    "terms.s5h": "5. Contact",
+    "terms.s5pPre": "Questions about these terms? ",
+    "terms.s5pLink": "Get in touch",
+    "terms.s5pPost": ".",
+
+    "contact.title": "Contact — MacroChat AI",
+    "contact.eyebrow": "Contact us",
+    "contact.h1": "Say hello.",
+    "contact.s1h": "Email",
+    "contact.s1p": "Bug reports, feature ideas, data deletion requests, or anything else:",
+    "contact.s2h": "Found a wrong number?",
+    "contact.s2p":
+      "If a food matched the wrong database entry or a calorie count looks off, email a screenshot — matching accuracy is the thing we care most about fixing.",
+
+    // Shown on the translated privacy/terms pages only. Machine-quality legal
+    // text in seven languages is a liability without this line.
+    "govern": "This page is a translation provided for convenience. The English version governs.",
+  },
 } as const;
 
 export type PageStrings = typeof en;

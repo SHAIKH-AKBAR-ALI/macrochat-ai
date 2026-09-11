@@ -842,11 +842,28 @@ set + `x-default` + a canonical, built from `stripLocale(Astro.url.pathname)`;
       hreflang ties the locales together. `/foods/` groups by first letter of the
       TRANSLATED name and sorts with `localeCompare(…, lang)`. Build green:
       35,432 pages in 169 s.
-- [ ] **I6 · about / privacy / terms / contact / 404 / 500.**
+- [x] **I6 · about / privacy / terms / contact** — ✅ one `legal` section, 48 keys
+      × 8 in `i18n/pages/<locale>.ts`, and the four pages now read it through
+      `pageT(lang, "legal")`. Mid-sentence links (privacy → contact, terms §5)
+      use the pre/link/post key split from I2 and point at `localeHref(lang, …)`
+      so a Spanish reader lands on `/es/contact`. The translated privacy and
+      terms pages carry a governing-language line ("the English version
+      governs") that the English pages don't render — machine-quality legal text
+      in seven languages is a liability without it.
+      `404.astro` / `500.astro` stay English at the root: they're
+      `localized={false}` app pages, Render serves one `dist/404.html`, and
+      there's no locale routing to hang them off.
+      **Encoding trap worth remembering:** a heredoc through the Bash tool
+      double-encodes non-ASCII (`mayoría` → `mayorÃ­a`) and a Python
+      `write_text` that fails mid-encode leaves the target file 0 bytes — it
+      truncated a committed `ja.ts` before erroring. Locale blocks are written
+      with the Write tool to a scratch file and appended by script; every locale
+      file is swept for `Ã`/U+FFFD after writing.
 
-**Not deployed yet — deliberately.** A half-translated site would put 31k
-English duplicate pages under locale prefixes, which is an SEO liability. The
-branch merges to `main` when I5–I6 are done.
+**I1–I6 all done (2026-09-11).** Build green at 35,432 pages in ~148 s. The
+branch is ready to merge to `main` and deploy — the reason it was held back (a
+half-translated site publishing 31k English duplicate pages under locale
+prefixes) no longer applies.
 
 ---
 

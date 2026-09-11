@@ -1,49 +1,47 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { localePaths } from "../../i18n/config";
+import { DEFAULT_LOCALE, localeHref, localePaths, toLocale } from "../../i18n/config";
+import { pageT } from "../../i18n/pages";
 
 // One file, eight routes: /calculator and /es/calculator, /ja/... etc.
 export const getStaticPaths = localePaths;
 
+const lang = toLocale(Astro.params.lang);
+const L = pageT(lang, "legal");
 ---
-<Layout title="Terms & Conditions — MacroChat AI">
+<Layout title={L("terms.title")}>
   <section class="band">
     <div class="wrap" style="max-width:760px;">
-      <p class="eyebrow">Terms &amp; conditions</p>
-      <h1 style="font-size:clamp(2rem,5vw,3.2rem); margin:1.2rem 0 1.5rem;">The fine print, short.</h1>
-      <p class="mono" style="color:var(--mute); margin-bottom:2rem;">Last updated: July 2026</p>
+      <p class="eyebrow">{L("terms.eyebrow")}</p>
+      <h1 style="font-size:clamp(2rem,5vw,3.2rem); margin:1.2rem 0 1.5rem;">{L("terms.h1")}</h1>
+      <p class="mono" style="color:var(--mute); margin-bottom:2rem;">{L("terms.updated")}</p>
+      {lang !== DEFAULT_LOCALE && (
+        <p class="mono" style="color:var(--mute); margin:-1.2rem 0 2rem;">{L("govern")}</p>
+      )}
 
       <div class="block" style="margin-bottom:1.2rem;">
-        <h3 style="margin-bottom:0.6rem;">1. Not medical advice</h3>
-        <p>MacroChat is a nutrition tracking tool, not a medical service. Calorie and
-        macro figures are estimates — portion sizes especially. Consult a qualified
-        professional before making health decisions, particularly if you have a
-        medical condition.</p>
+        <h3 style="margin-bottom:0.6rem;">{L("terms.s1h")}</h3>
+        <p>{L("terms.s1p")}</p>
       </div>
 
       <div class="block" style="margin-bottom:1.2rem;">
-        <h3 style="margin-bottom:0.6rem;">2. Accuracy</h3>
-        <p>We pull numbers from real databases (INDB, USDA) and clearly flag
-        estimated portions, but we do not guarantee accuracy of any value. Confirmed
-        gram amounts you enter are your responsibility.</p>
+        <h3 style="margin-bottom:0.6rem;">{L("terms.s2h")}</h3>
+        <p>{L("terms.s2p")}</p>
       </div>
 
       <div class="block" style="margin-bottom:1.2rem;">
-        <h3 style="margin-bottom:0.6rem;">3. Your account</h3>
-        <p>Keep your credentials safe; you're responsible for activity under your
-        account. Don't abuse the service (automated scraping, attempting to access
-        other users' data, or overloading the API).</p>
+        <h3 style="margin-bottom:0.6rem;">{L("terms.s3h")}</h3>
+        <p>{L("terms.s3p")}</p>
       </div>
 
       <div class="block" style="margin-bottom:1.2rem;">
-        <h3 style="margin-bottom:0.6rem;">4. Service availability</h3>
-        <p>This is a personal project provided as-is, with no uptime guarantee. We
-        may change or discontinue features at any time.</p>
+        <h3 style="margin-bottom:0.6rem;">{L("terms.s4h")}</h3>
+        <p>{L("terms.s4p")}</p>
       </div>
 
       <div class="block">
-        <h3 style="margin-bottom:0.6rem;">5. Contact</h3>
-        <p>Questions about these terms? <a href="/contact">Get in touch</a>.</p>
+        <h3 style="margin-bottom:0.6rem;">{L("terms.s5h")}</h3>
+        <p>{L("terms.s5pPre")}<a href={localeHref(lang, "/contact")}>{L("terms.s5pLink")}</a>{L("terms.s5pPost")}</p>
       </div>
     </div>
   </section>

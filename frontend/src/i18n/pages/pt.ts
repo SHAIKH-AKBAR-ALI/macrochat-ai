@@ -448,4 +448,69 @@ export const pt: { [S in keyof PageStrings]?: Partial<PageStrings[S]> } = {
     "tool.keyWin": "célula destacada",
     "tool.keyEnd": " = melhor para um objetivo magro / rico em proteína",
   },
+  legal: {
+    "about.title": "Sobre nós — MacroChat AI",
+    "about.eyebrow": "Sobre nós",
+    "about.h1a": "Números honestos,",
+    "about.h1b": "zero achismo.",
+    "about.s1h": "Por que o MacroChat existe",
+    "about.s1p":
+      "A maioria dos apps de calorias obriga você a vasculhar listas e pesar tudo. A maioria dos rastreadores com IA deixa o modelo inventar os números. O MacroChat não faz nem uma coisa nem outra: você fala com ele como falaria com uma pessoa — «200 g de frango grelhado, 2 rotis» ou uma foto — e cada caloria exibida vem de uma base de dados nutricional real, nunca da imaginação da IA.",
+    "about.s2h": "Como mantemos a honestidade",
+    "about.s2p":
+      "O único trabalho da IA é identificar alimentos e raciocinar sobre porções. Os macros vêm do USDA FoodData Central e do Indian Nutrient Databank (INDB). Os totais diários são calculados no backend, não por um modelo de linguagem. Quando estimamos uma porção a partir de uma foto, dizemos isso — e pedimos que você confirme antes de contar.",
+    "about.s3h": "A cozinha indiana também",
+    "about.s3p":
+      "O USDA cobre a lista mundial do dia a dia, e mais de 1.000 receitas e ingredientes indianos do INDB cobrem roti, dal, sabzi e biryani. Um só rastreador para as duas metades da sua dieta.",
+
+    "privacy.title": "Política de privacidade — MacroChat AI",
+    "privacy.eyebrow": "Política de privacidade",
+    "privacy.h1": "Seus dados, sem rodeios.",
+    "privacy.updated": "Última atualização: julho de 2026",
+    "privacy.s1h": "O que coletamos",
+    "privacy.s1p":
+      "Dados da conta (e-mail, altura, peso, idade, sexo, nível de atividade, objetivo, fuso horário) para calcular suas metas diárias; as refeições e mensagens que você registra; e as fotos que envia, processadas para identificação de alimentos.",
+    "privacy.s2h": "Como são usados",
+    "privacy.s2p":
+      "O texto e as fotos das refeições são enviados a provedores de IA (OpenAI; Google Gemini em sessões de convidado) apenas para identificar alimentos e porções. Os valores nutricionais vêm de bases públicas (USDA, INDB). Seus dados servem para operar o serviço — nunca são vendidos nem usados para publicidade.",
+    "privacy.s3h": "Onde ficam",
+    "privacy.s3p":
+      "Sua conta e seu histórico de refeições ficam no Supabase (Postgres) com segurança em nível de linha — só a sua conta autenticada pode ler seus registros. Análises de convidado não são salvas de forma alguma.",
+    "privacy.s4h": "Suas opções",
+    "privacy.s4pPre": "Você pode usar o MacroChat como convidado, sem nada armazenado. Para apagar sua conta e todos os dados associados, ",
+    "privacy.s4pLink": "fale conosco",
+    "privacy.s4pPost": " — a exclusão é permanente.",
+
+    "terms.title": "Termos e condições — MacroChat AI",
+    "terms.eyebrow": "Termos e condições",
+    "terms.h1": "As letras miúdas, resumidas.",
+    "terms.updated": "Última atualização: julho de 2026",
+    "terms.s1h": "1. Não é aconselhamento médico",
+    "terms.s1p":
+      "O MacroChat é uma ferramenta de registro nutricional, não um serviço médico. Os valores de calorias e macros são estimativas — sobretudo os tamanhos de porção. Consulte um profissional qualificado antes de tomar decisões de saúde, especialmente se tiver alguma condição médica.",
+    "terms.s2h": "2. Exatidão",
+    "terms.s2p":
+      "Tiramos os números de bases de dados reais (USDA, INDB) e sinalizamos claramente as porções estimadas, mas não garantimos a exatidão de nenhum valor. As gramagens que você confirma são de sua responsabilidade.",
+    "terms.s3h": "3. Sua conta",
+    "terms.s3p":
+      "Mantenha suas credenciais seguras; você responde pela atividade na sua conta. Não abuse do serviço (scraping automatizado, tentativas de acessar dados de outros usuários ou sobrecarga da API).",
+    "terms.s4h": "4. Disponibilidade do serviço",
+    "terms.s4p":
+      "Este é um projeto pessoal fornecido no estado em que se encontra, sem garantia de disponibilidade. Podemos alterar ou descontinuar recursos a qualquer momento.",
+    "terms.s5h": "5. Contato",
+    "terms.s5pPre": "Dúvidas sobre estes termos? ",
+    "terms.s5pLink": "Entre em contato",
+    "terms.s5pPost": ".",
+
+    "contact.title": "Contato — MacroChat AI",
+    "contact.eyebrow": "Contato",
+    "contact.h1": "Diga olá.",
+    "contact.s1h": "E-mail",
+    "contact.s1p": "Relatos de bugs, ideias de recursos, pedidos de exclusão de dados ou qualquer outra coisa:",
+    "contact.s2h": "Achou um número errado?",
+    "contact.s2p":
+      "Se um alimento foi associado à entrada errada da base ou uma contagem de calorias parece estranha, mande um print — a precisão das correspondências é o que mais queremos acertar.",
+
+    "govern": "Esta página é uma tradução fornecida por conveniência. A versão em inglês prevalece.",
+  },
 };

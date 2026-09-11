@@ -1,30 +1,31 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { localePaths } from "../../i18n/config";
+import { localePaths, toLocale } from "../../i18n/config";
+import { pageT } from "../../i18n/pages";
 
 // One file, eight routes: /calculator and /es/calculator, /ja/... etc.
 export const getStaticPaths = localePaths;
 
+const lang = toLocale(Astro.params.lang);
+const L = pageT(lang, "legal");
 ---
-<Layout title="Contact — MacroChat AI">
+<Layout title={L("contact.title")}>
   <section class="band">
     <div class="wrap" style="max-width:760px;">
-      <p class="eyebrow">Contact us</p>
-      <h1 style="font-size:clamp(2.2rem,6vw,4rem); margin:1.2rem 0 1.5rem;">Say hello.</h1>
+      <p class="eyebrow">{L("contact.eyebrow")}</p>
+      <h1 style="font-size:clamp(2.2rem,6vw,4rem); margin:1.2rem 0 1.5rem;">{L("contact.h1")}</h1>
 
       <div class="block" style="margin-bottom:1.5rem;">
-        <h3 style="margin-bottom:0.6rem;">Email</h3>
-        <p>Bug reports, feature ideas, data deletion requests, or anything else:</p>
+        <h3 style="margin-bottom:0.6rem;">{L("contact.s1h")}</h3>
+        <p>{L("contact.s1p")}</p>
         <p style="margin-top:0.8rem;">
           <a class="btn" href="mailto:mimali31394@gmail.com">mimali31394@gmail.com</a>
         </p>
       </div>
 
       <div class="block">
-        <h3 style="margin-bottom:0.6rem;">Found a wrong number?</h3>
-        <p>If a food matched the wrong database entry or a calorie count looks off,
-        email a screenshot — matching accuracy is the thing we care most about
-        fixing.</p>
+        <h3 style="margin-bottom:0.6rem;">{L("contact.s2h")}</h3>
+        <p>{L("contact.s2p")}</p>
       </div>
     </div>
   </section>
