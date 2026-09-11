@@ -867,6 +867,28 @@ prefixes) no longer applies.
 
 ---
 
+## Parked — next up after i18n (2026-09-11)
+
+User's own list, in the order agreed. Nothing here is started.
+
+- 🔵 **Login** — sign-in is failing for the user; exact symptom not captured yet.
+  Suspect list: the ~1h Supabase token with no refresh (known open item), or a
+  cold-start `Failed to fetch`. Get the real error before touching code.
+- 🔵 **Google sign-in** — "like other websites". Lazy path is Supabase's built-in
+  Google provider (enable in the Supabase dashboard + a Google Cloud OAuth
+  client). Catch: the frontend talks to FastAPI through `lib/api.ts` and does
+  NOT load supabase-js, so this needs either that client or a redirect-callback
+  route. Scope it before building.
+- 🔵 **Mobile UI** — a section overlaps on mobile, plus a general mobile rework.
+  Needs a screenshot (`screenshot/claude/`) and the viewport width. Remember Edge
+  headless clamps to ~500 px, so anything narrower is a capture artifact.
+- 🔵 **Food agent check** — user wants to check something in the AI pipeline
+  (`app/graph.py`, `app/nutrition.py`). Deliberately deferred to LAST, after the
+  three above. Ask what to check: a specific meal that came out wrong, or a
+  general review.
+
+---
+
 ## After R10
 
 Regroup with user. Candidates: guides/editorial, restaurant pages, PWA,
