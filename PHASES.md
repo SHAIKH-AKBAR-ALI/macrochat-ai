@@ -867,6 +867,48 @@ prefixes) no longer applies.
 
 ---
 
+## Mobile nav overflow — ✅ FIXED (2026-09-11)
+
+User reported the landing page "overlapping" on mobile. Reproduced with
+Playwright against the live site at 390px: page `scrollWidth` 414 in a 391px
+viewport — the logo collided with "Log a meal", the theme toggle sat off-screen
+and the whole page scrolled sideways. Three independent causes, all in
+`frontend/src/styles/global.css`:
+
+1. **`[hidden]` did nothing in the nav.** The UA's `[hidden]` rule is a bare
+   attribute selector, so `.nav__links a { display: flex }` outranked it and the
+   History link — markup has `hidden`, JS unhides it only when logged in — was
+   visible to every logged-out visitor, 64px of it. Fixed with a global
+   `[hidden] { display: none !important; }` next to the `img` base rule, so this
+   can't bite anywhere else either.
+2. **`.stats` used bare `1fr` tracks.** A `1fr` track floors at the content's
+   max-content width, and the unbreakable count-up string `1,000+` forced the
+   two-column band wider than the phone. Now `minmax(0, 1fr)` in both the base
+   rule and the ≤860 override.
+3. **The nav row could not fit its own contents.** Measured, not guessed: the
+   logged-in labels (Add meal · Dashboard · History · Log out) need 350px and
+   the wordmark 164px, so the row needs a 570px viewport — and with both
+   dropdowns it needs 749px in English, more in German. The wordmark now
+   collapses to its mark below 860px (`font-size: 0`, so it stays in the
+   accessibility tree), and the dropdown-hide breakpoint moved 640 → 860 to
+   match, since i18n added a second dropdown the old 640 never accounted for.
+
+Verified on the built site at 360 / 390 / 430 / 500 / 680 / 880 / 1280 px, in
+both auth states, on `/` and on `/pt/` (the longest labels): zero overflowing
+elements at every combination, desktop unchanged. Before/after in
+`screenshot/claude/mobile-nav-{overflow-before,fixed-after}-390.png`.
+
+Also checked and NOT a bug: the dark-band heading in the user's
+`screenshot/fix these colour and text overlap.png` measures 16.3:1 contrast in
+both themes on the live site — that screenshot predates the fix already
+recorded in CLAUDE.md.
+
+🔵 **Left open:** the language switcher is a `.nav__drop`, so it is now hidden
+below 860px — there is no way to change language on a phone. Give it a home in
+the footer when that matters.
+
+---
+
 ## Parked — next up after i18n (2026-09-11)
 
 User's own list, in the order agreed. Nothing here is started.

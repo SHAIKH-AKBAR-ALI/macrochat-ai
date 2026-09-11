@@ -74,6 +74,12 @@ body {
 
 img { max-width: 100%; display: block; }
 
+/* The UA's [hidden] rule is a bare attribute selector, so ANY class rule that
+   sets display wins over it — .nav__links a { display:flex } kept the History
+   link visible for logged-out visitors, which is what pushed the mobile nav
+   past the viewport. Make hidden mean hidden. */
+[hidden] { display: none !important; }
+
 h1, h2, h3, .display {
   font-family: var(--font-display);
   font-optical-sizing: auto;
@@ -277,15 +283,31 @@ main { flex: 1; }
   border-top: var(--border); margin-top: 0.4rem; padding-top: 0.65rem;
 }
 
-@media (max-width: 640px) {
-  .nav__drop { display: none; }  /* ponytail: mobile nav keeps the core 3 links; full menu is the footer sitemap */
+/* ponytail: mobile nav keeps the core links; full menu is the footer sitemap.
+   Raised 640 -> 860 because i18n added a second dropdown (the language
+   switcher): logged in, logo + both dropdowns + four links need a 749px
+   viewport in English and more in German, so 641-749 overflowed. 860 matches
+   the breakpoint the grids already use and leaves room for translated labels.
+   ponytail: the language switcher is therefore unreachable on phones — give it
+   a home in the footer when that matters. */
+@media (max-width: 860px) {
+  .nav__drop { display: none; }
 }
 
-@media (max-width: 430px) {
+/* Same threshold as the dropdown rule above: below it the nav is the compact
+   mobile row. Logged in it carries four longer labels (Add meal · Dashboard ·
+   History · Log out) which measure 350px, and with the 164px wordmark the row
+   needs a 570px viewport — so the wordmark collapses to its mark here rather
+   than shrinking the links to unreadable. font-size:0 hides the text visually
+   while leaving it in the accessibility tree. Extra headroom above 570 because
+   translated labels (de, pt) run longer than the English ones. */
+@media (max-width: 640px) {
   .nav .wrap { gap: 0.4rem; }
   .nav__links { gap: 0; }
-  .nav__links a { padding: 0.5rem 0.5rem; font-size: 0.84rem; }
+  .nav__links a { padding: 0.5rem 0.4rem; font-size: 0.8rem; }
   .nav__theme { padding: 0.5rem 0.45rem; }
+  .nav__logo { font-size: 0; gap: 0; }
+  .nav__logo img { margin-right: 0; }
 }
 
 /* --- buttons --- */
@@ -777,7 +799,10 @@ main { flex: 1; }
 }
 
 /* stats band — big count-up numbers */
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; }
+/* minmax(0,…) not 1fr: a bare 1fr track floors at the content's max-content
+   width, so the unbreakable "1,000+" count-up forced the grid wider than the
+   phone and scrolled the whole page sideways. */
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.2rem; }
 .stat {
   padding: 1.6rem 1.4rem; border-radius: var(--radius);
   background: color-mix(in srgb, var(--card) 16%, transparent);
@@ -876,8 +901,8 @@ a.cell--link:hover { border-color: var(--amber); }
 .donut__legend i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex: none; }
 
 @media (max-width: 860px) {
-  .stats, .gridfeat, .quotes { grid-template-columns: 1fr; }
-  .stats { grid-template-columns: 1fr 1fr; }
+  .stats, .gridfeat, .quotes { grid-template-columns: minmax(0, 1fr); }
+  .stats { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .shot__grid { grid-template-columns: 1fr; gap: 1.8rem; }
   .compare__cell { padding: 0.9rem 1rem; font-size: 0.88rem; }
 }
