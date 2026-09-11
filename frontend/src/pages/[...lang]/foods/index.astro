@@ -3,6 +3,7 @@ import Layout from "../../../layouts/Layout.astro";
 import { FOODS } from "../../../lib/seo";
 import { localeHref, localePaths, toLocale } from "../../../i18n/config";
 import { fmt, pageT } from "../../../i18n/pages";
+import { tf } from "../../../i18n/foods";
 
 // One file, eight routes: /calculator and /es/calculator, /ja/... etc.
 export const getStaticPaths = localePaths;
@@ -13,7 +14,8 @@ const F = pageT(lang, "foods");
 
 
 const groups = new Map<string, typeof FOODS>();
-for (const f of [...FOODS].sort((a, b) => a.name.localeCompare(b.name))) {
+const localised = FOODS.map((f) => tf(lang, f)).sort((a, b) => a.name.localeCompare(b.name, lang));
+for (const f of localised) {
   const k = f.name[0].toUpperCase();
   if (!groups.has(k)) groups.set(k, []);
   groups.get(k)!.push(f);

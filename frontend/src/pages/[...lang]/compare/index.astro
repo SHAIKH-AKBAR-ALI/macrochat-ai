@@ -3,6 +3,7 @@ import Layout from "../../../layouts/Layout.astro";
 import { comparePairs } from "../../../lib/seo";
 import { localeHref, localePaths, toLocale } from "../../../i18n/config";
 import { fmt, pageT } from "../../../i18n/pages";
+import { tf } from "../../../i18n/foods";
 
 // One file, eight routes: /calculator and /es/calculator, /ja/... etc.
 export const getStaticPaths = localePaths;
@@ -14,7 +15,7 @@ const F = pageT(lang, "foods");
 
 
 const pairs = comparePairs();
-const popular = pairs.slice(0, 24);
+const popular = pairs.slice(0, 24).map(([a, b]) => [tf(lang, a), tf(lang, b)] as const);
 ---
 <Layout title={C("indexTitle")} description={C("indexDesc")}>
   <section class="section">

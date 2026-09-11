@@ -8,6 +8,7 @@ import {
 import { SERVINGS } from "../../../lib/servings";
 import { localeHref, localePaths, toLocale } from "../../../i18n/config";
 import { fmt, pageDict, pageT } from "../../../i18n/pages";
+import { tf } from "../../../i18n/foods";
 import { useT } from "../../../i18n/ui";
 
 export function getStaticPaths() {
@@ -17,8 +18,9 @@ export function getStaticPaths() {
   );
 }
 
-const { a, b } = Astro.props as { a: Food; b: Food };
 const lang = toLocale(Astro.params.lang);
+const { a: enA, b: enB } = Astro.props as { a: Food; b: Food };
+const a = tf(lang, enA), b = tf(lang, enB);
 const lp = (path: string) => localeHref(lang, path);
 const C = pageT(lang, "compare");
 const CD = pageDict(lang, "compare");   // the same section as a plain object, for the island
@@ -37,7 +39,7 @@ const nutrients = NUTRIENTS.map((n) => ({
 const pdA = proteinDensity(a), pdB = proteinDensity(b);
 const leaner = a.kcal <= b.kcal ? a : b;
 const protein = pdA >= pdB ? a : b;
-const related = relatedFor(a.slug, 6);
+const related = relatedFor(a.slug, 6, lang);
 
 const faqs = [
   {

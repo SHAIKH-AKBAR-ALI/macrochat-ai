@@ -1,6 +1,8 @@
 // Build-time helpers for the /foods/ + /compare/ SEO pages.
 import foodsData from "../data/seo-foods.json";
 import { fmt } from "../i18n/pages";
+import { tf } from "../i18n/foods";
+import { DEFAULT_LOCALE, type Locale } from "../i18n/config";
 
 /** A locale section as a flat object — see pageDict(). */
 type Dict = Record<string, string>;
@@ -60,7 +62,7 @@ export function pairSlug(x: string, y: string): string | null {
 }
 
 /** Up to `n` other POPULAR foods to compare `slug` against (for the related grid). */
-export function relatedFor(slug: string, n = 6): { name: string; href: string }[] {
+export function relatedFor(slug: string, n = 6, lang: Locale = DEFAULT_LOCALE): { name: string; href: string }[] {
   const self = POPULAR.indexOf(slug);
   if (self < 0) return [];
   const others = POPULAR.filter((_, i) => i !== self);
@@ -70,7 +72,7 @@ export function relatedFor(slug: string, n = 6): { name: string; href: string }[
   for (let k = 0; k < others.length && out.length < n; k += step) {
     const s = pairSlug(slug, others[k]);
     const f = bySlug(others[k]);
-    if (s && f) out.push({ name: f.name, href: `/compare/${s}/` });
+    if (s && f) out.push({ name: tf(lang, f).name, href: `/compare/${s}/` });
   }
   return out;
 }

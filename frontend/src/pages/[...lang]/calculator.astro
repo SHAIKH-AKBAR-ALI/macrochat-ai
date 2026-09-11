@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import FullCalc from "../../components/FullCalc.tsx";
 import { localeHref, localePaths, toLocale } from "../../i18n/config";
+import { foodName } from "../../i18n/foods";
 import { pageDict, pageT } from "../../i18n/pages";
 import { useT } from "../../i18n/ui";
 
@@ -117,7 +118,7 @@ BMR = 370 + 21.6 · LBM</code></pre>
           <tbody>
             {COMMON_FOODS.map((x) => (
               <tr>
-                <td><a href={lp(`/foods/${x.slug}-macros/`)}>{x.name}</a></td>
+                <td><a href={lp(`/foods/${x.slug}-macros/`)}>{foodName(lang, x.slug, x.name)}</a></td>
                 <td>{x.serving}</td>
                 <td>{x.kcal}</td>
                 <td>{x.p} g</td>

@@ -832,9 +832,16 @@ set + `x-default` + a canonical, built from `stripLocale(Astro.url.pathname)`;
       concatenate English fragments; they now take the compare dictionary.
       `CompareTool` takes the same dict, and its nutrient labels are translated
       in the page so `NUTRIENTS` keeps its data keys.
-- [ ] **I5 · 499 food names × 7** — the long grind (3,493 strings). Missing names
-      fall back to English per key, so this can land in batches without breaking
-      a page.
+- [x] **I5 · 499 food names × 7** — ✅ the long grind (3,493 strings), all seven
+      locales complete. `src/i18n/foods/<locale>.json` is a flat slug → name map
+      and `i18n/foods.ts` exposes `foodName()` + `tf()` (a food with its `.name`
+      swapped), so one call at the top of a page localises every h1, title, link
+      label and related-grid entry downstream. A missing slug falls back to the
+      English name per key, which is what let the files land one locale at a
+      time. Slugs and URLs stay English on purpose — one path set, one sitemap,
+      hreflang ties the locales together. `/foods/` groups by first letter of the
+      TRANSLATED name and sorts with `localeCompare(…, lang)`. Build green:
+      35,432 pages in 169 s.
 - [ ] **I6 · about / privacy / terms / contact / 404 / 500.**
 
 **Not deployed yet — deliberately.** A half-translated site would put 31k

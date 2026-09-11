@@ -3,6 +3,7 @@ import Layout from "../../../layouts/Layout.astro";
 import { FOODS, bySlug, relatedFor, nutritionJsonLd, faqJsonLd, type Food } from "../../../lib/seo";
 import { localeHref, localePaths, toLocale } from "../../../i18n/config";
 import { fmt, pageT } from "../../../i18n/pages";
+import { tf } from "../../../i18n/foods";
 import { useT } from "../../../i18n/ui";
 
 export function getStaticPaths() {
@@ -12,15 +13,16 @@ export function getStaticPaths() {
   );
 }
 
-const { food } = Astro.props as { food: Food };
 const lang = toLocale(Astro.params.lang);
+const food = tf(lang, (Astro.props as { food: Food }).food);
 const lp = (path: string) => localeHref(lang, path);
 const F = pageT(lang, "foods");
 const C = pageT(lang, "calc");
 const t = useT(lang);
 const sourceName = food.source === "USDA" ? F("srcUSDA") : F("srcINDB");
-const related = FOODS.filter((f) => f.source === food.source && f.slug !== food.slug).slice(0, 6);
-const compares = relatedFor(food.slug, 6);
+const related = FOODS.filter((f) => f.source === food.source && f.slug !== food.slug)
+  .slice(0, 6).map((f) => tf(lang, f));
+const compares = relatedFor(food.slug, 6, lang);
 
 const p4 = Math.round(food.protein * 4);
 const c4 = Math.round(food.carb * 4);
