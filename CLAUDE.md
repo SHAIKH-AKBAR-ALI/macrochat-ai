@@ -483,9 +483,9 @@ jpeg → 413.
   round-trip per request (verify the JWT locally instead); rate-limit counters are
   per-process (Redis if we ever run 2+ instances).
 
-### Internationalisation — 🚧 IN PROGRESS on branch `i18n` (2026-09-10)
+### Internationalisation — 🚧 IN PROGRESS on branch `i18n` (I1–I5 done 2026-09-11)
 7 languages (es, ja, fr, de, pt, ko, it) + English. Full breakdown in `PHASES.md`
-section "I". **Do not merge to `main` until I5–I6 are done** — a half-translated
+section "I". **Do not merge to `main` until I6 is done** — a half-translated
 site publishes 31k English duplicate pages under locale prefixes.
 - Astro i18n, `prefixDefaultLocale: false` — English URLs unchanged. Every SEO
   page lives in `src/pages/[...lang]/`: the rest param can be `undefined`, so one
@@ -498,9 +498,18 @@ site publishes 31k English duplicate pages under locale prefixes.
   built from database rows.
 - `Layout.astro` emits the 8-locale hreflang set + `x-default` + canonical;
   sitemap repeats them.
+- `src/i18n/foods/<locale>.json` is a flat slug → name map for the 499 food
+  names; `i18n/foods.ts` exposes `foodName()` and `tf()` (a food with its
+  `.name` swapped), so one call at the top of a page localises the h1, title,
+  link labels and related grids that all read `.name`. Missing slug → English
+  name, per key. Slugs and URLs stay English on purpose — one path set, one
+  sitemap, hreflang ties the locales together. `/foods/` groups by first letter
+  of the TRANSLATED name, `localeCompare(…, lang)`.
 - Done: I1 routing/hreflang/chrome, I2 landing, I3 calculators + islands,
-  I4 `/foods/` + `/compare/`. Left: I5 the 499 food names, I6 legal/about pages.
-- Build is now 35,432 pages in ~140 s (was 4,436 in ~15 s).
+  I4 `/foods/` + `/compare/`, **I5 the 499 food names × 7** (`f11f905`).
+  Left: I6 about/privacy/terms/contact/404/500 body copy (their chrome is
+  already translated — the pages build under `[...lang]/` since I1).
+- Build is now 35,432 pages in ~170 s (was 4,436 in ~15 s).
 
 ### Phase 4+ — Later / not yet scoped
 Full 10-phase future plan lives in `ROADMAP.txt` (2026-07-05): session polish (token
